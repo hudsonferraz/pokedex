@@ -1,9 +1,11 @@
 import React, { useContext } from "react";
 import { Link, useLocation } from "react-router-dom";
 import FavoriteContext from "../contexts/favoritesContext";
+import { useTheme } from "../contexts/ThemeContext";
 
 const Navbar = () => {
   const { favoritePokemons } = useContext(FavoriteContext);
+  const { isDarkMode, toggleTheme } = useTheme();
   const location = useLocation();
   const logoImg =
     "https://raw.githubusercontent.com/PokeAPI/media/master/logo/pokeapi_256.png";
@@ -28,6 +30,13 @@ const Navbar = () => {
         >
           {favoritePokemons.length} ❤️
         </Link>
+        <button 
+          onClick={toggleTheme}
+          className="theme-toggle-btn"
+          aria-label={isDarkMode ? "Switch to light mode" : "Switch to dark mode"}
+        >
+          {isDarkMode ? "☀️" : "🌙"}
+        </button>
       </div>
     </nav>
   );

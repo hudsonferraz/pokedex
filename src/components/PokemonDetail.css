@@ -4,6 +4,8 @@
   display: flex;
   flex-direction: column;
   align-items: center;
+  background-color: var(--bg-color);
+  transition: background-color 0.3s ease;
 }
 
 .pokemon-detail-navigation {
@@ -24,18 +26,19 @@
 
 .nav-pokemon-btn {
   padding: 8px 16px;
-  background-color: white;
-  border: 2px solid #333;
+  background-color: var(--card-bg);
+  border: 2px solid var(--border-color);
   border-radius: 8px;
   cursor: pointer;
   font-size: 0.9rem;
   font-weight: 500;
   transition: all 0.2s ease;
   text-transform: capitalize;
+  color: var(--text-color);
 }
 
 .nav-pokemon-btn:hover {
-  background-color: #f0f0f0;
+  background-color: var(--filter-bg);
   transform: translateY(-2px);
 }
 
@@ -274,7 +277,8 @@
   align-items: center;
 }
 
-.share-button {
+.share-button,
+.compare-button {
   border: none;
   background-color: rgba(255, 255, 255, 0.3);
   padding: 8px 12px;
@@ -282,6 +286,15 @@
   cursor: pointer;
   font-size: 1.2rem;
   transition: all 0.2s ease;
+}
+
+.dark-mode .compare-button {
+  background-color: rgba(0, 0, 0, 0.3);
+}
+
+.dark-mode .share-button,
+.dark-mode .compare-button {
+  background-color: rgba(0, 0, 0, 0.3);
 }
 
 .share-button:hover {
@@ -342,22 +355,24 @@
   flex-direction: column;
   align-items: center;
   padding: 15px;
-  background-color: #f8f8f8;
+  background-color: var(--filter-bg);
   border-radius: 8px;
+  transition: background-color 0.3s ease;
 }
 
 .stat-label {
   font-size: 0.9rem;
-  color: #666;
+  color: var(--text-color);
   margin-bottom: 5px;
   text-transform: uppercase;
   font-weight: 600;
+  opacity: 0.7;
 }
 
 .stat-value {
   font-size: 1.3rem;
   font-weight: bold;
-  color: #333;
+  color: var(--text-color);
 }
 
 .pokemon-description-box {
@@ -376,7 +391,7 @@
   margin: 0 0 10px 0;
   font-size: 1rem;
   font-weight: 600;
-  color: #333;
+  color: var(--text-color);
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
@@ -385,8 +400,9 @@
   margin: 0;
   font-size: 0.9rem;
   line-height: 1.6;
-  color: #555;
+  color: var(--text-color);
   text-align: justify;
+  opacity: 0.9;
 }
 
 .pokemon-detail-stats-section {
@@ -397,8 +413,13 @@
 
 .pokemon-detail-stats-section h2 {
   margin-bottom: 15px;
-  color: #333;
+  color: var(--text-color);
   font-size: 1.5rem;
+}
+
+.pokemon-detail-moves h2,
+.pokemon-detail-abilities h2 {
+  color: var(--text-color);
 }
 
 .pokemon-stats-list {
@@ -416,14 +437,14 @@
 .stat-name {
   min-width: 150px;
   font-weight: 600;
-  color: #333;
+  color: var(--text-color);
   text-transform: capitalize;
 }
 
 .stat-bar-container {
   flex: 1;
   height: 24px;
-  background-color: #e0e0e0;
+  background-color: var(--filter-bg);
   border-radius: 12px;
   position: relative;
   overflow: hidden;

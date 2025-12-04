@@ -88,20 +88,24 @@ const Pokemon = (props) => {
           <h3> {pokemon.name}</h3>
           <div>#{pokemon.id}</div>
         </div>
-        <div className="card-bottom">
-          <div className="pokemon-type">
-            {pokemon.types.map((type, index) => {
-              return (
-                <div key={index} className="pokemon-type-text">
-                  {type.type.name}
-                </div>
-              );
-            })}
+          <div className="card-bottom">
+            <div className="pokemon-type">
+              {pokemon.types.map((type, index) => {
+                return (
+                  <div key={index} className="pokemon-type-text">
+                    {type.type.name}
+                  </div>
+                );
+              })}
+            </div>
+            <button 
+              className="pokemon-heart-btn" 
+              onClick={onHeartClick}
+              title={favoritePokemons.includes(pokemon.name) ? "Remove from favorites" : "Add to favorites"}
+            >
+              {heart}
+            </button>
           </div>
-          <button className="pokemon-heart-btn" onClick={onHeartClick}>
-            {heart}
-          </button>
-        </div>
       </div>
     </div>
   );

@@ -1,0 +1,228 @@
+.comparison-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+  animation: fadeIn 0.3s ease;
+}
+
+.comparison-modal {
+  background-color: var(--card-bg);
+  border-radius: 16px;
+  padding: 30px;
+  max-width: 900px;
+  width: 90%;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  position: relative;
+}
+
+.comparison-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 30px;
+  padding-bottom: 15px;
+  border-bottom: 2px solid var(--border-color);
+}
+
+.comparison-header h2 {
+  color: var(--text-color);
+  margin: 0;
+  font-size: 1.8rem;
+}
+
+.comparison-close-btn {
+  background: none;
+  border: none;
+  font-size: 2rem;
+  color: var(--text-color);
+  cursor: pointer;
+  padding: 0;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: background-color 0.2s ease;
+}
+
+.comparison-close-btn:hover {
+  background-color: var(--filter-bg);
+}
+
+.comparison-content {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  gap: 30px;
+  align-items: start;
+}
+
+.comparison-pokemon {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.comparison-pokemon-header {
+  text-align: center;
+  padding: 20px;
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+.comparison-pokemon-image {
+  width: 150px;
+  height: 150px;
+  image-rendering: pixelated;
+}
+
+.comparison-pokemon-name {
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: var(--text-color);
+  text-transform: capitalize;
+  margin: 0;
+}
+
+.comparison-pokemon-id {
+  font-size: 1rem;
+  color: var(--text-color);
+  opacity: 0.7;
+}
+
+.comparison-pokemon-types {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.comparison-type-badge {
+  padding: 6px 12px;
+  border-radius: 16px;
+  color: white;
+  font-size: 0.85rem;
+  font-weight: 500;
+  text-transform: capitalize;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+.comparison-stats {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.comparison-stat-row {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.comparison-stat-name {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text-color);
+  min-width: 80px;
+}
+
+.comparison-stat-bars {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: 100%;
+}
+
+.comparison-stat-bar-container {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.comparison-stat-bar {
+  height: 28px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding-right: 10px;
+  min-width: 40px;
+  transition: width 0.5s ease;
+  flex: 1;
+}
+
+.comparison-stat-value {
+  color: white;
+  font-weight: bold;
+  font-size: 0.85rem;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+}
+
+.comparison-winner {
+  color: #4caf50;
+  font-size: 1.2rem;
+  font-weight: bold;
+}
+
+.comparison-vs {
+  font-size: 2rem;
+  font-weight: bold;
+  color: var(--text-color);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px 0;
+  opacity: 0.6;
+}
+
+.comparison-loading {
+  text-align: center;
+  padding: 40px;
+  font-size: 1.2rem;
+  color: var(--text-color);
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@media (max-width: 768px) {
+  .comparison-content {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+
+  .comparison-vs {
+    font-size: 1.5rem;
+    padding: 10px 0;
+  }
+
+  .comparison-modal {
+    padding: 20px;
+    width: 95%;
+  }
+
+  .comparison-pokemon-image {
+    width: 120px;
+    height: 120px;
+  }
+}
+

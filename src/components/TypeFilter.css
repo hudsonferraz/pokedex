@@ -1,8 +1,9 @@
 .type-filter-container {
   padding: 15px;
-  background-color: #f8f8f8;
+  background-color: var(--filter-bg);
   border-radius: 8px;
   margin: 15px 20px;
+  transition: background-color 0.3s ease;
 }
 
 .type-filter-header {
@@ -21,7 +22,7 @@
 .type-filter-title {
   font-size: 1rem;
   font-weight: 600;
-  color: #333;
+  color: var(--text-color);
   margin: 0;
   text-transform: uppercase;
   letter-spacing: 0.5px;
@@ -108,14 +109,14 @@
 
 .generation-filter-button {
   padding: 6px 12px;
-  border: 2px solid #ddd;
+  border: 2px solid var(--border-color);
   border-radius: 6px;
-  background-color: white;
+  background-color: var(--card-bg);
   font-size: 0.85rem;
   font-weight: 500;
   cursor: pointer;
   transition: all 0.2s ease;
-  color: #333;
+  color: var(--text-color);
 }
 
 .generation-filter-button:hover {
@@ -150,6 +151,10 @@
   cursor: pointer;
   transition: all 0.2s ease;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.dark-mode .type-filter-button {
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
 }
 
 .type-filter-button:hover {

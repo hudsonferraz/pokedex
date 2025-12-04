@@ -7,6 +7,8 @@ import Favorites from "./components/Favorites";
 import ScrollToTop from "./components/ScrollToTop";
 import { FavoriteProvider } from "./contexts/favoritesContext";
 import { ToastProvider } from "./components/ToastProvider";
+import { ThemeProvider } from "./contexts/ThemeContext";
+import { ComparisonProvider } from "./contexts/ComparisonContext";
 
 const favoritesKey = "f";
 
@@ -36,21 +38,25 @@ function App() {
   };
 
   return (
-    <ToastProvider>
-      <FavoriteProvider
-        value={{
-          favoritePokemons: favorites,
-          updateFavoritePokemons: updateFavoritePokemons,
-        }}
-      >
-        <ScrollToTop />
-        <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/pokemon/:name" element={<PokemonDetail />} />
-          <Route path="/favorites" element={<Favorites />} />
-        </Routes>
-      </FavoriteProvider>
-    </ToastProvider>
+    <ThemeProvider>
+      <ComparisonProvider>
+        <ToastProvider>
+          <FavoriteProvider
+            value={{
+              favoritePokemons: favorites,
+              updateFavoritePokemons: updateFavoritePokemons,
+            }}
+          >
+            <ScrollToTop />
+            <Routes>
+              <Route path="/" element={<Home />} />
+              <Route path="/pokemon/:name" element={<PokemonDetail />} />
+              <Route path="/favorites" element={<Favorites />} />
+            </Routes>
+          </FavoriteProvider>
+        </ToastProvider>
+      </ComparisonProvider>
+    </ThemeProvider>
   );
 }
 

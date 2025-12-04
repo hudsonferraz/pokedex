@@ -3,7 +3,9 @@ import { useParams, useNavigate } from "react-router-dom";
 import { searchPokemon, getPokemonSpecies, getEvolutionChain, getAbilityDetails, getPokemons, getMoveDetails } from "../api";
 import FavoriteContext from "../contexts/favoritesContext";
 import { useToast } from "./ToastProvider";
+import { useComparison } from "../contexts/ComparisonContext";
 import StatsRadarChart from "./StatsRadarChart";
+import PokemonComparison from "./PokemonComparison";
 import { addToRecentlyViewed } from "../utils/recentlyViewed";
 import "./PokemonDetail.css";
 
@@ -40,7 +42,9 @@ const PokemonDetail = () => {
   const navigate = useNavigate();
   const { favoritePokemons, updateFavoritePokemons } = useContext(FavoriteContext);
   const { showToast } = useToast();
+  const { comparisonPokemon, addToComparison, clearComparison } = useComparison();
   const [pokemon, setPokemon] = useState(null);
+  const [showComparison, setShowComparison] = useState(false);
   const [loading, setLoading] = useState(true);
   const [evolutionChain, setEvolutionChain] = useState([]);
   const [abilityDescriptions, setAbilityDescriptions] = useState({});
@@ -423,10 +427,31 @@ const PokemonDetail = () => {
               <h1 className="pokemon-detail-name">{pokemon.name}</h1>
               <span className="pokemon-detail-id">#{pokemon.id}</span>
               <div className="pokemon-detail-actions">
+                <button 
+                  className="compare-button" 
+                  onClick={() => {
+                    addToComparison(pokemon.name);
+                    if (comparisonPokemon.length === 1) {
+                      setShowComparison(true);
+                    } else {
+                      showToast("Select another Pokemon to compare", "info");
+                    }
+                  }}
+                  title="Add to comparison"
+                  style={{
+                    backgroundColor: comparisonPokemon.includes(pokemon.name) ? "#4caf50" : "rgba(255, 255, 255, 0.3)"
+                  }}
+                >
+                  ⚖️
+                </button>
                 <button className="share-button" onClick={handleShare} title="Share Pokemon">
                   🔗
                 </button>
-                <button className="pokemon-detail-heart-btn" onClick={onHeartClick}>
+                <button 
+                  className="pokemon-detail-heart-btn" 
+                  onClick={onHeartClick}
+                  title={favoritePokemons.includes(pokemon.name) ? "Remove from favorites" : "Add to favorites"}
+                >
                   {favoritePokemons.includes(pokemon.name) ? "❤️" : "🖤"}
                 </button>
               </div>
@@ -575,6 +600,16 @@ const PokemonDetail = () => {
           </div>
         )}
       </div>
+      {showComparison && comparisonPokemon.length === 2 && (
+        <PokemonComparison
+          pokemon1Name={comparisonPokemon[0]}
+          pokemon2Name={comparisonPokemon[1]}
+          onClose={() => {
+            setShowComparison(false);
+            clearComparison();
+          }}
+        />
+      )}
     </div>
   );
 };

@@ -2,6 +2,30 @@
   margin: 0px;
 }
 
+:root {
+  --bg-color: #ffffff;
+  --text-color: #333333;
+  --card-bg: #ffffff;
+  --border-color: #e0e0e0;
+  --input-bg: #ffffff;
+  --filter-bg: #f8f8f8;
+}
+
+.dark-mode {
+  --bg-color: #1a1a1a;
+  --text-color: #e0e0e0;
+  --card-bg: #2d2d2d;
+  --border-color: #404040;
+  --input-bg: #3a3a3a;
+  --filter-bg: #2a2a2a;
+}
+
+body {
+  background-color: var(--bg-color);
+  color: var(--text-color);
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
 nav {
   height: 100px;
   display: flex;
@@ -9,6 +33,9 @@ nav {
   justify-content: space-between;
   align-items: center;
   padding: 0 40px;
+  background-color: var(--card-bg);
+  border-bottom: 1px solid var(--border-color);
+  transition: background-color 0.3s ease, border-color 0.3s ease;
 }
 
 .navbar-img {
@@ -40,6 +67,27 @@ nav {
 .nav-link.active {
   color: #0e6f9f;
   background-color: #e8f4f8;
+}
+
+.theme-toggle-btn {
+  background: none;
+  border: 2px solid var(--border-color);
+  border-radius: 8px;
+  padding: 8px 12px;
+  font-size: 1.2rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  background-color: var(--input-bg);
+}
+
+.theme-toggle-btn:hover {
+  transform: scale(1.1);
+  border-color: #0e6f9f;
+}
+
+.theme-toggle-btn:focus {
+  outline: 2px solid #0e6f9f;
+  outline-offset: 2px;
 }
 
 .favorites-link {
@@ -100,6 +148,11 @@ nav {
   max-width: 100%;
   cursor: pointer;
   animation: fadeIn 0.4s ease;
+  background-color: var(--card-bg);
+}
+
+.dark-mode .pokemon-card {
+  box-shadow: 4px 4px 4px rgba(0, 0, 0, 0.5);
 }
 
 @keyframes fadeIn {
@@ -337,8 +390,13 @@ nav {
 
 .results-count {
   font-size: 0.9rem;
-  color: #666;
+  color: var(--text-color);
   font-weight: 500;
+  opacity: 0.8;
+}
+
+.dark-mode .results-count {
+  opacity: 0.7;
 }
 
 /* Global focus styles for accessibility */
