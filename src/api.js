@@ -54,3 +54,12 @@ export const getAbilityDetails = async (url) => {
     console.log(error);
   }
 };
+
+export const getMoveDetails = async (url) => {
+  try {
+    const response = await fetch(url);
+    return await response.json();
+  } catch (error) {
+    console.log(error);
+  }
+};

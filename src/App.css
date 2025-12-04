@@ -95,10 +95,22 @@ nav {
   flex-direction: column;
   box-shadow: 4px 4px 4px rgba(0, 0, 0, 0.25);
   border-radius: 8px;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
   overflow: hidden;
   max-width: 100%;
   cursor: pointer;
+  animation: fadeIn 0.4s ease;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .pokemon-card:hover {
@@ -321,6 +333,18 @@ nav {
 
 .App {
   text-align: center;
+}
+
+.results-count {
+  font-size: 0.9rem;
+  color: #666;
+  font-weight: 500;
+}
+
+@media (max-width: 768px) {
+  .results-count {
+    font-size: 0.8rem;
+  }
 }
 
 @media (max-width: 768px) {

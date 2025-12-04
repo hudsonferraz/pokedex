@@ -4,6 +4,7 @@ import Navbar from "./Navbar";
 import Pokedex from "./Pokedex";
 import Searchbar from "./Searchbar";
 import TypeFilter from "./TypeFilter";
+import SortOptions from "./SortOptions";
 
 const Home = () => {
   const [page, setPage] = useState(0);
@@ -16,6 +17,7 @@ const Home = () => {
   const [selectedTypes, setSelectedTypes] = useState([]);
   const [isSearching, setIsSearching] = useState(false);
   const [totalPokemonCount, setTotalPokemonCount] = useState(0);
+  const [sortBy, setSortBy] = useState("number");
 
   const itensPerPage = 50;
   const fetchPokemons = async () => {
@@ -171,11 +173,21 @@ const Home = () => {
       <Navbar />
       <Searchbar onSearch={onSearchHandler} />
       {!isSearching && (
-        <TypeFilter
-          selectedTypes={selectedTypes}
-          onTypeToggle={handleTypeToggle}
-          onClearAll={handleClearFilters}
-        />
+        <>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "0 20px", marginBottom: "10px" }}>
+            <SortOptions sortBy={sortBy} onSortChange={setSortBy} />
+            {pokemons.length > 0 && (
+              <div className="results-count">
+                Showing {pokemons.length} Pokemon
+              </div>
+            )}
+          </div>
+          <TypeFilter
+            selectedTypes={selectedTypes}
+            onTypeToggle={handleTypeToggle}
+            onClearAll={handleClearFilters}
+          />
+        </>
       )}
       {notFound ? (
         <div className="not-found-container">

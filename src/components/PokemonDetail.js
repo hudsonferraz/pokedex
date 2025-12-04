@@ -1,7 +1,8 @@
 import React, { useEffect, useState, useContext } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { searchPokemon, getPokemonSpecies, getEvolutionChain, getAbilityDetails } from "../api";
+import { searchPokemon, getPokemonSpecies, getEvolutionChain, getAbilityDetails, getPokemons, getMoveDetails } from "../api";
 import FavoriteContext from "../contexts/favoritesContext";
+import { useToast } from "./ToastProvider";
 import "./PokemonDetail.css";
 
 const getTypeColor = (typeName) => {
@@ -32,12 +33,16 @@ const PokemonDetail = () => {
   const { name } = useParams();
   const navigate = useNavigate();
   const { favoritePokemons, updateFavoritePokemons } = useContext(FavoriteContext);
+  const { showToast } = useToast();
   const [pokemon, setPokemon] = useState(null);
   const [loading, setLoading] = useState(true);
   const [evolutionChain, setEvolutionChain] = useState([]);
   const [abilityDescriptions, setAbilityDescriptions] = useState({});
   const [hoveredAbility, setHoveredAbility] = useState(null);
   const [pokemonDescription, setPokemonDescription] = useState("");
+  const [moves, setMoves] = useState([]);
+  const [prevPokemon, setPrevPokemon] = useState(null);
+  const [nextPokemon, setNextPokemon] = useState(null);
 
   const parseEvolutionChain = (chain) => {
     const evolutions = [];
@@ -46,7 +51,26 @@ const PokemonDetail = () => {
     while (current) {
       const pokemonName = current.species.name;
       const pokemonId = current.species.url.split('/').slice(-2, -1)[0];
-      evolutions.push({ name: pokemonName, id: pokemonId });
+      const evolutionDetails = current.evolution_details?.[0];
+      let condition = "";
+      
+      if (evolutionDetails) {
+        if (evolutionDetails.min_level) {
+          condition = `Level ${evolutionDetails.min_level}`;
+        } else if (evolutionDetails.item) {
+          condition = evolutionDetails.item.name.replace(/-/g, " ");
+        } else if (evolutionDetails.trigger?.name === "trade") {
+          condition = "Trade";
+        } else if (evolutionDetails.trigger?.name === "use-item") {
+          condition = "Use Item";
+        }
+      }
+      
+      evolutions.push({ 
+        name: pokemonName, 
+        id: pokemonId,
+        condition: condition
+      });
       current = current.evolves_to?.[0];
     }
     
@@ -61,6 +85,30 @@ const PokemonDetail = () => {
         setPokemon(data);
         
         if (data) {
+          if (data.moves && data.moves.length > 0) {
+            const movesPromises = data.moves
+              .slice(0, 20)
+              .map(async (move) => {
+                try {
+                  const moveData = await getMoveDetails(move.move.url);
+                  return {
+                    name: move.move.name,
+                    level: move.version_group_details[0]?.level_learned_at || 0,
+                    type: moveData?.type?.name || "normal",
+                  };
+                } catch (error) {
+                  return {
+                    name: move.move.name,
+                    level: move.version_group_details[0]?.level_learned_at || 0,
+                    type: "normal",
+                  };
+                }
+              });
+            const movesList = await Promise.all(movesPromises);
+            movesList.sort((a, b) => a.level - b.level);
+            setMoves(movesList);
+          }
+
           const speciesData = await getPokemonSpecies(data.id);
           
           if (speciesData) {
@@ -108,6 +156,31 @@ const PokemonDetail = () => {
             });
             setAbilityDescriptions(descriptionsMap);
           }
+
+          const prevId = data.id > 1 ? data.id - 1 : null;
+          const nextId = data.id < 1025 ? data.id + 1 : null;
+
+          if (prevId) {
+            try {
+              const prevData = await searchPokemon(prevId);
+              setPrevPokemon(prevData);
+            } catch (error) {
+              setPrevPokemon(null);
+            }
+          } else {
+            setPrevPokemon(null);
+          }
+
+          if (nextId) {
+            try {
+              const nextData = await searchPokemon(nextId);
+              setNextPokemon(nextData);
+            } catch (error) {
+              setNextPokemon(null);
+            }
+          } else {
+            setNextPokemon(null);
+          }
         }
         
         setLoading(false);
@@ -120,7 +193,23 @@ const PokemonDetail = () => {
   }, [name]);
 
   const onHeartClick = () => {
+    const wasFavorite = favoritePokemons.includes(pokemon.name);
     updateFavoritePokemons(pokemon.name);
+    if (wasFavorite) {
+      showToast(`${pokemon.name} removed from favorites`, "info");
+    } else {
+      showToast(`${pokemon.name} added to favorites! ❤️`, "success");
+    }
+  };
+
+  const handleShare = async () => {
+    const url = window.location.href;
+    try {
+      await navigator.clipboard.writeText(url);
+      showToast("Link copied to clipboard!", "success");
+    } catch (error) {
+      showToast("Failed to copy link", "error");
+    }
   };
 
   if (loading) {
@@ -160,9 +249,29 @@ const PokemonDetail = () => {
 
   return (
     <div className="pokemon-detail-container" style={{ backgroundColor: `${cardColor}20` }}>
-      <button onClick={() => navigate("/")} className="back-button">
-        ← Back to Pokedex
-      </button>
+      <div className="pokemon-detail-navigation">
+        <button onClick={() => navigate("/")} className="back-button">
+          ← Back to Pokedex
+        </button>
+        <div className="pokemon-nav-buttons">
+          {prevPokemon && (
+            <button 
+              onClick={() => navigate(`/pokemon/${prevPokemon.name}`)}
+              className="nav-pokemon-btn prev-btn"
+            >
+              ← #{prevPokemon.id} {prevPokemon.name}
+            </button>
+          )}
+          {nextPokemon && (
+            <button 
+              onClick={() => navigate(`/pokemon/${nextPokemon.name}`)}
+              className="nav-pokemon-btn next-btn"
+            >
+              #{nextPokemon.id} {nextPokemon.name} →
+            </button>
+          )}
+        </div>
+      </div>
       <div className="pokemon-detail-card" style={{ borderColor: cardColor }}>
         <div className="pokemon-detail-header">
           <div className="pokemon-detail-image-section">
@@ -227,9 +336,17 @@ const PokemonDetail = () => {
                             loading="lazy"
                           />
                           <span className="evolution-name">{evolution.name}</span>
+                          {evolution.condition && index > 0 && (
+                            <span className="evolution-condition">{evolution.condition}</span>
+                          )}
                         </div>
                         {index < evolutionChain.length - 1 && (
-                          <span className="evolution-arrow">→</span>
+                          <div className="evolution-arrow-container">
+                            <span className="evolution-arrow">→</span>
+                            {evolutionChain[index + 1]?.condition && (
+                              <span className="evolution-arrow-condition">{evolutionChain[index + 1].condition}</span>
+                            )}
+                          </div>
                         )}
                       </React.Fragment>
                     ))}
@@ -242,9 +359,14 @@ const PokemonDetail = () => {
             <div className="pokemon-detail-title">
               <h1 className="pokemon-detail-name">{pokemon.name}</h1>
               <span className="pokemon-detail-id">#{pokemon.id}</span>
-              <button className="pokemon-detail-heart-btn" onClick={onHeartClick}>
-                {favoritePokemons.includes(pokemon.name) ? "❤️" : "🖤"}
-              </button>
+              <div className="pokemon-detail-actions">
+                <button className="share-button" onClick={handleShare} title="Share Pokemon">
+                  🔗
+                </button>
+                <button className="pokemon-detail-heart-btn" onClick={onHeartClick}>
+                  {favoritePokemons.includes(pokemon.name) ? "❤️" : "🖤"}
+                </button>
+              </div>
             </div>
             <div className="pokemon-detail-types">
               {pokemon.types.map((type, index) => (
@@ -327,6 +449,23 @@ const PokemonDetail = () => {
                   </div>
                 );
               })}
+            </div>
+          </div>
+        )}
+        {moves.length > 0 && (
+          <div className="pokemon-detail-moves">
+            <h2>Moves</h2>
+            <div className="moves-list">
+              {moves.map((move, index) => (
+                <span 
+                  key={index} 
+                  className="move-badge"
+                  style={{ backgroundColor: getTypeColor(move.type) }}
+                >
+                  {move.name}
+                  {move.level > 0 && <span className="move-level"> (Lv. {move.level})</span>}
+                </span>
+              ))}
             </div>
           </div>
         )}

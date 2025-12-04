@@ -1,6 +1,7 @@
 import React, { useContext } from "react";
 import { useNavigate } from "react-router-dom";
 import FavoriteContext from "../contexts/favoritesContext";
+import { useToast } from "./ToastProvider";
 
 const getTypeColor = (typeName) => {
   const typeColors = {
@@ -30,10 +31,17 @@ const Pokemon = (props) => {
   const navigate = useNavigate();
   const { favoritePokemons, updateFavoritePokemons } =
     useContext(FavoriteContext);
+  const { showToast } = useToast();
   const { pokemon } = props;
   const onHeartClick = (e) => {
     e.stopPropagation();
+    const wasFavorite = favoritePokemons.includes(pokemon.name);
     updateFavoritePokemons(pokemon.name);
+    if (wasFavorite) {
+      showToast(`${pokemon.name} removed from favorites`, "info");
+    } else {
+      showToast(`${pokemon.name} added to favorites! ❤️`, "success");
+    }
   };
   const onCardClick = () => {
     navigate(`/pokemon/${pokemon.name}`);
@@ -47,6 +55,12 @@ const Pokemon = (props) => {
       className="pokemon-card"
       style={{ backgroundColor: cardColor }}
       onClick={onCardClick}
+      onMouseEnter={(e) => {
+        e.currentTarget.style.transform = "translateY(-4px) scale(1.02)";
+      }}
+      onMouseLeave={(e) => {
+        e.currentTarget.style.transform = "translateY(0) scale(1)";
+      }}
     >
       <div className="pokemon-image-container">
         <img
@@ -54,6 +68,10 @@ const Pokemon = (props) => {
           src={pokemon.sprites.front_default}
           className="pokemon-image"
           loading="lazy"
+          onLoad={(e) => {
+            e.target.style.opacity = "1";
+          }}
+          style={{ opacity: 0, transition: "opacity 0.3s ease" }}
         />
       </div>
       <div className="card-body">
