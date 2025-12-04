@@ -67,10 +67,18 @@
   object-fit: contain;
 }
 
+.pokemon-sprites-evolution-container {
+  display: flex;
+  gap: 25px;
+  width: 100%;
+  justify-content: center;
+  align-items: flex-start;
+  flex-wrap: wrap;
+}
+
 .pokemon-sprites-comparison {
   display: flex;
   gap: 20px;
-  width: 100%;
   justify-content: center;
 }
 
@@ -115,6 +123,70 @@
   font-size: 0.75rem;
   color: #666;
   text-transform: capitalize;
+}
+
+.evolution-chain-group {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  flex: 0 0 auto;
+}
+
+.evolution-chain {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.evolution-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  padding: 5px;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+}
+
+.evolution-item:hover {
+  background-color: rgba(0, 0, 0, 0.05);
+  transform: translateY(-2px);
+}
+
+.evolution-item.current-evolution {
+  background-color: rgba(0, 0, 0, 0.1);
+  font-weight: 600;
+}
+
+.evolution-sprite {
+  width: 64px;
+  height: 64px;
+  object-fit: contain;
+  background-color: #f5f5f5;
+  border-radius: 8px;
+  padding: 4px;
+}
+
+.evolution-name {
+  font-size: 0.7rem;
+  color: #333;
+  text-transform: capitalize;
+  text-align: center;
+  font-weight: 500;
+}
+
+.evolution-item.current-evolution .evolution-name {
+  font-weight: 600;
+  color: #000;
+}
+
+.evolution-arrow {
+  font-size: 1.2rem;
+  color: #666;
+  font-weight: bold;
 }
 
 .pokemon-detail-info {
@@ -274,6 +346,12 @@
   display: flex;
   gap: 10px;
   flex-wrap: wrap;
+  position: relative;
+}
+
+.ability-badge-container {
+  position: relative;
+  display: inline-block;
 }
 
 .ability-badge {
@@ -283,12 +361,72 @@
   text-transform: capitalize;
   font-weight: 500;
   color: #333;
+  cursor: help;
+  transition: background-color 0.2s ease;
+}
+
+.ability-badge:hover {
+  background-color: #e0e0e0;
 }
 
 .hidden-indicator {
   color: #666;
   font-size: 0.85rem;
   font-style: italic;
+}
+
+.ability-tooltip {
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  margin-bottom: 10px;
+  background-color: #333;
+  color: white;
+  padding: 12px 16px;
+  border-radius: 8px;
+  min-width: 250px;
+  max-width: 350px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  z-index: 1000;
+  pointer-events: none;
+  animation: fadeIn 0.2s ease;
+}
+
+.ability-tooltip::after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 6px solid transparent;
+  border-top-color: #333;
+}
+
+.ability-tooltip-title {
+  margin: 0 0 8px 0;
+  font-size: 1rem;
+  font-weight: 600;
+  text-transform: capitalize;
+  color: white;
+}
+
+.ability-tooltip-description {
+  margin: 0;
+  font-size: 0.85rem;
+  line-height: 1.4;
+  color: #e0e0e0;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(-5px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
 }
 
 @media (max-width: 768px) {
@@ -305,8 +443,14 @@
     font-size: 1.5rem;
   }
 
-  .pokemon-sprites-comparison {
+  .pokemon-sprites-evolution-container {
     flex-direction: column;
+    align-items: center;
+    gap: 20px;
+  }
+
+  .pokemon-sprites-comparison {
+    flex-direction: row;
     gap: 15px;
   }
 
@@ -321,6 +465,33 @@
   .pokemon-sprite {
     width: 60px;
     height: 60px;
+  }
+
+  .evolution-sprite {
+    width: 50px;
+    height: 50px;
+  }
+
+  .evolution-name {
+    font-size: 0.65rem;
+  }
+
+  .evolution-arrow {
+    font-size: 1rem;
+  }
+
+  .ability-tooltip {
+    min-width: 200px;
+    max-width: 280px;
+    font-size: 0.8rem;
+  }
+
+  .ability-tooltip-title {
+    font-size: 0.9rem;
+  }
+
+  .ability-tooltip-description {
+    font-size: 0.8rem;
   }
 }
 
