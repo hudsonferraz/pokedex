@@ -1,14 +1,14 @@
 <div align="center">
   <img src="public/pokedex.png" alt="Pokedex" width="400"/>
   
-  # 🎮 Pokedex
+  # Pokedex
   
   A modern, feature-rich Pokemon encyclopedia built with React
   
   [![Live Demo](https://img.shields.io/badge/Live%20Demo-View%20Here-blue?style=for-the-badge)](https://hudsonferraz.github.io/pokedex/)
 </div>
 
-## ✨ Features
+## Features
 
 - **Search Pokemon** - Quick search with autocomplete suggestions
 - **Favorites** - Save your favorite Pokemon for easy access
@@ -80,7 +80,7 @@ pokedex/
 └── package.json
 ```
 
-## Key Features Explained
+## Key Features
 
 ### Dark Mode
 Toggle between light and dark themes with persistent preference storage.
