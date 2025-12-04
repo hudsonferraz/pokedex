@@ -4,6 +4,7 @@ import "./App.css";
 import Home from "./components/Home";
 import PokemonDetail from "./components/PokemonDetail";
 import Favorites from "./components/Favorites";
+import ScrollToTop from "./components/ScrollToTop";
 import { FavoriteProvider } from "./contexts/favoritesContext";
 
 const favoritesKey = "f";
@@ -40,6 +41,7 @@ function App() {
         updateFavoritePokemons: updateFavoritePokemons,
       }}
     >
+      <ScrollToTop />
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/pokemon/:name" element={<PokemonDetail />} />

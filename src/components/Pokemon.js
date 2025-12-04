@@ -53,6 +53,7 @@ const Pokemon = (props) => {
           alt={pokemon.name}
           src={pokemon.sprites.front_default}
           className="pokemon-image"
+          loading="lazy"
         />
       </div>
       <div className="card-body">

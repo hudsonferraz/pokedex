@@ -1,0 +1,87 @@
+.pokemon-card-skeleton {
+  display: flex;
+  flex-direction: column;
+  border-radius: 8px;
+  overflow: hidden;
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  animation: loading 1.5s ease-in-out infinite;
+  min-height: 180px;
+}
+
+@keyframes loading {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+.skeleton-image-container {
+  padding: 8px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.skeleton-image {
+  width: 100px;
+  height: 100px;
+  border-radius: 8px;
+  background-color: rgba(255, 255, 255, 0.3);
+}
+
+.skeleton-body {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 10px;
+  flex: 1;
+  gap: 6px;
+}
+
+.skeleton-header {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.skeleton-text {
+  height: 16px;
+  border-radius: 4px;
+  background-color: rgba(255, 255, 255, 0.3);
+}
+
+.skeleton-title {
+  width: 80px;
+}
+
+.skeleton-id {
+  width: 40px;
+}
+
+.skeleton-footer {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+}
+
+.skeleton-badge {
+  width: 50px;
+  height: 20px;
+  border-radius: 12px;
+  background-color: rgba(255, 255, 255, 0.3);
+}
+
+.skeleton-heart {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background-color: rgba(255, 255, 255, 0.3);
+}
+

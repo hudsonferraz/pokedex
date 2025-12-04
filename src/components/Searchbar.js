@@ -1,11 +1,20 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
+import "./Searchbar.css";
 
 const Searchbar = (props) => {
   const [search, setSearch] = useState("");
+  const [showClear, setShowClear] = useState(false);
   const { onSearch } = props;
+  const searchInputRef = useRef(null);
+
+  useEffect(() => {
+    setShowClear(search.length > 0);
+  }, [search]);
+
   const onChangeHandler = (e) => {
-    setSearch(e.target.value);
-    if (e.target.value.length === 0) {
+    const value = e.target.value;
+    setSearch(value);
+    if (value.length === 0) {
       onSearch(undefined);
     }
   };
@@ -16,6 +25,12 @@ const Searchbar = (props) => {
       return;
     }
     onSearch(trimmedSearch);
+  };
+
+  const handleClear = () => {
+    setSearch("");
+    onSearch(undefined);
+    searchInputRef.current?.focus();
   };
 
   const onButtonClickHandler = () => {
@@ -32,11 +47,18 @@ const Searchbar = (props) => {
     <div className="searchbar-container">
       <div className="searchbar">
         <input 
-          placeholder="Search for a pokemon" 
+          ref={searchInputRef}
+          placeholder="Search for a pokemon..." 
           onChange={onChangeHandler}
           onKeyPress={onKeyPressHandler}
           value={search}
+          className="search-input"
         />
+        {showClear && (
+          <button className="clear-search-btn" onClick={handleClear} aria-label="Clear search">
+            ×
+          </button>
+        )}
       </div>
       <div className="searchbar-btn">
         <button onClick={onButtonClickHandler}>Search</button>

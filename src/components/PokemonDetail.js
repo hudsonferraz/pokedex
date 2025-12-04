@@ -170,41 +170,42 @@ const PokemonDetail = () => {
               src={pokemon.sprites.other?.["official-artwork"]?.front_default || pokemon.sprites.front_default}
               alt={pokemon.name}
               className="pokemon-detail-image"
+              loading="eager"
             />
             <div className="pokemon-sprites-evolution-container">
               <div className="pokemon-sprites-comparison">
                 <div className="sprite-group">
                   <h3 className="sprite-label">Original</h3>
                   <div className="sprite-pair">
-                    {pokemon.sprites.front_default && (
-                      <div className="sprite-item">
-                        <img src={pokemon.sprites.front_default} alt="Front Original" className="pokemon-sprite" />
-                        <span className="sprite-caption">Front</span>
-                      </div>
-                    )}
-                    {pokemon.sprites.back_default && (
-                      <div className="sprite-item">
-                        <img src={pokemon.sprites.back_default} alt="Back Original" className="pokemon-sprite" />
-                        <span className="sprite-caption">Back</span>
-                      </div>
-                    )}
+                  {pokemon.sprites.front_default && (
+                    <div className="sprite-item">
+                      <img src={pokemon.sprites.front_default} alt="Front Original" className="pokemon-sprite" loading="lazy" />
+                      <span className="sprite-caption">Front</span>
+                    </div>
+                  )}
+                  {pokemon.sprites.back_default && (
+                    <div className="sprite-item">
+                      <img src={pokemon.sprites.back_default} alt="Back Original" className="pokemon-sprite" loading="lazy" />
+                      <span className="sprite-caption">Back</span>
+                    </div>
+                  )}
                   </div>
                 </div>
                 <div className="sprite-group">
                   <h3 className="sprite-label">Shiny</h3>
                   <div className="sprite-pair">
-                    {pokemon.sprites.front_shiny && (
-                      <div className="sprite-item">
-                        <img src={pokemon.sprites.front_shiny} alt="Front Shiny" className="pokemon-sprite" />
-                        <span className="sprite-caption">Front</span>
-                      </div>
-                    )}
-                    {pokemon.sprites.back_shiny && (
-                      <div className="sprite-item">
-                        <img src={pokemon.sprites.back_shiny} alt="Back Shiny" className="pokemon-sprite" />
-                        <span className="sprite-caption">Back</span>
-                      </div>
-                    )}
+                  {pokemon.sprites.front_shiny && (
+                    <div className="sprite-item">
+                      <img src={pokemon.sprites.front_shiny} alt="Front Shiny" className="pokemon-sprite" loading="lazy" />
+                      <span className="sprite-caption">Front</span>
+                    </div>
+                  )}
+                  {pokemon.sprites.back_shiny && (
+                    <div className="sprite-item">
+                      <img src={pokemon.sprites.back_shiny} alt="Back Shiny" className="pokemon-sprite" loading="lazy" />
+                      <span className="sprite-caption">Back</span>
+                    </div>
+                  )}
                   </div>
                 </div>
               </div>
@@ -223,6 +224,7 @@ const PokemonDetail = () => {
                             src={`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${evolution.id}.png`}
                             alt={evolution.name}
                             className="evolution-sprite"
+                            loading="lazy"
                           />
                           <span className="evolution-name">{evolution.name}</span>
                         </div>
