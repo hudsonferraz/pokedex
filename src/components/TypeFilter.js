@@ -24,17 +24,29 @@ const typeColors = {
 
 const allTypes = Object.keys(typeColors);
 
-const TypeFilter = ({ selectedTypes, onTypeToggle, onClearAll }) => {
+const TypeFilter = ({ selectedTypes, onTypeToggle, onClearAll, selectedGeneration, onGenerationChange }) => {
   const [isExpanded, setIsExpanded] = useState(true);
+  
+  const generations = [
+    { num: 1, name: "Gen 1", range: "1-151" },
+    { num: 2, name: "Gen 2", range: "152-251" },
+    { num: 3, name: "Gen 3", range: "252-386" },
+    { num: 4, name: "Gen 4", range: "387-493" },
+    { num: 5, name: "Gen 5", range: "494-649" },
+    { num: 6, name: "Gen 6", range: "650-721" },
+    { num: 7, name: "Gen 7", range: "722-809" },
+    { num: 8, name: "Gen 8", range: "810-905" },
+    { num: 9, name: "Gen 9", range: "906-1025" },
+  ];
 
   return (
     <div className="type-filter-container">
       <div className="type-filter-header">
         <div className="type-filter-title-section">
           <h3 className="type-filter-title">Filter by Type</h3>
-          {selectedTypes.length > 0 && (
-            <span className="filter-count-badge" aria-label={`${selectedTypes.length} filter${selectedTypes.length !== 1 ? 's' : ''} active`}>
-              {selectedTypes.length}
+          {(selectedTypes.length > 0 || selectedGeneration) && (
+            <span className="filter-count-badge" aria-label={`${selectedTypes.length + (selectedGeneration ? 1 : 0)} filter${selectedTypes.length + (selectedGeneration ? 1 : 0) !== 1 ? 's' : ''} active`}>
+              {selectedTypes.length + (selectedGeneration ? 1 : 0)}
             </span>
           )}
         </div>
@@ -59,27 +71,64 @@ const TypeFilter = ({ selectedTypes, onTypeToggle, onClearAll }) => {
         </div>
       </div>
       {isExpanded && (
-        <div className="type-filter-grid" role="group" aria-label="Pokemon type filters">
-          {allTypes.map((type) => (
-            <button
-              key={type}
-              onClick={() => onTypeToggle(type)}
-              className={`type-filter-button ${selectedTypes.includes(type) ? "active" : ""}`}
-              style={{
-                backgroundColor: selectedTypes.includes(type) ? typeColors[type] : "#f0f0f0",
-                color: selectedTypes.includes(type) ? "white" : "#333",
-              }}
-              aria-pressed={selectedTypes.includes(type)}
-              aria-label={`Filter by ${type} type`}
-            >
-              {type}
-            </button>
-          ))}
-        </div>
+        <>
+          {onGenerationChange && (
+            <div className="generation-filter-section">
+              <h4 className="generation-filter-title">Generation</h4>
+              <div className="generation-filter-buttons">
+                <button
+                  onClick={() => onGenerationChange(null)}
+                  className={`generation-filter-button ${!selectedGeneration ? "active" : ""}`}
+                >
+                  All
+                </button>
+                {generations.map((gen) => (
+                  <button
+                    key={gen.num}
+                    onClick={() => onGenerationChange(gen.num)}
+                    className={`generation-filter-button ${selectedGeneration === gen.num ? "active" : ""}`}
+                    title={gen.range}
+                  >
+                    {gen.name}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+          <div className="type-filter-grid" role="group" aria-label="Pokemon type filters">
+            {allTypes.map((type) => (
+              <button
+                key={type}
+                onClick={() => onTypeToggle(type)}
+                className={`type-filter-button ${selectedTypes.includes(type) ? "active" : ""}`}
+                style={{
+                  backgroundColor: selectedTypes.includes(type) ? typeColors[type] : "#f0f0f0",
+                  color: selectedTypes.includes(type) ? "white" : "#333",
+                }}
+                aria-pressed={selectedTypes.includes(type)}
+                aria-label={`Filter by ${type} type`}
+              >
+                {type}
+              </button>
+            ))}
+          </div>
+        </>
       )}
-      {selectedTypes.length > 0 && (
+      {(selectedTypes.length > 0 || selectedGeneration) && (
         <div className="active-filters-chips">
           <span className="active-filters-label">Active:</span>
+          {selectedGeneration && (
+            <span className="active-filter-chip" style={{ backgroundColor: "#0e6f9f" }}>
+              Gen {selectedGeneration}
+              <button
+                onClick={() => onGenerationChange && onGenerationChange(null)}
+                className="remove-filter-btn"
+                aria-label="Remove generation filter"
+              >
+                ×
+              </button>
+            </span>
+          )}
           {selectedTypes.map((type) => (
             <span
               key={type}

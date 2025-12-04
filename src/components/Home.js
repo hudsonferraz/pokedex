@@ -4,7 +4,7 @@ import Navbar from "./Navbar";
 import Pokedex from "./Pokedex";
 import Searchbar from "./Searchbar";
 import TypeFilter from "./TypeFilter";
-import SortOptions from "./SortOptions";
+import RecentlyViewed from "./RecentlyViewed";
 
 const Home = () => {
   const [page, setPage] = useState(0);
@@ -17,7 +17,7 @@ const Home = () => {
   const [selectedTypes, setSelectedTypes] = useState([]);
   const [isSearching, setIsSearching] = useState(false);
   const [totalPokemonCount, setTotalPokemonCount] = useState(0);
-  const [sortBy, setSortBy] = useState("number");
+  const [selectedGeneration, setSelectedGeneration] = useState(null);
 
   const itensPerPage = 50;
   const fetchPokemons = async () => {
@@ -69,42 +69,76 @@ const Home = () => {
   };
 
   useEffect(() => {
-    if (!isSearching && selectedTypes.length === 0) {
+    if (!isSearching && selectedTypes.length === 0 && !selectedGeneration) {
       fetchPokemons();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [page]);
 
   useEffect(() => {
-    if (!isSearching && selectedTypes.length === 0 && page === 0) {
+    if (!isSearching && selectedTypes.length === 0 && !selectedGeneration && page === 0) {
       fetchPokemons();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedTypes.length]);
+  }, [selectedTypes.length, selectedGeneration]);
 
   useEffect(() => {
-    if (!isSearching && selectedTypes.length > 0 && filteredAllPokemons.length === 0) {
+    if (!isSearching && (selectedTypes.length > 0 || selectedGeneration) && filteredAllPokemons.length === 0) {
       fetchAllPokemonsForFilter();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedTypes.length]);
+  }, [selectedTypes.length, selectedGeneration]);
 
   const filteredPokemons = useMemo(() => {
-    if (selectedTypes.length === 0) {
+    let pokemons = [];
+    
+    // If no filters, use current page's Pokemon
+    if (selectedTypes.length === 0 && !selectedGeneration) {
       return allPokemons;
     }
+    
+    // If filters are active, use filteredAllPokemons
     if (filteredAllPokemons.length === 0) {
       return [];
     }
-    return filteredAllPokemons.filter((pokemon) => {
-      const pokemonTypes = pokemon.types.map((type) => type.type.name);
-      return selectedTypes.some((selectedType) => pokemonTypes.includes(selectedType));
+    
+    pokemons = filteredAllPokemons.filter((pokemon) => {
+      // Type filter
+      if (selectedTypes.length > 0) {
+        const pokemonTypes = pokemon.types.map((type) => type.type.name);
+        const matchesType = selectedTypes.some((selectedType) => pokemonTypes.includes(selectedType));
+        if (!matchesType) return false;
+      }
+      
+      // Generation filter
+      if (selectedGeneration) {
+        const genRanges = {
+          1: { min: 1, max: 151 },
+          2: { min: 152, max: 251 },
+          3: { min: 252, max: 386 },
+          4: { min: 387, max: 493 },
+          5: { min: 494, max: 649 },
+          6: { min: 650, max: 721 },
+          7: { min: 722, max: 809 },
+          8: { min: 810, max: 905 },
+          9: { min: 906, max: 1025 }
+        };
+        const range = genRanges[selectedGeneration];
+        if (range && (pokemon.id < range.min || pokemon.id > range.max)) {
+          return false;
+        }
+      }
+      
+      return true;
     });
-  }, [allPokemons, filteredAllPokemons, selectedTypes]);
+
+    // Always sort by number
+    return [...pokemons].sort((a, b) => a.id - b.id);
+  }, [allPokemons, filteredAllPokemons, selectedTypes, selectedGeneration]);
 
   useEffect(() => {
     if (!isSearching) {
-      if (selectedTypes.length > 0) {
+      if (selectedTypes.length > 0 || selectedGeneration) {
         if (filteredPokemons.length > 0) {
           const startIndex = page * itensPerPage;
           const endIndex = startIndex + itensPerPage;
@@ -114,17 +148,18 @@ const Home = () => {
           setTotalPages(Math.max(1, filteredPages));
         }
         setLoading(false);
-      } else if (selectedTypes.length === 0 && allPokemons.length > 0) {
+      } else if (selectedTypes.length === 0 && !selectedGeneration && allPokemons.length > 0) {
         setPokemons(allPokemons);
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [filteredPokemons, isSearching, selectedTypes, page]);
+  }, [filteredPokemons, isSearching, selectedTypes, selectedGeneration, page]);
 
   const onSearchHandler = async (pokemon) => {
     if (!pokemon) {
       setIsSearching(false);
       setSelectedTypes([]);
+      setSelectedGeneration(null);
       setFilteredAllPokemons([]);
       return fetchPokemons();
     }
@@ -133,6 +168,7 @@ const Home = () => {
     setNotFound(false);
     setIsSearching(true);
     setSelectedTypes([]);
+    setSelectedGeneration(null);
     setFilteredAllPokemons([]);
     try {
       const result = await searchPokemon(pokemon);
@@ -164,6 +200,7 @@ const Home = () => {
 
   const handleClearFilters = () => {
     setSelectedTypes([]);
+    setSelectedGeneration(null);
     setPage(0);
     setFilteredAllPokemons([]);
   };
@@ -174,8 +211,8 @@ const Home = () => {
       <Searchbar onSearch={onSearchHandler} />
       {!isSearching && (
         <>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "0 20px", marginBottom: "10px" }}>
-            <SortOptions sortBy={sortBy} onSortChange={setSortBy} />
+          <RecentlyViewed />
+          <div style={{ display: "flex", justifyContent: "flex-end", alignItems: "center", padding: "0 20px", marginBottom: "10px" }}>
             {pokemons.length > 0 && (
               <div className="results-count">
                 Showing {pokemons.length} Pokemon
@@ -186,6 +223,8 @@ const Home = () => {
             selectedTypes={selectedTypes}
             onTypeToggle={handleTypeToggle}
             onClearAll={handleClearFilters}
+            selectedGeneration={selectedGeneration}
+            onGenerationChange={setSelectedGeneration}
           />
         </>
       )}

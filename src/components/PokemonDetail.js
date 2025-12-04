@@ -4,6 +4,7 @@ import { searchPokemon, getPokemonSpecies, getEvolutionChain, getAbilityDetails,
 import FavoriteContext from "../contexts/favoritesContext";
 import { useToast } from "./ToastProvider";
 import StatsRadarChart from "./StatsRadarChart";
+import { addToRecentlyViewed } from "../utils/recentlyViewed";
 import "./PokemonDetail.css";
 
 // Simple cache for Pokemon data
@@ -46,6 +47,10 @@ const PokemonDetail = () => {
   const [hoveredAbility, setHoveredAbility] = useState(null);
   const [pokemonDescription, setPokemonDescription] = useState("");
   const [moves, setMoves] = useState([]);
+  const [allMoves, setAllMoves] = useState([]);
+  const [showAllMoves, setShowAllMoves] = useState(false);
+  const [hoveredMove, setHoveredMove] = useState(null);
+  const [moveDetails, setMoveDetails] = useState({});
   const [prevPokemon, setPrevPokemon] = useState(null);
   const [nextPokemon, setNextPokemon] = useState(null);
 
@@ -105,31 +110,44 @@ const PokemonDetail = () => {
             data: data,
             timestamp: Date.now()
           });
+          // Add to recently viewed
+          addToRecentlyViewed(data);
         }
         
         if (data) {
           if (data.moves && data.moves.length > 0) {
-            const movesPromises = data.moves
-              .slice(0, 20)
-              .map(async (move) => {
-                try {
-                  const moveData = await getMoveDetails(move.move.url);
-                  return {
-                    name: move.move.name,
-                    level: move.version_group_details[0]?.level_learned_at || 0,
-                    type: moveData?.type?.name || "normal",
-                  };
-                } catch (error) {
-                  return {
-                    name: move.move.name,
-                    level: move.version_group_details[0]?.level_learned_at || 0,
-                    type: "normal",
-                  };
-                }
-              });
-            const movesList = await Promise.all(movesPromises);
-            movesList.sort((a, b) => a.level - b.level);
-            setMoves(movesList);
+            const movesPromises = data.moves.map(async (move) => {
+              try {
+                const moveData = await getMoveDetails(move.move.url);
+                const moveInfo = {
+                  name: move.move.name,
+                  level: move.version_group_details[0]?.level_learned_at || 0,
+                  type: moveData?.type?.name || "normal",
+                  power: moveData?.power || null,
+                  accuracy: moveData?.accuracy || null,
+                  pp: moveData?.pp || null,
+                  damageClass: moveData?.damage_class?.name || null,
+                };
+                setMoveDetails(prev => ({ ...prev, [move.move.name]: moveInfo }));
+                return moveInfo;
+              } catch (error) {
+                const moveInfo = {
+                  name: move.move.name,
+                  level: move.version_group_details[0]?.level_learned_at || 0,
+                  type: "normal",
+                  power: null,
+                  accuracy: null,
+                  pp: null,
+                  damageClass: null,
+                };
+                setMoveDetails(prev => ({ ...prev, [move.move.name]: moveInfo }));
+                return moveInfo;
+              }
+            });
+            const allMovesList = await Promise.all(movesPromises);
+            allMovesList.sort((a, b) => a.level - b.level);
+            setAllMoves(allMovesList);
+            setMoves(allMovesList.slice(0, 20));
           }
 
           const speciesData = await getPokemonSpecies(data.id);
@@ -498,20 +516,61 @@ const PokemonDetail = () => {
             </div>
           </div>
         )}
-        {moves.length > 0 && (
+        {allMoves.length > 0 && (
           <div className="pokemon-detail-moves">
-            <h2>Moves</h2>
-            <div className="moves-list">
-              {moves.map((move, index) => (
-                <span 
-                  key={index} 
-                  className="move-badge"
-                  style={{ backgroundColor: getTypeColor(move.type) }}
+            <div className="moves-header">
+              <h2>Moves ({allMoves.length})</h2>
+              {allMoves.length > 20 && (
+                <button 
+                  onClick={() => setShowAllMoves(!showAllMoves)}
+                  className="show-all-moves-btn"
                 >
-                  {move.name}
-                  {move.level > 0 && <span className="move-level"> (Lv. {move.level})</span>}
-                </span>
-              ))}
+                  {showAllMoves ? "Show Less" : `Show All (${allMoves.length})`}
+                </button>
+              )}
+            </div>
+            <div className="moves-list">
+              {(showAllMoves ? allMoves : moves).map((move, index) => {
+                const details = moveDetails[move.name] || move;
+                return (
+                  <div
+                    key={index}
+                    className="move-badge-container"
+                    onMouseEnter={() => setHoveredMove(move.name)}
+                    onMouseLeave={() => setHoveredMove(null)}
+                  >
+                    <span 
+                      className="move-badge"
+                      style={{ backgroundColor: getTypeColor(move.type) }}
+                    >
+                      {move.name}
+                      {move.level > 0 && <span className="move-level"> (Lv. {move.level})</span>}
+                    </span>
+                    {hoveredMove === move.name && details && (
+                      <div className="move-tooltip">
+                        <h4 className="move-tooltip-title">{details.name}</h4>
+                        <div className="move-tooltip-details">
+                          <span className="move-tooltip-type" style={{ backgroundColor: getTypeColor(details.type) }}>
+                            {details.type}
+                          </span>
+                          {details.power !== null && (
+                            <span className="move-tooltip-stat">Power: {details.power}</span>
+                          )}
+                          {details.accuracy !== null && (
+                            <span className="move-tooltip-stat">Accuracy: {details.accuracy}%</span>
+                          )}
+                          {details.pp !== null && (
+                            <span className="move-tooltip-stat">PP: {details.pp}</span>
+                          )}
+                          {details.damageClass && (
+                            <span className="move-tooltip-stat">Class: {details.damageClass}</span>
+                          )}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
             </div>
           </div>
         )}

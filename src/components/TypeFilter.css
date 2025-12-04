@@ -85,6 +85,55 @@
   background-color: #cc0000;
 }
 
+.generation-filter-section {
+  margin-bottom: 15px;
+  padding-bottom: 15px;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.generation-filter-title {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #333;
+  margin: 0 0 10px 0;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.generation-filter-buttons {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.generation-filter-button {
+  padding: 6px 12px;
+  border: 2px solid #ddd;
+  border-radius: 6px;
+  background-color: white;
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  color: #333;
+}
+
+.generation-filter-button:hover {
+  border-color: #0e6f9f;
+  background-color: #f0f8ff;
+}
+
+.generation-filter-button.active {
+  background-color: #0e6f9f;
+  color: white;
+  border-color: #0e6f9f;
+}
+
+.generation-filter-button:focus {
+  outline: 2px solid #0e6f9f;
+  outline-offset: 2px;
+}
+
 .type-filter-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));

@@ -5,7 +5,6 @@ import FavoriteContext from "../contexts/favoritesContext";
 import Navbar from "./Navbar";
 import Pokemon from "./Pokemon";
 import PokemonCardSkeleton from "./PokemonCardSkeleton";
-import SortOptions from "./SortOptions";
 import TypeFilter from "./TypeFilter";
 import "./Favorites.css";
 
@@ -14,8 +13,8 @@ const Favorites = () => {
   const { favoritePokemons, updateFavoritePokemons } = useContext(FavoriteContext);
   const [favoritePokemonData, setFavoritePokemonData] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [sortBy, setSortBy] = useState("number");
   const [selectedTypes, setSelectedTypes] = useState([]);
+  const [selectedGeneration, setSelectedGeneration] = useState(null);
 
   useEffect(() => {
     const fetchFavoritePokemons = async () => {
@@ -49,34 +48,44 @@ const Favorites = () => {
     fetchFavoritePokemons();
   }, [favoritePokemons]);
 
-  const filteredAndSortedPokemons = useMemo(() => {
+  const filteredPokemons = useMemo(() => {
     let pokemons = favoritePokemonData;
 
-    if (selectedTypes.length > 0) {
+    if (selectedTypes.length > 0 || selectedGeneration) {
       pokemons = pokemons.filter((pokemon) => {
-        const pokemonTypes = pokemon.types.map((type) => type.type.name);
-        return selectedTypes.some((selectedType) => pokemonTypes.includes(selectedType));
+        // Type filter
+        if (selectedTypes.length > 0) {
+          const pokemonTypes = pokemon.types.map((type) => type.type.name);
+          const matchesType = selectedTypes.some((selectedType) => pokemonTypes.includes(selectedType));
+          if (!matchesType) return false;
+        }
+        
+        // Generation filter
+        if (selectedGeneration) {
+          const genRanges = {
+            1: { min: 1, max: 151 },
+            2: { min: 152, max: 251 },
+            3: { min: 252, max: 386 },
+            4: { min: 387, max: 493 },
+            5: { min: 494, max: 649 },
+            6: { min: 650, max: 721 },
+            7: { min: 722, max: 809 },
+            8: { min: 810, max: 905 },
+            9: { min: 906, max: 1025 }
+          };
+          const range = genRanges[selectedGeneration];
+          if (range && (pokemon.id < range.min || pokemon.id > range.max)) {
+            return false;
+          }
+        }
+        
+        return true;
       });
     }
 
-    const sorted = [...pokemons].sort((a, b) => {
-      switch (sortBy) {
-        case "name":
-          return a.name.localeCompare(b.name);
-        case "name-desc":
-          return b.name.localeCompare(a.name);
-        case "type":
-          const aType = a.types[0]?.type.name || "";
-          const bType = b.types[0]?.type.name || "";
-          return aType.localeCompare(bType);
-        case "number":
-        default:
-          return a.id - b.id;
-      }
-    });
-
-    return sorted;
-  }, [favoritePokemonData, selectedTypes, sortBy]);
+    // Always sort by number
+    return [...pokemons].sort((a, b) => a.id - b.id);
+  }, [favoritePokemonData, selectedTypes, selectedGeneration]);
 
   const handleTypeToggle = (type) => {
     setSelectedTypes((prev) => {
@@ -90,6 +99,7 @@ const Favorites = () => {
 
   const handleClearFilters = () => {
     setSelectedTypes([]);
+    setSelectedGeneration(null);
   };
 
   return (
@@ -110,11 +120,10 @@ const Favorites = () => {
         </div>
         {favoritePokemons.length > 0 && (
           <>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "0 20px", marginBottom: "10px" }}>
-              <SortOptions sortBy={sortBy} onSortChange={setSortBy} />
-              {filteredAndSortedPokemons.length > 0 && (
+            <div style={{ display: "flex", justifyContent: "flex-end", alignItems: "center", padding: "0 20px", marginBottom: "10px" }}>
+              {filteredPokemons.length > 0 && (
                 <div className="results-count">
-                  Showing {filteredAndSortedPokemons.length} of {favoritePokemons.length} favorites
+                  Showing {filteredPokemons.length} of {favoritePokemons.length} favorites
                 </div>
               )}
             </div>
@@ -122,6 +131,8 @@ const Favorites = () => {
               selectedTypes={selectedTypes}
               onTypeToggle={handleTypeToggle}
               onClearAll={handleClearFilters}
+              selectedGeneration={selectedGeneration}
+              onGenerationChange={setSelectedGeneration}
             />
           </>
         )}
@@ -132,16 +143,16 @@ const Favorites = () => {
             ))}
           </div>
         ) : favoritePokemons.length > 0 ? (
-          filteredAndSortedPokemons.length > 0 ? (
+          filteredPokemons.length > 0 ? (
             <div className="favorites-grid">
-              {filteredAndSortedPokemons.map((pokemon, index) => (
+              {filteredPokemons.map((pokemon, index) => (
                 <Pokemon key={pokemon.id || index} pokemon={pokemon} />
               ))}
             </div>
           ) : (
             <div className="favorites-empty-action">
               <p className="favorites-empty-message">
-                No favorites match the selected type filter.
+                No favorites match the selected filters.
               </p>
               <button onClick={handleClearFilters} className="explore-button">
                 Clear Filters
