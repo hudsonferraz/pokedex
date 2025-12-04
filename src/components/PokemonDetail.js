@@ -37,6 +37,7 @@ const PokemonDetail = () => {
   const [evolutionChain, setEvolutionChain] = useState([]);
   const [abilityDescriptions, setAbilityDescriptions] = useState({});
   const [hoveredAbility, setHoveredAbility] = useState(null);
+  const [pokemonDescription, setPokemonDescription] = useState("");
 
   const parseEvolutionChain = (chain) => {
     const evolutions = [];
@@ -61,6 +62,17 @@ const PokemonDetail = () => {
         
         if (data) {
           const speciesData = await getPokemonSpecies(data.id);
+          
+          if (speciesData) {
+            const englishFlavorText = speciesData?.flavor_text_entries?.find(
+              (entry) => entry.language.name === "en"
+            )?.flavor_text;
+            if (englishFlavorText) {
+              const cleanDescription = englishFlavorText.replace(/\f/g, " ").replace(/\n/g, " ");
+              setPokemonDescription(cleanDescription);
+            }
+          }
+          
           if (speciesData?.evolution_chain?.url) {
             const evolutionData = await getEvolutionChain(speciesData.evolution_chain.url);
             if (evolutionData?.chain) {
@@ -257,6 +269,12 @@ const PokemonDetail = () => {
                 <span className="stat-value">{pokemon.base_experience}</span>
               </div>
             </div>
+            {pokemonDescription && (
+              <div className="pokemon-description-box" style={{ borderLeftColor: cardColor }}>
+                <h3 className="description-title">Description</h3>
+                <p className="description-text">{pokemonDescription}</p>
+              </div>
+            )}
           </div>
         </div>
         <div className="pokemon-detail-stats-section">

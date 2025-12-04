@@ -273,6 +273,35 @@
   color: #333;
 }
 
+.pokemon-description-box {
+  margin-top: 15px;
+  padding: 15px;
+  background-color: #f8f8f8;
+  border-radius: 8px;
+  border-left: 4px solid;
+}
+
+.pokemon-description-box[style*="border-left-color"] {
+  border-left-color: inherit;
+}
+
+.description-title {
+  margin: 0 0 10px 0;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #333;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.description-text {
+  margin: 0;
+  font-size: 0.9rem;
+  line-height: 1.6;
+  color: #555;
+  text-align: justify;
+}
+
 .pokemon-detail-stats-section {
   margin-top: 20px;
   padding-top: 20px;
@@ -492,6 +521,19 @@
 
   .ability-tooltip-description {
     font-size: 0.8rem;
+  }
+
+  .pokemon-description-box {
+    margin-top: 12px;
+    padding: 12px;
+  }
+
+  .description-title {
+    font-size: 0.9rem;
+  }
+
+  .description-text {
+    font-size: 0.85rem;
   }
 }
 
