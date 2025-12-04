@@ -61,6 +61,15 @@ const Pokemon = (props) => {
       onMouseLeave={(e) => {
         e.currentTarget.style.transform = "translateY(0) scale(1)";
       }}
+      role="button"
+      tabIndex={0}
+      aria-label={`View details for ${pokemon.name}, Pokemon number ${pokemon.id}`}
+      onKeyPress={(e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          onCardClick();
+        }
+      }}
     >
       <div className="pokemon-image-container">
         <img

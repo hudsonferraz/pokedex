@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import Pagination from "./Pagination";
 import Pokemon from "./Pokemon";
 import PokemonCardSkeleton from "./PokemonCardSkeleton";
@@ -15,6 +15,19 @@ const Pokedex = (props) => {
       setPage(page + 1);
     }
   };
+
+  useEffect(() => {
+    const handleKeyPress = (e) => {
+      if (e.key === "ArrowLeft" && page > 0) {
+        setPage(page - 1);
+      } else if (e.key === "ArrowRight" && page + 1 < totalPages) {
+        setPage(page + 1);
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyPress);
+    return () => window.removeEventListener("keydown", handleKeyPress);
+  }, [page, totalPages, setPage]);
   return (
     <div>
       <div className="pokedex-header">

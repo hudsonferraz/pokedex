@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo } from "react";
+import React, { useEffect, useState, useMemo, useCallback } from "react";
 import { getPokemonData, getPokemons, searchPokemon } from "../api";
 import Navbar from "./Navbar";
 import Pokedex from "./Pokedex";

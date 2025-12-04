@@ -1,0 +1,41 @@
+.stats-radar-chart-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 20px;
+  background-color: #f8f8f8;
+  border-radius: 8px;
+  margin-top: 15px;
+}
+
+.radar-chart-svg {
+  max-width: 100%;
+  height: auto;
+}
+
+.radar-label {
+  font-size: 0.7rem;
+  font-weight: 600;
+  fill: #333;
+}
+
+.radar-value {
+  font-size: 0.65rem;
+  font-weight: bold;
+  fill: #666;
+}
+
+@media (max-width: 768px) {
+  .stats-radar-chart-container {
+    padding: 15px;
+  }
+
+  .radar-label {
+    font-size: 0.65rem;
+  }
+
+  .radar-value {
+    font-size: 0.6rem;
+  }
+}
+

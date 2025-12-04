@@ -3,7 +3,12 @@ import { useParams, useNavigate } from "react-router-dom";
 import { searchPokemon, getPokemonSpecies, getEvolutionChain, getAbilityDetails, getPokemons, getMoveDetails } from "../api";
 import FavoriteContext from "../contexts/favoritesContext";
 import { useToast } from "./ToastProvider";
+import StatsRadarChart from "./StatsRadarChart";
 import "./PokemonDetail.css";
+
+// Simple cache for Pokemon data
+const pokemonCache = new Map();
+const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
 
 const getTypeColor = (typeName) => {
   const typeColors = {
@@ -81,8 +86,26 @@ const PokemonDetail = () => {
     const fetchPokemon = async () => {
       try {
         setLoading(true);
+        
+        // Check cache first
+        const cacheKey = name.toLowerCase();
+        const cached = pokemonCache.get(cacheKey);
+        if (cached && Date.now() - cached.timestamp < CACHE_DURATION) {
+          setPokemon(cached.data);
+          setLoading(false);
+          // Still fetch fresh data in background
+        }
+        
         const data = await searchPokemon(name);
         setPokemon(data);
+        
+        // Cache the data
+        if (data) {
+          pokemonCache.set(cacheKey, {
+            data: data,
+            timestamp: Date.now()
+          });
+        }
         
         if (data) {
           if (data.moves && data.moves.length > 0) {
@@ -212,6 +235,22 @@ const PokemonDetail = () => {
     }
   };
 
+  // Keyboard navigation - must be before any early returns
+  useEffect(() => {
+    const handleKeyPress = (e) => {
+      if (e.key === "ArrowLeft" && prevPokemon) {
+        navigate(`/pokemon/${prevPokemon.name}`);
+      } else if (e.key === "ArrowRight" && nextPokemon) {
+        navigate(`/pokemon/${nextPokemon.name}`);
+      } else if (e.key === "Escape") {
+        navigate("/");
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyPress);
+    return () => window.removeEventListener("keydown", handleKeyPress);
+  }, [prevPokemon, nextPokemon, navigate]);
+
   if (loading) {
     return <div className="pokemon-detail-loading">Loading...</div>;
   }
@@ -250,7 +289,11 @@ const PokemonDetail = () => {
   return (
     <div className="pokemon-detail-container" style={{ backgroundColor: `${cardColor}20` }}>
       <div className="pokemon-detail-navigation">
-        <button onClick={() => navigate("/")} className="back-button">
+        <button 
+          onClick={() => navigate("/")} 
+          className="back-button"
+          aria-label="Back to Pokedex"
+        >
           ← Back to Pokedex
         </button>
         <div className="pokemon-nav-buttons">
@@ -258,6 +301,7 @@ const PokemonDetail = () => {
             <button 
               onClick={() => navigate(`/pokemon/${prevPokemon.name}`)}
               className="nav-pokemon-btn prev-btn"
+              aria-label={`Previous Pokemon: ${prevPokemon.name}`}
             >
               ← #{prevPokemon.id} {prevPokemon.name}
             </button>
@@ -266,6 +310,7 @@ const PokemonDetail = () => {
             <button 
               onClick={() => navigate(`/pokemon/${nextPokemon.name}`)}
               className="nav-pokemon-btn next-btn"
+              aria-label={`Next Pokemon: ${nextPokemon.name}`}
             >
               #{nextPokemon.id} {nextPokemon.name} →
             </button>
@@ -403,6 +448,7 @@ const PokemonDetail = () => {
         </div>
         <div className="pokemon-detail-stats-section">
           <h2>Base Stats</h2>
+          <StatsRadarChart stats={pokemon.stats} color={cardColor} />
           <div className="pokemon-stats-list">
             {pokemon.stats.map((stat, index) => (
               <div key={index} className="pokemon-stat-row">

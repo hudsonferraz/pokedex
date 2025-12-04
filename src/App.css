@@ -341,6 +341,20 @@ nav {
   font-weight: 500;
 }
 
+/* Global focus styles for accessibility */
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+select:focus-visible {
+  outline: 2px solid #0e6f9f;
+  outline-offset: 2px;
+}
+
+.pokemon-card:focus-visible {
+  outline: 3px solid #0e6f9f;
+  outline-offset: 3px;
+}
+
 @media (max-width: 768px) {
   .results-count {
     font-size: 0.8rem;
