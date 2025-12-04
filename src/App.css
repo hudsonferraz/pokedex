@@ -6,12 +6,44 @@ nav {
   height: 100px;
   display: flex;
   flex-direction: row;
-  justify-content: space-evenly;
+  justify-content: space-between;
   align-items: center;
+  padding: 0 40px;
 }
 
 .navbar-img {
   width: 160px;
+  cursor: pointer;
+}
+
+.navbar-links {
+  display: flex;
+  gap: 20px;
+  align-items: center;
+}
+
+.nav-link {
+  text-decoration: none;
+  color: #333;
+  font-size: 1.1rem;
+  font-weight: 500;
+  padding: 8px 16px;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+}
+
+.nav-link:hover {
+  background-color: #f0f0f0;
+  color: #0e6f9f;
+}
+
+.nav-link.active {
+  color: #0e6f9f;
+  background-color: #e8f4f8;
+}
+
+.favorites-link {
+  font-size: 1.2rem;
 }
 
 .searchbar-container {
@@ -177,4 +209,28 @@ nav {
 
 .App {
   text-align: center;
+}
+
+@media (max-width: 768px) {
+  nav {
+    padding: 0 15px;
+    height: 80px;
+  }
+
+  .navbar-img {
+    width: 120px;
+  }
+
+  .navbar-links {
+    gap: 10px;
+  }
+
+  .nav-link {
+    font-size: 0.9rem;
+    padding: 6px 12px;
+  }
+
+  .favorites-link {
+    font-size: 1rem;
+  }
 }

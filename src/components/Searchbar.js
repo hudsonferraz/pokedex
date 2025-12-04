@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 
 const Searchbar = (props) => {
-  const [search, setSearch] = useState("dito");
+  const [search, setSearch] = useState("");
   const { onSearch } = props;
   const onChangeHandler = (e) => {
     setSearch(e.target.value);
@@ -10,17 +10,36 @@ const Searchbar = (props) => {
     }
   };
 
+  const handleSearch = () => {
+    const trimmedSearch = search.trim();
+    if (trimmedSearch.length === 0) {
+      return;
+    }
+    onSearch(trimmedSearch);
+  };
+
   const onButtonClickHandler = () => {
-    onSearch(search);
+    handleSearch();
+  };
+
+  const onKeyPressHandler = (e) => {
+    if (e.key === "Enter") {
+      handleSearch();
+    }
   };
 
   return (
     <div className="searchbar-container">
       <div className="searchbar">
-        <input placeholder="Buscar pokemon" onChange={onChangeHandler} />
+        <input 
+          placeholder="Search for a pokemon" 
+          onChange={onChangeHandler}
+          onKeyPress={onKeyPressHandler}
+          value={search}
+        />
       </div>
       <div className="searchbar-btn">
-        <button onClick={onButtonClickHandler}>Buscar</button>
+        <button onClick={onButtonClickHandler}>Search</button>
       </div>
     </div>
   );

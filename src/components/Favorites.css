@@ -1,0 +1,81 @@
+.favorites-container {
+  padding: 20px;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.favorites-header {
+  text-align: center;
+  margin-bottom: 30px;
+}
+
+.favorites-title {
+  font-size: 2.5rem;
+  color: #333;
+  margin-bottom: 10px;
+}
+
+.favorites-count {
+  font-size: 1.1rem;
+  color: #666;
+  margin: 0;
+}
+
+.favorites-empty-message {
+  font-size: 1.1rem;
+  color: #666;
+  margin: 20px 0;
+  padding: 20px;
+  background-color: #f8f8f8;
+  border-radius: 8px;
+}
+
+.favorites-loading {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 50vh;
+  font-size: 1.5rem;
+  color: #666;
+}
+
+.favorites-grid {
+  display: grid;
+  gap: 8px;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  padding: 8px;
+}
+
+.favorites-empty-action {
+  display: flex;
+  justify-content: center;
+  margin-top: 40px;
+}
+
+.explore-button {
+  padding: 12px 24px;
+  background-color: #0e6f9f;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s ease, transform 0.2s ease;
+}
+
+.explore-button:hover {
+  background-color: #0d5d85;
+  transform: translateY(-2px);
+}
+
+@media (max-width: 768px) {
+  .favorites-title {
+    font-size: 2rem;
+  }
+
+  .favorites-container {
+    padding: 15px;
+  }
+}
+

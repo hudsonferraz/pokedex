@@ -3,6 +3,7 @@ import { Routes, Route } from "react-router-dom";
 import "./App.css";
 import Home from "./components/Home";
 import PokemonDetail from "./components/PokemonDetail";
+import Favorites from "./components/Favorites";
 import { FavoriteProvider } from "./contexts/favoritesContext";
 
 const favoritesKey = "f";
@@ -42,6 +43,7 @@ function App() {
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/pokemon/:name" element={<PokemonDetail />} />
+        <Route path="/favorites" element={<Favorites />} />
       </Routes>
     </FavoriteProvider>
   );
