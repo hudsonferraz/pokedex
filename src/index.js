@@ -5,7 +5,7 @@ import './index.css';
 import App from './App';
 import reportWebVitals from './reportWebVitals';
 
-const basename = '/';
+const basename = process.env.PUBLIC_URL || '/pokedex';
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
