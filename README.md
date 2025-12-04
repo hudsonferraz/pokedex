@@ -1,44 +1,111 @@
-<img src="/public/pokedex.png" width="60%" height="60%"/>
+<div align="center">
+  <img src="public/pokedex.png" alt="Pokedex" width="400"/>
+  
+  # 🎮 Pokedex
+  
+  A modern, feature-rich Pokemon encyclopedia built with React
+  
+  [![Live Demo](https://img.shields.io/badge/Live%20Demo-View%20Here-blue?style=for-the-badge)](https://hudsonferraz.github.io/pokedex/)
+</div>
 
-## You can see this project running live [here](https://hudsonferraz.github.io/pokedex/).
+## ✨ Features
 
-# Pokedex
+- **Search Pokemon** - Quick search with autocomplete suggestions
+- **Favorites** - Save your favorite Pokemon for easy access
+- **Dark Mode** - Toggle between light and dark themes
+- **Detailed Stats** - View comprehensive Pokemon statistics with radar charts
+- **Compare Pokemon** - Side-by-side comparison of Pokemon stats
+- **Type-based Colors** - Pokemon cards colored by their types
+- **Evolution Chains** - Visual evolution paths for each Pokemon
+- **Responsive Design** - Works seamlessly on desktop and mobile
+- **Type & Generation Filters** - Filter Pokemon by type or generation
+- **Recently Viewed** - Quick access to recently viewed Pokemon
+- **Move Details** - Hover to see detailed move information
 
-Project made to practice with APIs consuming the PokeAPI
+## Live Demo
 
-# Getting started
+Visit the live application: **[https://hudsonferraz.github.io/pokedex/](https://hudsonferraz.github.io/pokedex/)**
 
-## Dependencies
+## Tech Stack
 
-```
-React 18.2.0
-```
+- **React 18.2.0** - UI library
+- **React Router DOM 6.20.0** - Client-side routing
+- **PokeAPI** - Pokemon data source
+- **CSS3** - Styling with CSS variables for theming
 
-## Installing
+## Installation
 
-Once you have everything installed and running, let's clone this repository and open its folder. No change to any files should be required.
-
-```
+1. Clone the repository:
+```bash
 git clone https://github.com/hudsonferraz/pokedex.git
 cd pokedex
 ```
 
-Then run npm install to install dependencies
-
-```
+2. Install dependencies:
+```bash
 npm install
 ```
 
 ## Usage
 
-```
+### Development
+Start the development server:
+```bash
 npm start
 ```
+The app will open at `http://localhost:3000`
 
-## Built with
+### Build
+Create a production build:
+```bash
+npm run build
+```
 
-[React](https://reactjs.org/): React is a free and open-source front-end JavaScript library for building user interfaces based on UI components.
+### Deploy
+Deploy to GitHub Pages:
+```bash
+npm run deploy
+```
+
+## Project Structure
+
+```
+pokedex/
+├── public/          # Static assets
+├── src/
+│   ├── components/  # React components
+│   ├── contexts/    # Context providers (Theme, Favorites, Comparison)
+│   ├── utils/       # Utility functions
+│   └── api.js       # PokeAPI integration
+└── package.json
+```
+
+## Key Features Explained
+
+### Dark Mode
+Toggle between light and dark themes with persistent preference storage.
+
+### Pokemon Comparison
+Select two Pokemon from their detail pages to compare stats side-by-side with visual indicators.
+
+### Type Filtering
+Filter Pokemon by type across all generations with pagination support.
+
+### Generation Filtering
+Browse Pokemon by generation (Gen 1-9) with ID range filtering.
+
+## API
+
+This project uses the [PokeAPI](https://pokeapi.co/) - a free, open-source RESTful API for Pokemon data.
 
 ## License
 
-[MIT](https://choosealicense.com/licenses/mit/)
+This project is licensed under the MIT License - see the [LICENSE](LICENSE.txt) file for details.
+
+## Author
+
+**Hudson Ferraz**
+- GitHub: [@hudsonferraz](https://github.com/hudsonferraz)
+- Live Demo: [https://hudsonferraz.github.io/pokedex/](https://hudsonferraz.github.io/pokedex/)
+
+---
