@@ -28,3 +28,13 @@ export const clearRecentlyViewed = () => {
   }
 };
 
+export const removeFromRecentlyViewed = (pokemonId) => {
+  try {
+    const recent = getRecentlyViewed();
+    const filtered = recent.filter(p => p.id !== pokemonId);
+    localStorage.setItem(RECENTLY_VIEWED_KEY, JSON.stringify(filtered));
+  } catch (error) {
+    console.log("Error removing from recently viewed:", error);
+  }
+};
+

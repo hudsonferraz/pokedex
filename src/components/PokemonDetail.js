@@ -274,7 +274,14 @@ const PokemonDetail = () => {
   }, [prevPokemon, nextPokemon, navigate]);
 
   if (loading) {
-    return <div className="pokemon-detail-loading">Loading...</div>;
+    return (
+      <div className="pokemon-detail-container">
+        <div className="pokemon-detail-loading">
+          <div className="loading-skeleton-header"></div>
+          <div className="loading-skeleton-content"></div>
+        </div>
+      </div>
+    );
   }
 
   if (!pokemon) {
@@ -428,7 +435,7 @@ const PokemonDetail = () => {
               <span className="pokemon-detail-id">#{pokemon.id}</span>
               <div className="pokemon-detail-actions">
                 <button 
-                  className="compare-button" 
+                  className="pokemon-detail-action-btn compare-action-btn" 
                   onClick={() => {
                     addToComparison(pokemon.name);
                     if (comparisonPokemon.length === 1) {
@@ -437,22 +444,28 @@ const PokemonDetail = () => {
                       showToast("Select another Pokemon to compare", "info");
                     }
                   }}
-                  title="Add to comparison"
                   style={{
-                    backgroundColor: comparisonPokemon.includes(pokemon.name) ? "#4caf50" : "rgba(255, 255, 255, 0.3)"
+                    backgroundColor: comparisonPokemon.includes(pokemon.name) ? "#4caf50" : "var(--input-bg)",
+                    color: comparisonPokemon.includes(pokemon.name) ? "white" : "var(--text-color)"
                   }}
                 >
-                  ⚖️
-                </button>
-                <button className="share-button" onClick={handleShare} title="Share Pokemon">
-                  🔗
+                  Compare with
                 </button>
                 <button 
-                  className="pokemon-detail-heart-btn" 
-                  onClick={onHeartClick}
-                  title={favoritePokemons.includes(pokemon.name) ? "Remove from favorites" : "Add to favorites"}
+                  className="pokemon-detail-action-btn share-action-btn" 
+                  onClick={handleShare}
                 >
-                  {favoritePokemons.includes(pokemon.name) ? "❤️" : "🖤"}
+                  Share Pokemon
+                </button>
+                <button 
+                  className="pokemon-detail-action-btn favorite-action-btn" 
+                  onClick={onHeartClick}
+                  style={{
+                    backgroundColor: favoritePokemons.includes(pokemon.name) ? "#e74c3c" : "var(--input-bg)",
+                    color: favoritePokemons.includes(pokemon.name) ? "white" : "var(--text-color)"
+                  }}
+                >
+                  {favoritePokemons.includes(pokemon.name) ? "Remove from Favorites" : "Add to Favorites"}
                 </button>
               </div>
             </div>
@@ -491,24 +504,28 @@ const PokemonDetail = () => {
         </div>
         <div className="pokemon-detail-stats-section">
           <h2>Base Stats</h2>
-          <StatsRadarChart stats={pokemon.stats} color={cardColor} />
-          <div className="pokemon-stats-list">
-            {pokemon.stats.map((stat, index) => (
-              <div key={index} className="pokemon-stat-row">
-                <span className="stat-name">{formatStatName(stat.stat.name)}</span>
-                <div className="stat-bar-container">
-                  <div
-                    className="stat-bar"
-                    style={{
-                      width: `${(stat.base_stat / 255) * 100}%`,
-                      backgroundColor: cardColor,
-                    }}
-                  >
-                    <span className="stat-value-number">{stat.base_stat}</span>
+          <div className="stats-content">
+            <div className="stats-radar-chart-container">
+              <StatsRadarChart stats={pokemon.stats} color={cardColor} />
+            </div>
+            <div className="pokemon-stats-list">
+              {pokemon.stats.map((stat, index) => (
+                <div key={index} className="pokemon-stat-row">
+                  <span className="stat-name">{formatStatName(stat.stat.name)}</span>
+                  <div className="stat-bar-container">
+                    <div
+                      className="stat-bar"
+                      style={{
+                        width: `${(stat.base_stat / 255) * 100}%`,
+                        backgroundColor: cardColor,
+                      }}
+                    >
+                      <span className="stat-value-number">{stat.base_stat}</span>
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
         </div>
         {pokemon.abilities && pokemon.abilities.length > 0 && (

@@ -61,10 +61,37 @@
   min-width: 80px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   border: 1px solid var(--border-color);
+  position: relative;
 }
 
 .dark-mode .recently-viewed-item {
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.remove-recent-item-btn {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  background-color: rgba(255, 0, 0, 0.7);
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 16px;
+  font-weight: bold;
+  line-height: 1;
+  transition: all 0.2s ease;
+  z-index: 10;
+}
+
+.remove-recent-item-btn:hover {
+  background-color: rgba(255, 0, 0, 0.9);
+  transform: scale(1.1);
 }
 
 .recently-viewed-item:hover {

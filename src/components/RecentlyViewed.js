@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { getRecentlyViewed, clearRecentlyViewed } from "../utils/recentlyViewed";
+import { getRecentlyViewed, clearRecentlyViewed, removeFromRecentlyViewed } from "../utils/recentlyViewed";
 import "./RecentlyViewed.css";
 
 const RecentlyViewed = () => {
@@ -53,6 +53,18 @@ const RecentlyViewed = () => {
               loading="lazy"
             />
             <span className="recently-viewed-name">{pokemon.name}</span>
+            <button
+              className="remove-recent-item-btn"
+              onClick={(e) => {
+                e.stopPropagation();
+                removeFromRecentlyViewed(pokemon.id);
+                setRecentPokemon(getRecentlyViewed());
+              }}
+              aria-label={`Remove ${pokemon.name} from recently viewed`}
+              title="Remove from recently viewed"
+            >
+              ×
+            </button>
           </div>
         ))}
       </div>

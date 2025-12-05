@@ -42,8 +42,8 @@ const Pagination = (props) => {
 
   return (
     <div className="pagination-container">
-      <button onClick={onLeftClick} disabled={page === 1} className="pagination-arrow">
-        ◀️
+      <button onClick={onLeftClick} disabled={page === 1} className="pagination-arrow" aria-label="Previous page">
+        ←
       </button>
       <div className="pagination-numbers">
         {getPageNumbers().map((pageNum, index) => (
@@ -60,8 +60,8 @@ const Pagination = (props) => {
       <div className="pagination-info">
         {page} de {totalPages}
       </div>
-      <button onClick={onRightClick} disabled={page === totalPages} className="pagination-arrow">
-        ▶️
+      <button onClick={onRightClick} disabled={page === totalPages} className="pagination-arrow" aria-label="Next page">
+        →
       </button>
     </div>
   );

@@ -4,9 +4,9 @@ import "./StatsRadarChart.css";
 const StatsRadarChart = ({ stats, color }) => {
   const statNames = ["HP", "Attack", "Defense", "Sp. Atk", "Sp. Def", "Speed"];
   const maxStat = 255;
-  const centerX = 150;
-  const centerY = 150;
-  const radius = 100;
+  const centerX = 175;
+  const centerY = 175;
+  const radius = 120;
 
   const getStatValue = (statName) => {
     const statMap = {
@@ -30,7 +30,7 @@ const StatsRadarChart = ({ stats, color }) => {
 
   const getLabelPoint = (index) => {
     const angle = (index * 2 * Math.PI) / statNames.length - Math.PI / 2;
-    const labelRadius = radius + 20;
+    const labelRadius = radius + 25;
     const x = centerX + labelRadius * Math.cos(angle);
     const y = centerY + labelRadius * Math.sin(angle);
     return { x, y };
@@ -46,8 +46,7 @@ const StatsRadarChart = ({ stats, color }) => {
   }).join(' ') + ' Z';
 
   return (
-    <div className="stats-radar-chart-container">
-      <svg width="300" height="300" viewBox="0 0 300 300" className="radar-chart-svg">
+    <svg width="300" height="300" viewBox="0 0 350 350" className="radar-chart-svg">
         {/* Grid circles */}
         {[0.25, 0.5, 0.75, 1].map((scale, i) => (
           <circle
@@ -56,7 +55,7 @@ const StatsRadarChart = ({ stats, color }) => {
             cy={centerY}
             r={radius * scale}
             fill="none"
-            stroke="#e0e0e0"
+            stroke="var(--border-color)"
             strokeWidth="1"
           />
         ))}
@@ -73,7 +72,7 @@ const StatsRadarChart = ({ stats, color }) => {
               y1={centerY}
               x2={x}
               y2={y}
-              stroke="#e0e0e0"
+              stroke="var(--border-color)"
               strokeWidth="1"
             />
           );
@@ -129,7 +128,6 @@ const StatsRadarChart = ({ stats, color }) => {
           );
         })}
       </svg>
-    </div>
   );
 };
 
