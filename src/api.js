@@ -63,3 +63,31 @@ export const getMoveDetails = async (url) => {
     console.log(error);
   }
 };
+
+export const getPokemonForms = async (speciesData) => {
+  try {
+    if (speciesData && speciesData.varieties && speciesData.varieties.length > 1) {
+      const forms = await Promise.all(
+        speciesData.varieties.map(async (variety) => {
+          try {
+            const pokemonResponse = await fetch(variety.pokemon.url);
+            const pokemonData = await pokemonResponse.json();
+            return {
+              name: pokemonData.name,
+              id: pokemonData.id,
+              is_default: variety.is_default,
+              sprite: pokemonData.sprites?.other?.["official-artwork"]?.front_default || pokemonData.sprites?.front_default
+            };
+          } catch (error) {
+            return null;
+          }
+        })
+      );
+      return forms.filter(form => form !== null);
+    }
+    return [];
+  } catch (error) {
+    console.log(error);
+    return [];
+  }
+};

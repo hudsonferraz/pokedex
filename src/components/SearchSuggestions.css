@@ -3,11 +3,11 @@
   top: 100%;
   left: 0;
   right: 0;
-  background-color: white;
-  border: 1px solid #ddd;
-  border-radius: 6px;
+  background-color: var(--card-bg);
+  border: 2px solid var(--border-color);
+  border-radius: 8px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-  z-index: 1000;
+  z-index: 1001;
   max-height: 300px;
   overflow-y: auto;
   margin-top: 4px;
@@ -18,7 +18,8 @@
   cursor: pointer;
   text-transform: capitalize;
   transition: background-color 0.2s ease;
-  border-bottom: 1px solid #f0f0f0;
+  border-bottom: 1px solid var(--border-color);
+  color: var(--text-color);
 }
 
 .suggestion-item:last-child {
@@ -26,10 +27,11 @@
 }
 
 .suggestion-item:hover {
-  background-color: #f0f0f0;
+  background-color: var(--filter-bg);
 }
 
 .suggestion-item:active {
-  background-color: #e0e0e0;
+  background-color: var(--filter-bg);
+  opacity: 0.8;
 }
 

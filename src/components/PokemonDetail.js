@@ -1,7 +1,8 @@
 import React, { useEffect, useState, useContext } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { searchPokemon, getPokemonSpecies, getEvolutionChain, getAbilityDetails, getPokemons, getMoveDetails } from "../api";
+import { searchPokemon, getPokemonSpecies, getEvolutionChain, getAbilityDetails, getPokemons, getMoveDetails, getPokemonForms } from "../api";
 import FavoriteContext from "../contexts/favoritesContext";
+import TeamContext from "../contexts/TeamContext";
 import { useToast } from "./ToastProvider";
 import { useComparison } from "../contexts/ComparisonContext";
 import StatsRadarChart from "./StatsRadarChart";
@@ -41,6 +42,7 @@ const PokemonDetail = () => {
   const { name } = useParams();
   const navigate = useNavigate();
   const { favoritePokemons, updateFavoritePokemons } = useContext(FavoriteContext);
+  const { team, addToTeam, isInTeam, canAddToTeam } = useContext(TeamContext);
   const { showToast } = useToast();
   const { comparisonPokemon, addToComparison, clearComparison } = useComparison();
   const [pokemon, setPokemon] = useState(null);
@@ -57,6 +59,8 @@ const PokemonDetail = () => {
   const [moveDetails, setMoveDetails] = useState({});
   const [prevPokemon, setPrevPokemon] = useState(null);
   const [nextPokemon, setNextPokemon] = useState(null);
+  const [pokemonForms, setPokemonForms] = useState([]);
+  const [currentFormIndex, setCurrentFormIndex] = useState(0);
 
   const parseEvolutionChain = (chain) => {
     const evolutions = [];
@@ -95,6 +99,8 @@ const PokemonDetail = () => {
     const fetchPokemon = async () => {
       try {
         setLoading(true);
+        setPokemonForms([]);
+        setCurrentFormIndex(0);
         
         // Check cache first
         const cacheKey = name.toLowerCase();
@@ -154,7 +160,13 @@ const PokemonDetail = () => {
             setMoves(allMovesList.slice(0, 20));
           }
 
-          const speciesData = await getPokemonSpecies(data.id);
+          let speciesData;
+          if (data.species?.url) {
+            const speciesResponse = await fetch(data.species.url);
+            speciesData = await speciesResponse.json();
+          } else {
+            speciesData = await getPokemonSpecies(data.id);
+          }
           
           if (speciesData) {
             const englishFlavorText = speciesData?.flavor_text_entries?.find(
@@ -163,6 +175,25 @@ const PokemonDetail = () => {
             if (englishFlavorText) {
               const cleanDescription = englishFlavorText.replace(/\f/g, " ").replace(/\n/g, " ");
               setPokemonDescription(cleanDescription);
+            }
+
+            const forms = await getPokemonForms(speciesData);
+            if (forms && forms.length > 1) {
+              forms.sort((a, b) => {
+                if (a.is_default && !b.is_default) return -1;
+                if (!a.is_default && b.is_default) return 1;
+                return a.id - b.id;
+              });
+              setPokemonForms(forms);
+              const currentIndex = forms.findIndex(form => form.name.toLowerCase() === data.name.toLowerCase());
+              if (currentIndex >= 0) {
+                setCurrentFormIndex(currentIndex);
+              } else {
+                setCurrentFormIndex(0);
+              }
+            } else {
+              setPokemonForms([]);
+              setCurrentFormIndex(0);
             }
           }
           
@@ -236,6 +267,22 @@ const PokemonDetail = () => {
     };
     fetchPokemon();
   }, [name]);
+
+  const handleFormChange = (direction) => {
+    if (pokemonForms.length <= 1) return;
+    
+    let newIndex;
+    if (direction === 'next') {
+      newIndex = (currentFormIndex + 1) % pokemonForms.length;
+    } else {
+      newIndex = (currentFormIndex - 1 + pokemonForms.length) % pokemonForms.length;
+    }
+    
+    const newForm = pokemonForms[newIndex];
+    if (newForm) {
+      navigate(`/pokemon/${newForm.name}`);
+    }
+  };
 
   const onHeartClick = () => {
     const wasFavorite = favoritePokemons.includes(pokemon.name);
@@ -431,7 +478,36 @@ const PokemonDetail = () => {
           </div>
           <div className="pokemon-detail-info">
             <div className="pokemon-detail-title">
-              <h1 className="pokemon-detail-name">{pokemon.name}</h1>
+              <div className="pokemon-detail-name-container">
+                {pokemonForms.length > 1 && (
+                  <button
+                    className="form-nav-btn form-nav-prev"
+                    onClick={() => handleFormChange('prev')}
+                    aria-label="Previous form"
+                    title="Previous form"
+                  >
+                    ‹
+                  </button>
+                )}
+                <div className="pokemon-name-wrapper">
+                  <h1 className="pokemon-detail-name">{pokemon.name}</h1>
+                  {pokemonForms.length > 1 && (
+                    <span className="form-indicator">
+                      {currentFormIndex + 1}/{pokemonForms.length}
+                    </span>
+                  )}
+                </div>
+                {pokemonForms.length > 1 && (
+                  <button
+                    className="form-nav-btn form-nav-next"
+                    onClick={() => handleFormChange('next')}
+                    aria-label="Next form"
+                    title="Next form"
+                  >
+                    ›
+                  </button>
+                )}
+              </div>
               <span className="pokemon-detail-id">#{pokemon.id}</span>
               <div className="pokemon-detail-actions">
                 <button 
@@ -466,6 +542,30 @@ const PokemonDetail = () => {
                   }}
                 >
                   {favoritePokemons.includes(pokemon.name) ? "Remove from Favorites" : "Add to Favorites"}
+                </button>
+                <button 
+                  className="pokemon-detail-action-btn team-action-btn" 
+                  onClick={() => {
+                    if (!canAddToTeam()) {
+                      showToast("Team is full! Remove a Pokemon from your team first.", "error");
+                      return;
+                    }
+                    if (isInTeam(pokemon.name)) {
+                      showToast(`${pokemon.name} is already in your team!`, "info");
+                      return;
+                    }
+                    if (addToTeam(pokemon)) {
+                      showToast(`${pokemon.name} added to team!`, "success");
+                    }
+                  }}
+                  disabled={isInTeam(pokemon.name) || !canAddToTeam()}
+                  style={{
+                    backgroundColor: isInTeam(pokemon.name) ? "#4caf50" : "var(--input-bg)",
+                    color: isInTeam(pokemon.name) ? "white" : "var(--text-color)",
+                    opacity: (!canAddToTeam() && !isInTeam(pokemon.name)) ? 0.5 : 1
+                  }}
+                >
+                  {isInTeam(pokemon.name) ? "In Team" : "Add to Team"}
                 </button>
               </div>
             </div>

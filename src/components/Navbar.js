@@ -30,6 +30,12 @@ const Navbar = () => {
         >
           {favoritePokemons.length} ❤️
         </Link>
+        <Link 
+          to="/team-builder" 
+          className={`nav-link ${location.pathname === "/team-builder" ? "active" : ""}`}
+        >
+          Team Builder
+        </Link>
         <button 
           onClick={toggleTheme}
           className="theme-toggle-btn"
