@@ -11,7 +11,7 @@ const getTypeColor = (typeName) => {
   return typeColors[typeName] || "#A8A878";
 };
 
-const TeamSlot = ({ pokemon, slotNumber, onRemove, onAdd }) => {
+const TeamSlot = ({ pokemon, slotNumber, selectedMoves, onRemove, onAdd, onEditMoves }) => {
   const navigate = useNavigate();
 
   const handleCardClick = () => {
@@ -20,9 +20,14 @@ const TeamSlot = ({ pokemon, slotNumber, onRemove, onAdd }) => {
     }
   };
 
+  const displayMove = (name) => (name || "").replace(/-/g, " ");
+
   if (pokemon) {
     const primaryType = pokemon.types[0]?.type.name || "normal";
     const cardColor = getTypeColor(primaryType);
+    const movesToShow = Array.isArray(selectedMoves) && selectedMoves.length > 0
+      ? selectedMoves
+      : (pokemon.moves || []).slice(0, 4).map((m) => m.move.name);
 
     return (
       <div 
@@ -56,6 +61,30 @@ const TeamSlot = ({ pokemon, slotNumber, onRemove, onAdd }) => {
               {type.type.name}
             </span>
           ))}
+        </div>
+        <div className="team-slot-moves-row">
+          {pokemon.moves && pokemon.moves.length > 0 ? (
+            <>
+              <div className="team-slot-moves" title="Moveset">
+                {movesToShow.map((name, i) => (
+                  <span key={name || i} className="team-slot-move">{displayMove(name)}</span>
+                ))}
+              </div>
+              <button
+                type="button"
+                className="team-slot-edit-moves"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onEditMoves(pokemon);
+                }}
+                title="Select 4 moves"
+              >
+                Edit moves
+              </button>
+            </>
+          ) : (
+            <span className="team-slot-no-moves">No move data</span>
+          )}
         </div>
       </div>
     );

@@ -19,6 +19,11 @@
   gap: 15px;
 }
 
+.team-builder-title-block {
+  flex: 1;
+  min-width: 0;
+}
+
 .team-builder-header h1 {
   font-size: 2rem;
   font-weight: 700;
@@ -26,9 +31,126 @@
   margin: 0;
 }
 
+.team-builder-tagline {
+  margin: 6px 0 0 0;
+  font-size: 0.95rem;
+  color: var(--text-color);
+  opacity: 0.85;
+}
+
 .team-builder-actions {
   display: flex;
+  flex-wrap: wrap;
+  align-items: center;
   gap: 10px;
+}
+
+.team-selector-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.team-select {
+  padding: 8px 12px;
+  border: 2px solid var(--border-color);
+  border-radius: 8px;
+  background-color: var(--card-bg);
+  color: var(--text-color);
+  font-size: 0.9rem;
+  font-weight: 600;
+  min-width: 140px;
+  cursor: pointer;
+}
+
+.export-dropdown {
+  position: relative;
+}
+
+.export-menu {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  margin-top: 4px;
+  background-color: var(--card-bg);
+  border: 2px solid var(--border-color);
+  border-radius: 8px;
+  padding: 6px 0;
+  min-width: 160px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  z-index: 10;
+}
+
+.export-menu button {
+  display: block;
+  width: 100%;
+  padding: 10px 16px;
+  border: none;
+  background: none;
+  color: var(--text-color);
+  font-size: 0.9rem;
+  text-align: left;
+  cursor: pointer;
+}
+
+.export-menu button:hover {
+  background-color: var(--filter-bg);
+}
+
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1001;
+  padding: 20px;
+}
+
+.confirm-modal,
+.rename-modal {
+  background-color: var(--card-bg);
+  border-radius: 12px;
+  padding: 24px;
+  max-width: 400px;
+  width: 100%;
+  border: 2px solid var(--border-color);
+}
+
+.confirm-modal p,
+.rename-modal h3 {
+  margin: 0 0 20px 0;
+  color: var(--text-color);
+  font-size: 1rem;
+}
+
+.rename-modal h3 {
+  font-size: 1.2rem;
+}
+
+.confirm-modal-actions,
+.rename-modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.rename-input {
+  width: 100%;
+  padding: 10px 12px;
+  margin-bottom: 20px;
+  border: 2px solid var(--border-color);
+  border-radius: 8px;
+  background-color: var(--filter-bg);
+  color: var(--text-color);
+  font-size: 1rem;
+}
+
+.rename-input:focus {
+  outline: none;
+  border-color: #6890F0;
 }
 
 .action-btn {
