@@ -7,6 +7,7 @@ import { useToast } from "./ToastProvider";
 import { useComparison } from "../contexts/ComparisonContext";
 import StatsRadarChart from "./StatsRadarChart";
 import PokemonComparison from "./PokemonComparison";
+import MovePickerModal from "./MovePickerModal";
 import { addToRecentlyViewed } from "../utils/recentlyViewed";
 import "./PokemonDetail.css";
 
@@ -42,7 +43,7 @@ const PokemonDetail = () => {
   const { name } = useParams();
   const navigate = useNavigate();
   const { favoritePokemons, updateFavoritePokemons } = useContext(FavoriteContext);
-  const { team, addToTeam, isInTeam, canAddToTeam } = useContext(TeamContext);
+  const { team, addToTeam, isInTeam, canAddToTeam, getMoveset, setMoveset } = useContext(TeamContext);
   const { showToast } = useToast();
   const { comparisonPokemon, addToComparison, clearComparison } = useComparison();
   const [pokemon, setPokemon] = useState(null);
@@ -61,6 +62,8 @@ const PokemonDetail = () => {
   const [nextPokemon, setNextPokemon] = useState(null);
   const [pokemonForms, setPokemonForms] = useState([]);
   const [currentFormIndex, setCurrentFormIndex] = useState(0);
+  const [showMovePicker, setShowMovePicker] = useState(false);
+  const [hoveredMovesetMove, setHoveredMovesetMove] = useState(null);
 
   const parseEvolutionChain = (chain) => {
     const evolutions = [];
@@ -129,6 +132,12 @@ const PokemonDetail = () => {
             const movesPromises = data.moves.map(async (move) => {
               try {
                 const moveData = await getMoveDetails(move.move.url);
+                const enEffect = moveData?.effect_entries?.find((e) => e.language?.name === "en");
+                let effect = enEffect?.short_effect || enEffect?.effect || null;
+                const effectChance = moveData?.effect_chance != null ? moveData.effect_chance : null;
+                if (effect && effectChance != null) {
+                  effect = effect.replace(/\$effect_chance/g, String(effectChance));
+                }
                 const moveInfo = {
                   name: move.move.name,
                   level: move.version_group_details[0]?.level_learned_at || 0,
@@ -137,6 +146,8 @@ const PokemonDetail = () => {
                   accuracy: moveData?.accuracy || null,
                   pp: moveData?.pp || null,
                   damageClass: moveData?.damage_class?.name || null,
+                  effect,
+                  effectChance,
                 };
                 setMoveDetails(prev => ({ ...prev, [move.move.name]: moveInfo }));
                 return moveInfo;
@@ -149,6 +160,8 @@ const PokemonDetail = () => {
                   accuracy: null,
                   pp: null,
                   damageClass: null,
+                  effect: null,
+                  effectChance: null,
                 };
                 setMoveDetails(prev => ({ ...prev, [move.move.name]: moveInfo }));
                 return moveInfo;
@@ -261,7 +274,7 @@ const PokemonDetail = () => {
         
         setLoading(false);
       } catch (error) {
-        console.log("Error fetching pokemon:", error);
+        console.error("Error fetching pokemon:", error);
         setLoading(false);
       }
     };
@@ -312,7 +325,7 @@ const PokemonDetail = () => {
       } else if (e.key === "ArrowRight" && nextPokemon) {
         navigate(`/pokemon/${nextPokemon.name}`);
       } else if (e.key === "Escape") {
-        navigate("/");
+        navigate("/browse");
       }
     };
 
@@ -368,9 +381,9 @@ const PokemonDetail = () => {
         <button 
           onClick={() => navigate("/")} 
           className="back-button"
-          aria-label="Back to Pokedex"
+          aria-label="Back to Browse"
         >
-          ← Back to Pokedex
+          ← Back to Browse
         </button>
         <div className="pokemon-nav-buttons">
           {prevPokemon && (
@@ -658,6 +671,74 @@ const PokemonDetail = () => {
             </div>
           </div>
         )}
+        {pokemon && isInTeam(pokemon.name) && pokemon.moves && pokemon.moves.length > 0 && (
+          <div className="pokemon-detail-moveset-section">
+            <h2 className="moveset-section-title">Your Pokémon moveset</h2>
+            <p className="moveset-section-desc">Choose 4 moves for this Pokémon.</p>
+            <div className="moveset-slots-display">
+              {(() => {
+                const current = getMoveset(pokemon.name);
+                const padded = [...current, ...Array(4).fill("—")].slice(0, 4);
+                const formatStats = (d) => {
+                  if (!d) return null;
+                  const parts = [];
+                  if (d.power != null) parts.push(`${d.power} Pwr`);
+                  else parts.push("—");
+                  if (d.accuracy != null) parts.push(`${d.accuracy}%`);
+                  else parts.push("—");
+                  parts.push(d.pp != null ? `${d.pp} PP` : "— PP");
+                  const cls = d.damageClass ? d.damageClass.replace(/-/g, " ") : "";
+                  if (cls) parts.push(cls.charAt(0).toUpperCase() + cls.slice(1));
+                  return parts.join(" · ");
+                };
+                return padded.map((moveName, i) => {
+                  const details = typeof moveName === "string" && moveName !== "—" ? moveDetails[moveName] : null;
+                  const statsLine = formatStats(details);
+                  const isEmpty = typeof moveName !== "string" || moveName === "—";
+                  return (
+                    <span
+                      key={i}
+                      className="moveset-slot"
+                      onMouseEnter={() => !isEmpty && setHoveredMovesetMove(moveName)}
+                      onMouseLeave={() => setHoveredMovesetMove(null)}
+                    >
+                      <span className="moveset-slot-num">{i + 1}</span>
+                      <span className="moveset-slot-move">
+                        {!isEmpty ? moveName.replace(/-/g, " ") : moveName}
+                      </span>
+                      {statsLine && <span className="moveset-slot-stats">{statsLine}</span>}
+                      {hoveredMovesetMove === moveName && details?.effect && (
+                        <div className="moveset-slot-tooltip">
+                          <p className="moveset-slot-tooltip-effect">{details.effect}</p>
+                        </div>
+                      )}
+                    </span>
+                  );
+                });
+              })()}
+            </div>
+            <button
+              type="button"
+              className="moveset-edit-btn"
+              onClick={() => setShowMovePicker(true)}
+            >
+              Edit moves
+            </button>
+            {showMovePicker && (
+              <MovePickerModal
+                pokemon={pokemon}
+                currentMoves={getMoveset(pokemon.name)}
+                moveDetails={moveDetails}
+                onSave={(moves) => {
+                  setMoveset(pokemon.name, moves);
+                  showToast("Moves saved");
+                  setShowMovePicker(false);
+                }}
+                onClose={() => setShowMovePicker(false)}
+              />
+            )}
+          </div>
+        )}
         {allMoves.length > 0 && (
           <div className="pokemon-detail-moves">
             <div className="moves-header">
@@ -708,6 +789,9 @@ const PokemonDetail = () => {
                             <span className="move-tooltip-stat">Class: {details.damageClass}</span>
                           )}
                         </div>
+                        {details.effect && (
+                          <p className="move-tooltip-effect">{details.effect}</p>
+                        )}
                       </div>
                     )}
                   </div>
