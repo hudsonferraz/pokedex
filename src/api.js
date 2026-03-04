@@ -1,66 +1,82 @@
+function handleResponse(response) {
+  if (!response.ok) {
+    const err = new Error(`HTTP ${response.status}`);
+    console.error(err);
+    return undefined;
+  }
+  return response.json();
+}
+
 export const searchPokemon = async (pokemon) => {
   try {
-    let url = `https://pokeapi.co/api/v2/pokemon/${pokemon}`;
+    const url = `https://pokeapi.co/api/v2/pokemon/${pokemon}`;
     const response = await fetch(url);
-    return await response.json();
+    return await handleResponse(response);
   } catch (error) {
     console.error(error);
+    return undefined;
   }
 };
 
 export const getPokemons = async (limit = 50, offset = 0) => {
   try {
-    let url = `https://pokeapi.co/api/v2/pokemon?limit=${limit}&offset=${offset}`;
+    const url = `https://pokeapi.co/api/v2/pokemon?limit=${limit}&offset=${offset}`;
     const response = await fetch(url);
-    return await response.json();
+    return await handleResponse(response);
   } catch (error) {
     console.error(error);
+    return undefined;
   }
 };
 
 export const getPokemonData = async (url) => {
   try {
     const response = await fetch(url);
-    return await response.json();
+    return await handleResponse(response);
   } catch (error) {
     console.error(error);
+    return undefined;
   }
 };
 
 export const getPokemonSpecies = async (pokemonId) => {
   try {
-    let url = `https://pokeapi.co/api/v2/pokemon-species/${pokemonId}`;
+    const url = `https://pokeapi.co/api/v2/pokemon-species/${pokemonId}`;
     const response = await fetch(url);
-    return await response.json();
+    return await handleResponse(response);
   } catch (error) {
     console.error(error);
+    return undefined;
   }
 };
 
 export const getEvolutionChain = async (url) => {
   try {
     const response = await fetch(url);
-    return await response.json();
+    return await handleResponse(response);
   } catch (error) {
     console.error(error);
+    return undefined;
   }
 };
 
 export const getAbilityDetails = async (url) => {
   try {
     const response = await fetch(url);
-    return await response.json();
+    return await handleResponse(response);
   } catch (error) {
     console.error(error);
+    return undefined;
   }
 };
 
 export const getMoveDetails = async (url) => {
   try {
     const response = await fetch(url);
-    return await response.json();
+    return await handleResponse(response);
   } catch (error) {
     console.error(error);
+    return undefined;
   }
 };
 
@@ -71,7 +87,8 @@ export const getPokemonForms = async (speciesData) => {
         speciesData.varieties.map(async (variety) => {
           try {
             const pokemonResponse = await fetch(variety.pokemon.url);
-            const pokemonData = await pokemonResponse.json();
+            const pokemonData = await handleResponse(pokemonResponse);
+            if (!pokemonData) return null;
             return {
               name: pokemonData.name,
               id: pokemonData.id,
@@ -79,6 +96,7 @@ export const getPokemonForms = async (speciesData) => {
               sprite: pokemonData.sprites?.other?.["official-artwork"]?.front_default || pokemonData.sprites?.front_default
             };
           } catch (error) {
+            console.error(error);
             return null;
           }
         })
