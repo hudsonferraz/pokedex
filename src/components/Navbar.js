@@ -22,19 +22,19 @@ const Navbar = () => {
           to="/" 
           className={`nav-link ${location.pathname === "/" ? "active" : ""}`}
         >
-          Home
+          Team Builder
+        </Link>
+        <Link 
+          to="/browse" 
+          className={`nav-link ${location.pathname === "/browse" ? "active" : ""}`}
+        >
+          Browse
         </Link>
         <Link 
           to="/favorites" 
           className={`nav-link favorites-link ${location.pathname === "/favorites" ? "active" : ""}`}
         >
           {favoritePokemons.length} ❤️
-        </Link>
-        <Link 
-          to="/team-builder" 
-          className={`nav-link ${location.pathname === "/team-builder" ? "active" : ""}`}
-        >
-          Team Builder
         </Link>
         <button 
           onClick={toggleTheme}

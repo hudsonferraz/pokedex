@@ -135,6 +135,31 @@
   outline-offset: 2px;
 }
 
+.format-preference-section {
+  margin-bottom: 15px;
+  padding-bottom: 15px;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.format-preference-title {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text-color);
+  margin: 0 0 8px 0;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.format-preference-select {
+  padding: 8px 12px;
+  border: 2px solid var(--border-color);
+  border-radius: 6px;
+  background-color: var(--card-bg);
+  color: var(--text-color);
+  font-size: 0.9rem;
+  min-width: 140px;
+}
+
 .type-filter-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
