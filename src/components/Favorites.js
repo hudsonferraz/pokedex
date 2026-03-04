@@ -30,7 +30,7 @@ const Favorites = () => {
           try {
             return await searchPokemon(pokemonName);
           } catch (error) {
-            console.log(`Error fetching ${pokemonName}:`, error);
+            console.error(`Error fetching ${pokemonName}:`, error);
             return null;
           }
         });
@@ -40,7 +40,7 @@ const Favorites = () => {
         setFavoritePokemonData(validResults);
         setLoading(false);
       } catch (error) {
-        console.log("Error fetching favorite pokemons:", error);
+        console.error("Error fetching favorite pokemons:", error);
         setLoading(false);
       }
     };
@@ -161,7 +161,7 @@ const Favorites = () => {
           )
         ) : (
           <div className="favorites-empty-action">
-            <button onClick={() => navigate("/")} className="explore-button">
+            <button onClick={() => navigate("/browse")} className="explore-button">
               Explore Pokemon
             </button>
           </div>

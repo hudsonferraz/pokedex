@@ -5,6 +5,7 @@ import Pokedex from "./Pokedex";
 import Searchbar from "./Searchbar";
 import TypeFilter from "./TypeFilter";
 import RecentlyViewed from "./RecentlyViewed";
+import { getStoredFormat, setStoredFormat } from "../utils/formatOptions";
 
 const Home = () => {
   const [page, setPage] = useState(0);
@@ -18,6 +19,7 @@ const Home = () => {
   const [isSearching, setIsSearching] = useState(false);
   const [totalPokemonCount, setTotalPokemonCount] = useState(0);
   const [selectedGeneration, setSelectedGeneration] = useState(null);
+  const [preferredFormat, setPreferredFormat] = useState(getStoredFormat);
 
   const itensPerPage = 50;
   const fetchPokemons = async () => {
@@ -38,7 +40,7 @@ const Home = () => {
         setTotalPokemonCount(data.count);
       }
     } catch (error) {
-      console.log("fetchPokemons error: ", error);
+      console.error("fetchPokemons error:", error);
       setNotFound(true);
     } finally {
       setLoading(false);
@@ -61,7 +63,7 @@ const Home = () => {
         setTotalPokemonCount(data.count);
       }
     } catch (error) {
-      console.log("fetchAllPokemonsForFilter error: ", error);
+      console.error("fetchAllPokemonsForFilter error:", error);
       setNotFound(true);
     } finally {
       setLoading(false);
@@ -225,6 +227,8 @@ const Home = () => {
             onClearAll={handleClearFilters}
             selectedGeneration={selectedGeneration}
             onGenerationChange={setSelectedGeneration}
+            preferredFormat={preferredFormat}
+            onFormatChange={(v) => { setPreferredFormat(v); setStoredFormat(v); }}
           />
         </>
       )}
@@ -234,7 +238,7 @@ const Home = () => {
             <h2>Pokemon not found!</h2>
             <p>Try searching for a different Pokemon name.</p>
             <button onClick={() => onSearchHandler(undefined)} className="back-to-list-btn">
-              Back to Pokedex
+              Back to Browse
             </button>
           </div>
         </div>

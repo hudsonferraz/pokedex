@@ -30,7 +30,7 @@ const PokemonComparison = ({ pokemon1Name, pokemon2Name, onClose }) => {
         setPokemon2(p2);
       } catch (error) {
         showToast("Error loading Pokemon for comparison", "error");
-        console.log("Error fetching Pokemon:", error);
+        console.error("Error fetching Pokemon:", error);
       } finally {
         setLoading(false);
       }

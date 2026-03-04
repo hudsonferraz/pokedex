@@ -26,7 +26,7 @@ const SearchSuggestions = ({ searchTerm, onSelect, onClose }) => {
           setSuggestions(filtered);
         }
       } catch (error) {
-        console.log("Error fetching suggestions:", error);
+        console.error("Error fetching suggestions:", error);
       } finally {
         setLoading(false);
       }

@@ -7,8 +7,8 @@ export const addToRecentlyViewed = (pokemon) => {
     const filtered = recent.filter(p => p.id !== pokemon.id);
     const updated = [{ id: pokemon.id, name: pokemon.name, sprite: pokemon.sprites.front_default }, ...filtered].slice(0, MAX_RECENT);
     localStorage.setItem(RECENTLY_VIEWED_KEY, JSON.stringify(updated));
-  } catch (error) {
-    console.log("Error saving recently viewed:", error);
+  } catch {
+    // ignore
   }
 };
 
@@ -23,8 +23,8 @@ export const getRecentlyViewed = () => {
 export const clearRecentlyViewed = () => {
   try {
     localStorage.removeItem(RECENTLY_VIEWED_KEY);
-  } catch (error) {
-    console.log("Error clearing recently viewed:", error);
+  } catch {
+    // ignore
   }
 };
 
@@ -33,8 +33,8 @@ export const removeFromRecentlyViewed = (pokemonId) => {
     const recent = getRecentlyViewed();
     const filtered = recent.filter(p => p.id !== pokemonId);
     localStorage.setItem(RECENTLY_VIEWED_KEY, JSON.stringify(filtered));
-  } catch (error) {
-    console.log("Error removing from recently viewed:", error);
+  } catch {
+    // ignore
   }
 };
 

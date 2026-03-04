@@ -4,7 +4,7 @@ export const searchPokemon = async (pokemon) => {
     const response = await fetch(url);
     return await response.json();
   } catch (error) {
-    console.log(error);
+    console.error(error);
   }
 };
 
@@ -14,7 +14,7 @@ export const getPokemons = async (limit = 50, offset = 0) => {
     const response = await fetch(url);
     return await response.json();
   } catch (error) {
-    console.log(error);
+    console.error(error);
   }
 };
 
@@ -23,7 +23,7 @@ export const getPokemonData = async (url) => {
     const response = await fetch(url);
     return await response.json();
   } catch (error) {
-    console.log(error);
+    console.error(error);
   }
 };
 
@@ -33,7 +33,7 @@ export const getPokemonSpecies = async (pokemonId) => {
     const response = await fetch(url);
     return await response.json();
   } catch (error) {
-    console.log(error);
+    console.error(error);
   }
 };
 
@@ -42,7 +42,7 @@ export const getEvolutionChain = async (url) => {
     const response = await fetch(url);
     return await response.json();
   } catch (error) {
-    console.log(error);
+    console.error(error);
   }
 };
 
@@ -51,7 +51,7 @@ export const getAbilityDetails = async (url) => {
     const response = await fetch(url);
     return await response.json();
   } catch (error) {
-    console.log(error);
+    console.error(error);
   }
 };
 
@@ -60,7 +60,7 @@ export const getMoveDetails = async (url) => {
     const response = await fetch(url);
     return await response.json();
   } catch (error) {
-    console.log(error);
+    console.error(error);
   }
 };
 
@@ -87,7 +87,7 @@ export const getPokemonForms = async (speciesData) => {
     }
     return [];
   } catch (error) {
-    console.log(error);
+    console.error(error);
     return [];
   }
 };
