@@ -362,18 +362,20 @@ const TeamBuilder = () => {
           </div>
         )}
 
-        <div className="team-slots-grid">
-          {[0, 1, 2, 3, 4, 5].map((slotIndex) => (
-            <TeamSlot
-              key={slotIndex}
-              slotNumber={slotIndex + 1}
-              pokemon={team[slotIndex] || null}
-              selectedMoves={team[slotIndex] ? getMoveset(team[slotIndex].name) : []}
-              onRemove={handleRemovePokemon}
-              onAdd={() => handleSlotClick(slotIndex)}
-              onEditMoves={(p) => setMovePickerPokemon(p)}
-            />
-          ))}
+        <div className="team-slots-wrapper" role="region" aria-label="Team slots">
+          <div className="team-slots-grid">
+            {[0, 1, 2, 3, 4, 5].map((slotIndex) => (
+              <TeamSlot
+                key={slotIndex}
+                slotNumber={slotIndex + 1}
+                pokemon={team[slotIndex] || null}
+                selectedMoves={team[slotIndex] ? getMoveset(team[slotIndex].name) : []}
+                onRemove={handleRemovePokemon}
+                onAdd={() => handleSlotClick(slotIndex)}
+                onEditMoves={(p) => setMovePickerPokemon(p)}
+              />
+            ))}
+          </div>
         </div>
 
         {movePickerPokemon && (

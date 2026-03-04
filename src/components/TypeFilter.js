@@ -24,16 +24,7 @@ const typeColors = {
 
 const allTypes = Object.keys(typeColors);
 
-const FORMAT_OPTIONS = [
-  { value: "", label: "Any" },
-  { value: "VGC (doubles)", label: "VGC" },
-  { value: "Singles OU", label: "OU" },
-  { value: "Singles UU", label: "UU" },
-  { value: "Doubles", label: "Doubles" },
-  { value: "Battle Stadium", label: "Battle Stadium" },
-];
-
-const TypeFilter = ({ selectedTypes, onTypeToggle, onClearAll, selectedGeneration, onGenerationChange, preferredFormat, onFormatChange }) => {
+const TypeFilter = ({ selectedTypes, onTypeToggle, onClearAll, selectedGeneration, onGenerationChange }) => {
   const [isExpanded, setIsExpanded] = useState(true);
   
   const generations = [
@@ -102,21 +93,6 @@ const TypeFilter = ({ selectedTypes, onTypeToggle, onClearAll, selectedGeneratio
                   </button>
                 ))}
               </div>
-            </div>
-          )}
-          {onFormatChange && (
-            <div className="format-preference-section">
-              <h4 className="format-preference-title">Building for (AI / tips)</h4>
-              <select
-                className="format-preference-select"
-                value={preferredFormat || ""}
-                onChange={(e) => onFormatChange(e.target.value)}
-                aria-label="Preferred format for team tips"
-              >
-                {FORMAT_OPTIONS.map((opt) => (
-                  <option key={opt.value || "any"} value={opt.value}>{opt.label}</option>
-                ))}
-              </select>
             </div>
           )}
           <div className="type-filter-grid" role="group" aria-label="Pokemon type filters">

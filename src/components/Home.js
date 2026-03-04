@@ -5,8 +5,6 @@ import Pokedex from "./Pokedex";
 import Searchbar from "./Searchbar";
 import TypeFilter from "./TypeFilter";
 import RecentlyViewed from "./RecentlyViewed";
-import { getStoredFormat, setStoredFormat } from "../utils/formatOptions";
-
 const Home = () => {
   const [page, setPage] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
@@ -19,7 +17,6 @@ const Home = () => {
   const [isSearching, setIsSearching] = useState(false);
   const [totalPokemonCount, setTotalPokemonCount] = useState(0);
   const [selectedGeneration, setSelectedGeneration] = useState(null);
-  const [preferredFormat, setPreferredFormat] = useState(getStoredFormat);
 
   const itensPerPage = 50;
   const fetchPokemons = async () => {
@@ -227,8 +224,6 @@ const Home = () => {
             onClearAll={handleClearFilters}
             selectedGeneration={selectedGeneration}
             onGenerationChange={setSelectedGeneration}
-            preferredFormat={preferredFormat}
-            onFormatChange={(v) => { setPreferredFormat(v); setStoredFormat(v); }}
           />
         </>
       )}
