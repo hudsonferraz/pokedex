@@ -51,7 +51,7 @@ nav {
 
 .nav-link {
   text-decoration: none;
-  color: #333;
+  color: var(--text-color);
   font-size: 1.1rem;
   font-weight: 500;
   padding: 8px 16px;
@@ -60,13 +60,13 @@ nav {
 }
 
 .nav-link:hover {
-  background-color: #f0f0f0;
+  background-color: var(--filter-bg);
   color: #0e6f9f;
 }
 
 .nav-link.active {
   color: #0e6f9f;
-  background-color: #e8f4f8;
+  background-color: var(--filter-bg);
 }
 
 .theme-toggle-btn {
