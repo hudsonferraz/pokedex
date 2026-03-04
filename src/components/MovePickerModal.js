@@ -27,6 +27,7 @@ const MovePickerModal = ({
   pokemon,
   currentMoves,
   moveDetails = null,
+  moveDetailsLoading = false,
   onSave,
   onClose,
 }) => {
@@ -204,7 +205,11 @@ const MovePickerModal = ({
         </div>
 
         <div className="move-picker-effect-preview" aria-live="polite">
-          {hoveredMoveName && getDetails(hoveredMoveName)?.effect ? (
+          {moveDetailsLoading ? (
+            <span className="move-picker-effect-preview-placeholder">
+              Loading move details…
+            </span>
+          ) : hoveredMoveName && getDetails(hoveredMoveName)?.effect ? (
             <>
               <span className="move-picker-effect-preview-label">
                 {displayName(hoveredMoveName)}:

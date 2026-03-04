@@ -2,7 +2,8 @@ import React, { useState, useContext, useRef, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import TeamContext from "../contexts/TeamContext";
 import { useToast } from "./ToastProvider";
-import { searchPokemon } from "../api";
+import { searchPokemon, getMoveDetails } from "../api";
+import { buildMoveInfoFromApi } from "../utils/moveDetails";
 import SearchSuggestions from "./SearchSuggestions";
 import TeamSlot from "./TeamSlot";
 import TeamAnalysis from "./TeamAnalysis";
@@ -44,6 +45,8 @@ const TeamBuilder = () => {
   const [renameValue, setRenameValue] = useState("");
   const [teamToDelete, setTeamToDelete] = useState(null);
   const [movePickerPokemon, setMovePickerPokemon] = useState(null);
+  const [movePickerDetails, setMovePickerDetails] = useState({});
+  const [movePickerDetailsLoading, setMovePickerDetailsLoading] = useState(false);
   const searchContainerRef = useRef(null);
   const searchInputRef = useRef(null);
   const exportMenuRef = useRef(null);
@@ -107,6 +110,44 @@ const TeamBuilder = () => {
       return () => document.removeEventListener("mousedown", handleClickOutside);
     }
   }, [showExportMenu]);
+
+  // Load move details when move picker opens so modal shows types, stats, effect
+  useEffect(() => {
+    if (!movePickerPokemon?.moves?.length) {
+      setMovePickerDetails({});
+      setMovePickerDetailsLoading(false);
+      return;
+    }
+    let cancelled = false;
+    setMovePickerDetailsLoading(true);
+    setMovePickerDetails({});
+    const uniqueMoves = [];
+    const seen = new Set();
+    for (const m of movePickerPokemon.moves) {
+      const name = m.move?.name;
+      if (name && !seen.has(name)) {
+        seen.add(name);
+        uniqueMoves.push(m);
+      }
+    }
+    Promise.all(
+      uniqueMoves.map(async (move) => {
+        const moveData = await getMoveDetails(move.move.url);
+        return buildMoveInfoFromApi(moveData, move);
+      })
+    ).then((results) => {
+      if (cancelled) return;
+      const details = {};
+      results.forEach((info) => {
+        if (info?.name) details[info.name] = info;
+      });
+      setMovePickerDetails(details);
+      setMovePickerDetailsLoading(false);
+    }).catch(() => {
+      if (!cancelled) setMovePickerDetailsLoading(false);
+    });
+    return () => { cancelled = true; };
+  }, [movePickerPokemon]);
 
   const handleSearch = async (query) => {
     if (!query.trim()) {
@@ -339,6 +380,8 @@ const TeamBuilder = () => {
           <MovePickerModal
             pokemon={movePickerPokemon}
             currentMoves={getMoveset(movePickerPokemon.name)}
+            moveDetails={movePickerDetails}
+            moveDetailsLoading={movePickerDetailsLoading}
             onSave={(moves) => {
               setMoveset(movePickerPokemon.name, moves);
               showToast("Moves saved");
