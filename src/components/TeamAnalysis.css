@@ -66,6 +66,13 @@
   opacity: 1;
 }
 
+.coverage-gap-hint {
+  display: block;
+  margin-top: 6px;
+  font-size: 0.85rem;
+  opacity: 0.9;
+}
+
 .stats-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -170,6 +177,28 @@
   font-size: 0.7rem;
   font-weight: 700;
   color: var(--text-color);
+}
+
+.matchup-section {
+  border-top: 1px solid var(--border-color);
+  padding-top: 20px;
+}
+
+.damage-calc-link {
+  display: inline-block;
+  margin-top: 10px;
+  padding: 8px 14px;
+  background-color: var(--filter-bg);
+  color: #6890F0;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  text-decoration: none;
+  transition: background-color 0.2s ease;
+}
+
+.damage-calc-link:hover {
+  background-color: rgba(104, 144, 240, 0.2);
 }
 
 @media (max-width: 768px) {

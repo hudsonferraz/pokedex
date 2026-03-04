@@ -37,6 +37,10 @@ const TeamAnalysis = ({ team }) => {
     .filter(([_, value]) => value === "super-effective")
     .map(([type]) => type);
 
+  const noCoverageTypes = Object.entries(coverage)
+    .filter(([_, value]) => value === "no-effect")
+    .map(([type]) => type);
+
   const allTypes = ["normal", "fire", "water", "electric", "grass", "ice", "fighting", "poison", "ground", "flying", "psychic", "bug", "rock", "ghost", "dragon", "dark", "steel", "fairy"];
 
   return (
@@ -131,6 +135,9 @@ const TeamAnalysis = ({ team }) => {
         <h3>Type Coverage</h3>
         <p className="analysis-note">
           Super-effective against: {superEffectiveCoverage.length}/18 types
+          {noCoverageTypes.length > 0 && (
+            <span className="coverage-gap-hint"> — Consider moves that hit: {noCoverageTypes.slice(0, 6).join(", ")}</span>
+          )}
         </p>
         <div className="coverage-grid">
           {allTypes.map(type => {
@@ -155,6 +162,22 @@ const TeamAnalysis = ({ team }) => {
             );
           })}
         </div>
+      </div>
+
+      <div className="analysis-section matchup-section">
+        <h3>Matchup summary</h3>
+        <p className="analysis-note">
+          Weak to: {superEffectiveWeaknesses.length > 0 ? superEffectiveWeaknesses.join(", ") : "none"}.
+          Resist/immune: {resistantTypes.length > 0 ? resistantTypes.join(", ") : "none"}.
+        </p>
+        <a
+          href="https://calc.pokemonshowdown.com/"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="damage-calc-link"
+        >
+          Open Pokémon Showdown damage calculator →
+        </a>
       </div>
     </div>
   );
