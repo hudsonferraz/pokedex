@@ -205,47 +205,49 @@ const Home = () => {
   };
 
   return (
-    <div>
+    <div className="browse-page">
       <Navbar />
-      <Searchbar onSearch={onSearchHandler} />
-      {!isSearching && (
-        <>
-          <RecentlyViewed />
-          <div style={{ display: "flex", justifyContent: "flex-end", alignItems: "center", padding: "0 20px", marginBottom: "10px" }}>
-            {pokemons.length > 0 && (
-              <div className="results-count">
-                Showing {pokemons.length} Pokemon
-              </div>
-            )}
+      <div className="browse-content">
+        <Searchbar onSearch={onSearchHandler} />
+        {!isSearching && (
+          <>
+            <RecentlyViewed />
+            <div className="browse-results-row">
+              {pokemons.length > 0 && (
+                <div className="results-count">
+                  Showing {pokemons.length} Pokemon
+                </div>
+              )}
+            </div>
+            <TypeFilter
+              selectedTypes={selectedTypes}
+              onTypeToggle={handleTypeToggle}
+              onClearAll={handleClearFilters}
+              selectedGeneration={selectedGeneration}
+              onGenerationChange={setSelectedGeneration}
+            />
+          </>
+        )}
+        {notFound ? (
+          <div className="not-found-container">
+            <div className="not-found-text">
+              <h2>Pokemon not found!</h2>
+              <p>Try searching for a different Pokemon name.</p>
+              <button onClick={() => onSearchHandler(undefined)} className="back-to-list-btn">
+                Back to Browse
+              </button>
+            </div>
           </div>
-          <TypeFilter
-            selectedTypes={selectedTypes}
-            onTypeToggle={handleTypeToggle}
-            onClearAll={handleClearFilters}
-            selectedGeneration={selectedGeneration}
-            onGenerationChange={setSelectedGeneration}
+        ) : (
+          <Pokedex
+            pokemons={pokemons}
+            loading={loading}
+            page={page}
+            setPage={setPage}
+            totalPages={totalPages}
           />
-        </>
-      )}
-      {notFound ? (
-        <div className="not-found-container">
-          <div className="not-found-text">
-            <h2>Pokemon not found!</h2>
-            <p>Try searching for a different Pokemon name.</p>
-            <button onClick={() => onSearchHandler(undefined)} className="back-to-list-btn">
-              Back to Browse
-            </button>
-          </div>
-        </div>
-      ) : (
-        <Pokedex
-          pokemons={pokemons}
-          loading={loading}
-          page={page}
-          setPage={setPage}
-          totalPages={totalPages}
-        />
-      )}
+        )}
+      </div>
     </div>
   );
 };

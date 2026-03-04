@@ -1,7 +1,5 @@
-import React, { useContext } from "react";
+import React from "react";
 import { useNavigate } from "react-router-dom";
-import FavoriteContext from "../contexts/favoritesContext";
-import { useToast } from "./ToastProvider";
 
 const getTypeColor = (typeName) => {
   const typeColors = {
@@ -29,29 +27,15 @@ const getTypeColor = (typeName) => {
 
 const Pokemon = (props) => {
   const navigate = useNavigate();
-  const { favoritePokemons, updateFavoritePokemons } =
-    useContext(FavoriteContext);
-  const { showToast } = useToast();
   const { pokemon } = props;
-  const onHeartClick = (e) => {
-    e.stopPropagation();
-    const wasFavorite = favoritePokemons.includes(pokemon.name);
-    updateFavoritePokemons(pokemon.name);
-    if (wasFavorite) {
-      showToast(`${pokemon.name} removed from favorites`, "info");
-    } else {
-      showToast(`${pokemon.name} added to favorites! ❤️`, "success");
-    }
-  };
   const onCardClick = () => {
     navigate(`/pokemon/${pokemon.name}`);
   };
-  const heart = favoritePokemons.includes(pokemon.name) ? "❤️" : "🖤";
   const primaryType = pokemon.types[0]?.type.name || "normal";
   const cardColor = getTypeColor(primaryType);
-  
+
   return (
-    <div 
+    <div
       className="pokemon-card"
       style={{ backgroundColor: cardColor }}
       onClick={onCardClick}
@@ -88,24 +72,15 @@ const Pokemon = (props) => {
           <h3> {pokemon.name}</h3>
           <div>#{pokemon.id}</div>
         </div>
-          <div className="card-bottom">
-            <div className="pokemon-type">
-              {pokemon.types.map((type, index) => {
-                return (
-                  <div key={index} className="pokemon-type-text">
-                    {type.type.name}
-                  </div>
-                );
-              })}
-            </div>
-            <button 
-              className="pokemon-heart-btn" 
-              onClick={onHeartClick}
-              title={favoritePokemons.includes(pokemon.name) ? "Remove from favorites" : "Add to favorites"}
-            >
-              {heart}
-            </button>
+        <div className="card-bottom">
+          <div className="pokemon-type">
+            {pokemon.types.map((type, index) => (
+              <div key={index} className="pokemon-type-text">
+                {type.type.name}
+              </div>
+            ))}
           </div>
+        </div>
       </div>
     </div>
   );

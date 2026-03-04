@@ -1,7 +1,6 @@
 import React, { useEffect, useState, useContext } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { searchPokemon, getPokemonSpecies, getEvolutionChain, getAbilityDetails, getPokemons, getMoveDetails, getPokemonForms } from "../api";
-import FavoriteContext from "../contexts/favoritesContext";
 import TeamContext from "../contexts/TeamContext";
 import { useToast } from "./ToastProvider";
 import { useComparison } from "../contexts/ComparisonContext";
@@ -42,7 +41,6 @@ const getTypeColor = (typeName) => {
 const PokemonDetail = () => {
   const { name } = useParams();
   const navigate = useNavigate();
-  const { favoritePokemons, updateFavoritePokemons } = useContext(FavoriteContext);
   const { team, addToTeam, isInTeam, canAddToTeam, getMoveset, setMoveset } = useContext(TeamContext);
   const { showToast } = useToast();
   const { comparisonPokemon, addToComparison, clearComparison } = useComparison();
@@ -297,16 +295,6 @@ const PokemonDetail = () => {
     }
   };
 
-  const onHeartClick = () => {
-    const wasFavorite = favoritePokemons.includes(pokemon.name);
-    updateFavoritePokemons(pokemon.name);
-    if (wasFavorite) {
-      showToast(`${pokemon.name} removed from favorites`, "info");
-    } else {
-      showToast(`${pokemon.name} added to favorites! ❤️`, "success");
-    }
-  };
-
   const handleShare = async () => {
     const url = window.location.href;
     try {
@@ -545,16 +533,6 @@ const PokemonDetail = () => {
                   onClick={handleShare}
                 >
                   Share Pokemon
-                </button>
-                <button 
-                  className="pokemon-detail-action-btn favorite-action-btn" 
-                  onClick={onHeartClick}
-                  style={{
-                    backgroundColor: favoritePokemons.includes(pokemon.name) ? "#e74c3c" : "var(--input-bg)",
-                    color: favoritePokemons.includes(pokemon.name) ? "white" : "var(--text-color)"
-                  }}
-                >
-                  {favoritePokemons.includes(pokemon.name) ? "Remove from Favorites" : "Add to Favorites"}
                 </button>
                 <button 
                   className="pokemon-detail-action-btn team-action-btn" 

@@ -1,8 +1,8 @@
 .type-filter-container {
-  padding: 15px;
+  padding: 12px;
   background-color: var(--filter-bg);
   border-radius: 8px;
-  margin: 15px 20px;
+  margin: 0 0 16px 0;
   transition: background-color 0.3s ease;
 }
 
@@ -89,13 +89,13 @@
 .generation-filter-section {
   margin-bottom: 15px;
   padding-bottom: 15px;
-  border-bottom: 1px solid #e0e0e0;
+  border-bottom: 1px solid var(--border-color);
 }
 
 .generation-filter-title {
   font-size: 0.9rem;
   font-weight: 600;
-  color: #333;
+  color: var(--text-color);
   margin: 0 0 10px 0;
   text-transform: uppercase;
   letter-spacing: 0.5px;
@@ -121,7 +121,7 @@
 
 .generation-filter-button:hover {
   border-color: #0e6f9f;
-  background-color: #f0f8ff;
+  background-color: var(--filter-bg);
 }
 
 .generation-filter-button.active {

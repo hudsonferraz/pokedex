@@ -5,18 +5,18 @@
 }
 
 .team-builder-content {
-  max-width: 1200px;
+  max-width: 1280px;
   margin: 0 auto;
-  padding: 20px;
+  padding: 16px 20px 24px;
 }
 
 .team-builder-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 30px;
+  margin-bottom: 20px;
   flex-wrap: wrap;
-  gap: 15px;
+  gap: 12px;
 }
 
 .team-builder-title-block {
@@ -187,7 +187,7 @@
 
 .team-slots-wrapper {
   overflow-x: auto;
-  margin-bottom: 30px;
+  margin-bottom: 24px;
   -webkit-overflow-scrolling: touch;
   padding-bottom: 8px;
 }
