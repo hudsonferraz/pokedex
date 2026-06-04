@@ -1,0 +1,40 @@
+.type-matchup-panel {
+  flex: 1;
+  min-width: 280px;
+}
+
+.type-matchup-panel-title {
+  margin: 0 0 6px;
+  font-size: 0.95rem;
+  color: var(--text-color);
+}
+
+.type-matchup-panel-subtitle {
+  margin: 0 0 10px;
+  font-size: 0.78rem;
+  color: var(--text-color);
+  opacity: 0.8;
+}
+
+.type-matchup-weak {
+  margin: 0 0 8px;
+  font-size: 0.82rem;
+  color: var(--danger);
+  font-weight: 600;
+}
+
+.type-matchup-se-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 10px;
+}
+
+.type-matchup-se-tag {
+  font-size: 0.7rem;
+  padding: 3px 8px;
+  border-radius: var(--radius-pill);
+  color: #fff;
+  font-weight: 600;
+  text-transform: capitalize;
+}

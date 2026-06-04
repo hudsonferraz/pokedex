@@ -33,12 +33,25 @@ flowchart LR
   subgraph apis [APIs]
     PokeAPI[PokeAPI]
     HF[Hugging Face via proxy]
+    Pikalytics[Pikalytics]
   end
   React --> PokeAPI
   React --> LS
   React -->|REACT_APP_API_URL| Render[Node server on Render]
   Render --> HF
+  Render --> Pikalytics
 ```
+
+### Live vs bundled data
+
+| Data | Source | Updates |
+|------|--------|---------|
+| Pokémon species, moves, stats | [PokeAPI](https://pokeapi.co/) | Automatic |
+| VGC usage %, top meta | Pikalytics (`GET /api/meta/usage/:format`) | ~monthly; server cache 6h |
+| Ban / restricted lists | `src/data/regulations.json` | Manual — link to [official VGC rules](https://play.pokemon.com/en-us/resources/rules/?category=vgc) |
+| Speed benchmarks | `src/data/speedBenchmarks.json` | Game mechanics (rarely changes) |
+
+If Pikalytics or the API is down, the app falls back to bundled `vgcUsage.json` / `vgcMeta.json` and shows **Offline fallback**.
 
 - **Browse / detail**: React calls PokeAPI directly for Pokémon data.
 - **Team builder**: Teams, movesets, and roles persist in `localStorage`.
@@ -51,6 +64,8 @@ flowchart LR
 - **AI team tips** — VGC rule engine (Tailwind/TR/Intimidate) + meta core hints + AI with full team context
 - **Speed tiers** — Level 50 speed table with Tailwind column and benchmarks
 - **Meta threats** — Curated cores per regulation ([Victory Road](https://victoryroad.pro/) style lists in `src/data/vgcMeta.json`)
+- **Team preview simulator** — Drag bring-4 vs opponent bring-4; type matchup matrix (no damage calc)
+- **VGC usage on Browse** — Live usage % from [Pikalytics](https://www.pikalytics.com/) via server proxy (6h cache); bundled JSON fallback offline
 - **Browse** — Search, type/generation filters, skeleton loading grid
 - **Dark mode** — Theme toggle with CSS variables
 - **Compare Pokémon** — Side-by-side stats from detail pages

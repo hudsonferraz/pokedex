@@ -1,12 +1,17 @@
 import React, { useMemo } from "react";
+import { useMetaData } from "../contexts/MetaDataContext";
 import { getMetaForRegulation, getMetaThreatTips } from "../utils/vgcMeta";
 import "./MetaThreatHints.css";
 
 const MetaThreatHints = ({ team, regulationId }) => {
-  const meta = useMemo(() => getMetaForRegulation(regulationId), [regulationId]);
+  const { meta, loading } = useMetaData();
+  const bundledMeta = useMemo(
+    () => getMetaForRegulation(regulationId, meta),
+    [regulationId, meta],
+  );
   const tips = useMemo(
-    () => getMetaThreatTips(team, regulationId),
-    [team, regulationId],
+    () => getMetaThreatTips(team, regulationId, meta),
+    [team, regulationId, meta],
   );
 
   if (!team?.length) return null;
@@ -14,7 +19,11 @@ const MetaThreatHints = ({ team, regulationId }) => {
   return (
     <section className="meta-threat-hints card-surface" aria-labelledby="meta-threat-title">
       <h2 id="meta-threat-title">Meta &amp; core threats</h2>
-      <p className="meta-threat-source">{meta.sourceNote}</p>
+      <p className="meta-threat-source">
+        {bundledMeta.sourceNote}
+        {meta?.live && " · Refreshed from Pikalytics."}
+        {loading && " · Updating…"}
+      </p>
 
       {tips.length > 0 ? (
         <ul className="meta-threat-list">
@@ -29,11 +38,17 @@ const MetaThreatHints = ({ team, regulationId }) => {
       )}
 
       <div className="meta-threat-top">
-        <span className="meta-threat-top-label">Frequently seen in {regulationId?.replace(/-/g, " ") || "this format"}:</span>
+        <span className="meta-threat-top-label">High usage in current format:</span>
         <div className="meta-threat-chips">
-          {(meta.topPokemon || []).slice(0, 12).map((speciesId) => (
+          {(bundledMeta.topPokemon || []).slice(0, 12).map((speciesId) => (
             <span key={speciesId} className="meta-threat-chip">
               {speciesId.replace(/-/g, " ")}
+              {meta?.usage?.[speciesId] != null && (
+                <span className="meta-threat-pct">
+                  {" "}
+                  {meta.usage[speciesId].toFixed(1)}%
+                </span>
+              )}
             </span>
           ))}
         </div>

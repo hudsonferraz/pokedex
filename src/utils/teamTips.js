@@ -147,7 +147,7 @@ export function getRuleBasedTips(team, context = {}) {
   tips.push(...getVgcCompositionTips(team, setsByName, rolesByName));
 
   if (regulationId) {
-    tips.push(...getMetaThreatTips(team, regulationId));
+    tips.push(...getMetaThreatTips(team, regulationId, context.liveMeta));
   }
 
   if (team.length < 6) {

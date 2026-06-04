@@ -24,7 +24,16 @@ const RegulationSelector = () => {
         ))}
       </select>
       <p className="regulation-selector-hint">
-        {regulation.notes} · Max {regulation.maxRestricted ?? 2} Restricted
+        {regulation.notes} · Max {regulation.maxRestricted ?? 2} Restricted.
+        Ban/restricted lists are bundled — verify against the{" "}
+        <a
+          href="https://play.pokemon.com/en-us/resources/rules/?category=vgc"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          official VGC handbook
+        </a>
+        . Usage % is loaded live from Pikalytics.
       </p>
     </div>
   );

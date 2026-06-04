@@ -2,27 +2,39 @@ import metaData from "../data/vgcMeta.json";
 import { normalizeSpeciesId } from "./regulation";
 import { getTeamWeaknesses } from "./teamAnalysis";
 
-export function getMetaForRegulation(regulationId) {
-  return metaData[regulationId] || metaData["regulation-i"];
+export function getMetaForRegulation(regulationId, liveMeta = null) {
+  if (liveMeta?.topPokemon?.length) {
+    return {
+      sourceNote: liveMeta.source,
+      sourceUrl: liveMeta.sourceUrl,
+      updated: liveMeta.updated,
+      live: liveMeta.live,
+      topPokemon: liveMeta.topPokemon,
+      cores: liveMeta.cores || [],
+    };
+  }
+  const bundled = metaData[regulationId] || metaData["regulation-i"];
+  return { ...bundled, live: false };
 }
 
-export function getMetaThreatTips(team, regulationId) {
+export function getMetaThreatTips(team, regulationId, liveMeta = null) {
   if (!team?.length) return [];
 
-  const meta = getMetaForRegulation(regulationId);
+  const meta = getMetaForRegulation(regulationId, liveMeta);
   const tips = [];
   const teamIds = new Set(team.map((pokemon) => normalizeSpeciesId(pokemon.name)));
 
-  const missingMetaAnswers = (meta.topPokemon || [])
+  const topList = meta.topPokemon || [];
+  const missingMetaAnswers = topList
     .filter((speciesId, index, array) => array.indexOf(speciesId) === index)
     .filter((speciesId) => !teamIds.has(speciesId))
     .slice(0, 4);
 
   if (missingMetaAnswers.length >= 3) {
     tips.push(
-      `Your roster does not include common meta picks (${missingMetaAnswers
+      `Your roster skips several high-usage picks (${missingMetaAnswers
         .map((id) => id.replace(/-/g, " "))
-        .join(", ")}). That can be fine for anti-meta teams — make sure you have a plan into them.`,
+        .join(", ")}). That can be fine for anti-meta teams — have a plan into them.`,
     );
   }
 
@@ -32,30 +44,34 @@ export function getMetaThreatTips(team, regulationId) {
     .map(([type]) => type);
 
   (meta.cores || []).forEach((core) => {
-    const overlap = core.pokemon.filter((speciesId) => teamIds.has(speciesId)).length;
+    const pokemonIds = (core.pokemon || []).map((id) => normalizeSpeciesId(id));
+    const overlap = pokemonIds.filter((speciesId) => teamIds.has(speciesId)).length;
     const corePresent = overlap >= 2;
     const corePartial = overlap === 1;
 
     if (corePresent) {
-      tips.push(`You run the ${core.name} core (${overlap}/${core.pokemon.length} pieces). ${core.hint}`);
+      tips.push(`You run the ${core.name} core. ${core.hint}`);
       return;
     }
 
-    if (!corePartial && criticalWeaknesses.length > 0) {
-      const weakToFireGrass =
-        criticalWeaknesses.includes("fire") || criticalWeaknesses.includes("grass");
-      if (core.id === "fire-grass" && weakToFireGrass) {
-        tips.push(`Meta threat — ${core.name}: ${core.hint}`);
-      }
-    }
-
-    if (!corePresent && !corePartial) {
-      const hasAnswer = core.pokemon.some((speciesId) => teamIds.has(speciesId));
-      if (!hasAnswer && ["fire-grass", "trick-room", "rain"].includes(core.id)) {
+    if (!corePresent && !corePartial && pokemonIds.length >= 2) {
+      const hasAnswer = pokemonIds.some((speciesId) => teamIds.has(speciesId));
+      if (!hasAnswer) {
         tips.push(`No direct answer to ${core.name} on your team. ${core.hint}`);
       }
     }
   });
+
+  if (
+    tips.length === 0 &&
+    criticalWeaknesses.length > 0 &&
+    topList.includes("incineroar") &&
+    !teamIds.has("incineroar")
+  ) {
+    tips.push(
+      `Meta still leans on Incineroar (${liveMeta?.live ? "live usage" : "historical data"}). Consider Intimidate pressure or a physical-bulk answer.`,
+    );
+  }
 
   return tips.slice(0, 4);
 }

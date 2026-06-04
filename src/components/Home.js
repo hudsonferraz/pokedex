@@ -1,11 +1,14 @@
-import React, { useEffect, useState, useMemo, useCallback } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import { getPokemonData, getPokemons, searchPokemon } from "../api";
+import { useRegulation } from "../contexts/RegulationContext";
 import Navbar from "./Navbar";
 import Pokedex from "./Pokedex";
 import Searchbar from "./Searchbar";
 import TypeFilter from "./TypeFilter";
 import RecentlyViewed from "./RecentlyViewed";
+import UsageStatsBar from "./UsageStatsBar";
 const Home = () => {
+  const { regulation } = useRegulation();
   const [page, setPage] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
   const [loading, setLoading] = useState(false);
@@ -212,6 +215,7 @@ const Home = () => {
         {!isSearching && (
           <>
             <RecentlyViewed />
+            <UsageStatsBar regulationLabel={regulation.label} />
             <div className="browse-results-row">
               {pokemons.length > 0 && (
                 <div className="results-count">
@@ -245,6 +249,7 @@ const Home = () => {
             page={page}
             setPage={setPage}
             totalPages={totalPages}
+
           />
         )}
       </div>

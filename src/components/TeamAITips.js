@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { getRuleBasedTips, getTeamSummaryForAI } from "../utils/teamTips";
 import { askAIForTeamTips } from "../services/aiTeamHelper";
 import { FORMAT_OPTIONS, getStoredFormat, setStoredFormat } from "../utils/formatOptions";
+import { useMetaData } from "../contexts/MetaDataContext";
 import "./TeamAITips.css";
 
 const TeamAITips = ({
@@ -18,12 +19,15 @@ const TeamAITips = ({
   const [aiError, setAiError] = useState("");
   const [format, setFormat] = useState(getStoredFormat);
 
+  const { meta: liveMeta } = useMetaData();
+
   const tipContext = {
     sets,
     roles,
     bringList,
     regulationId,
     regulationLabel,
+    liveMeta,
   };
 
   const ruleBasedTips = getRuleBasedTips(team, tipContext);

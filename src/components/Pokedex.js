@@ -1,10 +1,14 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useMemo } from "react";
 import Pagination from "./Pagination";
 import Pokemon from "./Pokemon";
 import PokemonCardSkeleton from "./PokemonCardSkeleton";
+import { useMetaData } from "../contexts/MetaDataContext";
+import { getUsagePercentFromMeta, getUsageMetaFromLive } from "../utils/usageStats";
 
 const Pokedex = (props) => {
   const { pokemons, loading, page, setPage, totalPages } = props;
+  const { meta } = useMetaData();
+  const usageMeta = useMemo(() => getUsageMetaFromLive(meta), [meta]);
   const onLeftClickHandler = () => {
     if (page > 0) {
       setPage(page - 1);
@@ -50,7 +54,17 @@ const Pokedex = (props) => {
         <div className="pokedex-grid">
           {pokemons &&
             pokemons.map((pokemon, index) => {
-              return <Pokemon key={pokemon.id || index} pokemon={pokemon} />;
+              const usagePercent = meta
+                ? getUsagePercentFromMeta(meta, pokemon.name)
+                : null;
+              return (
+                <Pokemon
+                  key={pokemon.id || index}
+                  pokemon={pokemon}
+                  usagePercent={usagePercent}
+                  usageLabel={usageMeta?.source}
+                />
+              );
             })}
         </div>
       )}

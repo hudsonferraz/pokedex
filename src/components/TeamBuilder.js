@@ -16,6 +16,7 @@ import MovePickerModal from "./MovePickerModal";
 import RegulationSelector from "./RegulationSelector";
 import RegulationWarnings from "./RegulationWarnings";
 import BringFourPreview from "./BringFourPreview";
+import TeamPreviewSimulator from "./TeamPreviewSimulator";
 import PokemonSetModal from "./PokemonSetModal";
 import ShowdownImportModal from "./ShowdownImportModal";
 import Navbar from "./Navbar";
@@ -534,6 +535,14 @@ const TeamBuilder = () => {
           team={team}
           bringList={bringList}
           onToggle={toggleBringPokemon}
+        />
+
+        <TeamPreviewSimulator
+          team={team}
+          sets={activeTeam?.sets}
+          bringList={bringList}
+          setBringList={setBringList}
+          regulationId={regulationId}
         />
 
         {movePickerPokemon && (

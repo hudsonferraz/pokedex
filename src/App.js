@@ -6,10 +6,27 @@ import PokemonDetail from "./components/PokemonDetail";
 import TeamBuilder from "./components/TeamBuilder";
 import ScrollToTop from "./components/ScrollToTop";
 import { TeamProvider } from "./contexts/TeamContext";
-import { RegulationProvider } from "./contexts/RegulationContext";
+import { RegulationProvider, useRegulation } from "./contexts/RegulationContext";
+import { MetaDataProvider } from "./contexts/MetaDataContext";
 import { ToastProvider } from "./components/ToastProvider";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import { ComparisonProvider } from "./contexts/ComparisonContext";
+
+function AppRoutes() {
+  const { regulationId } = useRegulation();
+  return (
+    <MetaDataProvider regulationId={regulationId}>
+      <TeamProvider>
+        <ScrollToTop />
+        <Routes>
+          <Route path="/" element={<TeamBuilder />} />
+          <Route path="/browse" element={<Home />} />
+          <Route path="/pokemon/:name" element={<PokemonDetail />} />
+        </Routes>
+      </TeamProvider>
+    </MetaDataProvider>
+  );
+}
 
 function App() {
   return (
@@ -17,14 +34,7 @@ function App() {
       <ComparisonProvider>
         <ToastProvider>
           <RegulationProvider>
-            <TeamProvider>
-              <ScrollToTop />
-              <Routes>
-                <Route path="/" element={<TeamBuilder />} />
-                <Route path="/browse" element={<Home />} />
-                <Route path="/pokemon/:name" element={<PokemonDetail />} />
-              </Routes>
-            </TeamProvider>
+            <AppRoutes />
           </RegulationProvider>
         </ToastProvider>
       </ComparisonProvider>

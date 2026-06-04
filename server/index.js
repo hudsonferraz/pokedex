@@ -19,6 +19,8 @@ const PORT = process.env.PORT || 3001;
 const HF_ROUTER_URL = "https://router.huggingface.co/v1/responses";
 // Chat model on the new Inference Providers (router). FLAN-T5 may not return output_text.
 const MODEL_ID = "meta-llama/Llama-3.2-3B-Instruct";
+const { getCached, setCached, getCacheStats } = require("./pikalyticsCache");
+const { parsePikalyticsMarkdown } = require("./pikalyticsParser");
 
 function getToken() {
   return (
@@ -54,6 +56,8 @@ app.get("/", (req, res) => {
     endpoints: {
       health: "GET /health",
       aiTeamTips: "POST /api/ai-team-tips",
+      metaUsage: "GET /api/meta/usage/:formatCode",
+      metaFormats: "GET /api/meta/formats",
     },
   };
 
@@ -83,6 +87,7 @@ app.get("/", (req, res) => {
   <ul>
     <li><code>GET /health</code> — health check (JSON)</li>
     <li><code>POST /api/ai-team-tips</code> — AI team tips (used by the app)</li>
+    <li><code>GET /api/meta/usage/:formatCode</code> — live VGC usage (Pikalytics proxy)</li>
   </ul>
 </body>
 </html>`);
@@ -125,6 +130,63 @@ function extractOutputText(body) {
   if (typeof body.output === "string") return body.output.trim();
   return null;
 }
+
+const PIKALYTICS_FORMATS = {
+  "gen9vgc2025regi": "VGC 2025 Regulation I",
+  "gen9vgc2025regj": "VGC 2025 Regulation J",
+  "gen9vgc2025regh": "VGC 2025 Regulation H",
+  "gen9vgc2026regf": "VGC 2026 Regulation F",
+  "gen9championsvgc2026regma": "Pokemon Champions VGC 2026 Reg M-A",
+};
+
+app.get("/api/meta/formats", (req, res) => {
+  res.json({
+    formats: Object.entries(PIKALYTICS_FORMATS).map(([formatCode, label]) => ({
+      formatCode,
+      label,
+    })),
+    cache: getCacheStats(),
+  });
+});
+
+app.get("/api/meta/usage/:formatCode", async (req, res) => {
+  const formatCode = (req.params.formatCode || "").trim();
+  if (!formatCode || !/^[a-z0-9]+$/i.test(formatCode)) {
+    return res.status(400).json({ error: "Invalid format code" });
+  }
+
+  const cached = getCached(formatCode);
+  if (cached) {
+    return res.json({ ...cached, cached: true });
+  }
+
+  const url = `https://www.pikalytics.com/ai/pokedex/${formatCode}`;
+  try {
+    const response = await fetchApi(url, {
+      headers: { Accept: "text/plain", "User-Agent": "PokedexTeamBuilder/1.0" },
+    });
+    if (!response.ok) {
+      return res.status(502).json({
+        error: `Pikalytics returned ${response.status} for ${formatCode}`,
+      });
+    }
+    const markdown = await response.text();
+    const parsed = parsePikalyticsMarkdown(markdown, formatCode);
+    const payload = {
+      ...parsed,
+      fetchedAt: new Date().toISOString(),
+      cached: false,
+    };
+    setCached(formatCode, payload);
+    return res.json(payload);
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Fetch failed";
+    console.error("Pikalytics meta error:", message);
+    return res.status(502).json({
+      error: `Could not load live meta from Pikalytics: ${message}`,
+    });
+  }
+});
 
 app.post("/api/ai-team-tips", async (req, res) => {
   const token = getToken();

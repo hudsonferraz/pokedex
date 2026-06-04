@@ -56,3 +56,8 @@
   color: var(--text-color);
   text-transform: capitalize;
 }
+
+.meta-threat-pct {
+  font-weight: 700;
+  opacity: 0.85;
+}

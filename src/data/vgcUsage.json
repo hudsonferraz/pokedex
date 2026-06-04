@@ -1,0 +1,59 @@
+{
+  "regulation-i": {
+    "updated": "2025-06",
+    "source": "Curated VGC usage estimates for portfolio UI — refresh from Victory Road / Smogon charts for live events.",
+    "usage": {
+      "incineroar": 48.2,
+      "rillaboom": 41.5,
+      "flutter-mane": 39.8,
+      "urshifu-rapid-strike": 35.4,
+      "landorus-therian": 32.1,
+      "amoonguss": 28.6,
+      "tornadus": 26.3,
+      "gholdengo": 24.7,
+      "kingambit": 23.9,
+      "palafin": 22.4,
+      "chi-yu": 21.8,
+      "chien-pao": 20.5,
+      "iron-hands": 19.2,
+      "dragonite": 17.6,
+      "pelipper": 16.8,
+      "torkoal": 15.4,
+      "farigiraf": 14.9,
+      "dondozo": 14.2,
+      "tinkaton": 13.8,
+      "arcanine": 12.5,
+      "entei": 11.9,
+      "ogerpon-hearthflame": 11.2,
+      "ogerpon-wellspring": 10.8,
+      "ogerpon-cornerstone": 9.6,
+      "ursaluna": 9.2,
+      "ninetales-alola": 8.8,
+      "murkrow": 8.4,
+      "kilowattrel": 7.9,
+      "garchomp": 7.5,
+      "hydreigon": 7.1,
+      "clefairy": 6.8,
+      "sneasler": 6.4,
+      "kommo-o": 6.1,
+      "baxcalibur": 5.8,
+      "ceruledge": 5.4,
+      "gouging-fire": 5.1,
+      "raging-bolt": 4.9,
+      "iron-boulder": 4.6,
+      "iron-crown": 4.3
+    }
+  },
+  "regulation-j": {
+    "updated": "2025-06",
+    "source": "Placeholder usage — update when Regulation J stats publish.",
+    "usage": {
+      "incineroar": 45,
+      "rillaboom": 40,
+      "flutter-mane": 38,
+      "landorus-therian": 30,
+      "amoonguss": 27,
+      "urshifu-rapid-strike": 33
+    }
+  }
+}

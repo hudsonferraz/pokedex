@@ -4,7 +4,7 @@ import { getTypeColor } from "../constants/typeColors";
 
 const Pokemon = (props) => {
   const navigate = useNavigate();
-  const { pokemon } = props;
+  const { pokemon, usagePercent, usageLabel } = props;
   const onCardClick = () => {
     navigate(`/pokemon/${pokemon.name}`);
   };
@@ -32,6 +32,11 @@ const Pokemon = (props) => {
         }
       }}
     >
+      {usagePercent != null && (
+        <span className="pokemon-usage-badge" title={usageLabel || "VGC usage"}>
+          {usagePercent.toFixed(1)}%
+        </span>
+      )}
       <div className="pokemon-image-container">
         <img
           alt={pokemon.name}
