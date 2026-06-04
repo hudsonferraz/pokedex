@@ -10,6 +10,67 @@
   padding: 16px 20px 24px;
 }
 
+.team-builder-hero {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: var(--space-5);
+  padding: var(--space-6);
+  margin-bottom: var(--space-5);
+  background: linear-gradient(135deg, var(--accent-muted) 0%, var(--card-bg) 55%);
+}
+
+.team-builder-hero-eyebrow {
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin: 0 0 var(--space-2);
+}
+
+.team-builder-hero h1 {
+  font-size: 1.75rem;
+  font-weight: 800;
+  color: var(--text-color);
+  margin: 0 0 var(--space-2);
+  line-height: 1.2;
+}
+
+.team-builder-hero-copy {
+  margin: 0;
+  max-width: 520px;
+  font-size: 0.95rem;
+  line-height: 1.5;
+  color: var(--text-color);
+  opacity: 0.9;
+}
+
+.team-builder-hero-features {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-color);
+}
+
+.team-builder-hero-features li::before {
+  content: "✓ ";
+  color: var(--success);
+}
+
+.team-builder-section-title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--text-color);
+  margin: 0;
+}
+
 .team-builder-header {
   display: flex;
   justify-content: space-between;
@@ -213,9 +274,33 @@
 
 .team-slots-grid {
   display: grid;
-  grid-template-columns: repeat(6, minmax(0, 1fr));
+  grid-template-columns: repeat(6, minmax(120px, 1fr));
   gap: 16px;
   min-width: 720px;
+}
+
+.search-loading-skeleton {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.search-skeleton-row {
+  height: 52px;
+  border-radius: var(--radius-md);
+}
+
+.export-menu button.copied-flash {
+  color: var(--success);
+  font-weight: 700;
+}
+
+@media (max-width: 900px) {
+  .team-slots-grid {
+    min-width: 640px;
+    grid-template-columns: repeat(6, minmax(108px, 1fr));
+  }
 }
 
 .add-pokemon-modal-overlay {

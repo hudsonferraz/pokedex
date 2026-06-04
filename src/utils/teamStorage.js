@@ -14,6 +14,7 @@ function loadFromStorage() {
         const teams = data.teams.map((t) => ({
           ...t,
           movesets: t.movesets && typeof t.movesets === "object" ? t.movesets : {},
+          roles: t.roles && typeof t.roles === "object" ? t.roles : {},
         }));
         return {
           teams,
@@ -31,7 +32,7 @@ function loadFromStorage() {
     if (legacy) {
       const pokemon = JSON.parse(legacy);
       if (Array.isArray(pokemon) && pokemon.length > 0) {
-        const team = { id: generateId(), name: "My Team", pokemon, movesets: {} };
+        const team = { id: generateId(), name: "My Team", pokemon, movesets: {}, roles: {} };
         window.localStorage.removeItem(LEGACY_TEAM_KEY);
         const payload = { teams: [team], activeTeamId: team.id };
         window.localStorage.setItem(TEAMS_KEY, JSON.stringify(payload));
@@ -42,7 +43,7 @@ function loadFromStorage() {
     // ignore migration error
   }
 
-  const defaultTeam = { id: generateId(), name: "Team 1", pokemon: [], movesets: {} };
+  const defaultTeam = { id: generateId(), name: "Team 1", pokemon: [], movesets: {}, roles: {} };
   return { teams: [defaultTeam], activeTeamId: defaultTeam.id };
 }
 

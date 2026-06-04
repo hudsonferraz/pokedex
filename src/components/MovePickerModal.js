@@ -1,27 +1,9 @@
 import React, { useState, useEffect, useMemo } from "react";
+import { getTypeColor } from "../constants/typeColors";
+import { useModalAccessibility } from "../hooks/useModalAccessibility";
 import "./MovePickerModal.css";
 
 const MAX_MOVES = 4;
-const TYPE_COLORS = {
-  normal: "#A8A878",
-  fire: "#F08030",
-  water: "#6890F0",
-  electric: "#F8D030",
-  grass: "#78C850",
-  ice: "#98D8D8",
-  fighting: "#C03028",
-  poison: "#A040A0",
-  ground: "#E0C068",
-  flying: "#A890F0",
-  psychic: "#F85888",
-  bug: "#A8B820",
-  rock: "#B8A038",
-  ghost: "#705898",
-  dragon: "#7038F8",
-  dark: "#705848",
-  steel: "#B8B8D0",
-  fairy: "#EE99AC",
-};
 
 const MovePickerModal = ({
   pokemon,
@@ -36,6 +18,7 @@ const MovePickerModal = ({
   );
   const [search, setSearch] = useState("");
   const [hoveredMoveName, setHoveredMoveName] = useState(null);
+  const modalRef = useModalAccessibility(true, onClose);
 
   const learnset = (pokemon?.moves || [])
     .map((m) => m.move.name)
@@ -140,11 +123,20 @@ const MovePickerModal = ({
     return { slot: i, moveName: moveName || null };
   });
 
+  const skeletonRows = Array.from({ length: 8 });
+
   return (
-    <div className="move-picker-overlay" onClick={onClose}>
-      <div className="move-picker-modal" onClick={(e) => e.stopPropagation()}>
+    <div className="move-picker-overlay" onClick={onClose} role="presentation">
+      <div
+        className="move-picker-modal"
+        ref={modalRef}
+        onClick={(e) => e.stopPropagation()}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="move-picker-title"
+      >
         <div className="move-picker-header">
-          <h2>Choose 4 moves — {displayName(pokemon?.name)}</h2>
+          <h2 id="move-picker-title">Choose 4 moves — {displayName(pokemon?.name)}</h2>
           <button
             type="button"
             className="move-picker-close"
@@ -173,8 +165,7 @@ const MovePickerModal = ({
                       <span
                         className="move-picker-slot-type"
                         style={{
-                          backgroundColor:
-                            TYPE_COLORS[getType(moveName)] || "#A8A878",
+                          backgroundColor: getTypeColor(getType(moveName)),
                         }}
                       >
                         {getType(moveName)}
@@ -226,7 +217,13 @@ const MovePickerModal = ({
         </div>
 
         <div className="move-picker-list">
-          {filteredBySearch.length === 0 ? (
+          {moveDetailsLoading ? (
+            <div className="move-picker-skeleton-list" aria-busy="true" aria-label="Loading moves">
+              {skeletonRows.map((_, index) => (
+                <div key={index} className="move-picker-skeleton-row skeleton-shimmer" />
+              ))}
+            </div>
+          ) : filteredBySearch.length === 0 ? (
             <p className="move-picker-no-results">No moves match.</p>
           ) : (
             filteredBySearch.map(({ type, moves: typeMoves }) => (
@@ -234,7 +231,7 @@ const MovePickerModal = ({
                 <h4
                   className="move-picker-type-heading"
                   style={{
-                    borderColor: TYPE_COLORS[type] || "var(--border-color)",
+                    borderColor: getTypeColor(type),
                   }}
                 >
                   {type === "other" ? "Other" : type}
@@ -264,8 +261,7 @@ const MovePickerModal = ({
                               <span
                                 className="move-picker-item-type"
                                 style={{
-                                  backgroundColor:
-                                    TYPE_COLORS[getType(name)] || "#A8A878",
+                                  backgroundColor: getTypeColor(getType(name)),
                                 }}
                               >
                                 {getType(name)}

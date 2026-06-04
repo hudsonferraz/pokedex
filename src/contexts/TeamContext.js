@@ -14,6 +14,8 @@ const TeamContext = React.createContext({
   getMoveset: () => [],
   setMoveset: () => null,
   setMovesets: () => null,
+  getRole: () => "",
+  setRole: () => null,
   addToTeam: () => null,
   removeFromTeam: () => null,
   clearTeam: () => null,
@@ -46,7 +48,7 @@ function TeamProviderWithState({ children }) {
         typeof optionalName === "string" && optionalName.trim()
           ? optionalName.trim()
           : `Team ${state.teams.length + 1}`;
-      const newTeam = { id: generateId(), name, pokemon: [], movesets: {} };
+      const newTeam = { id: generateId(), name, pokemon: [], movesets: {}, roles: {} };
       const teams = [...state.teams, newTeam];
       persist(teams, newTeam.id);
     },
@@ -80,11 +82,16 @@ function TeamProviderWithState({ children }) {
         if (t.id !== id) return t;
         const names = new Set(nextPokemon.map((p) => p && p.name).filter(Boolean));
         const movesets = t.movesets && typeof t.movesets === "object" ? t.movesets : {};
+        const roles = t.roles && typeof t.roles === "object" ? t.roles : {};
         const keptMovesets = {};
         Object.keys(movesets).forEach((name) => {
           if (names.has(name)) keptMovesets[name] = movesets[name];
         });
-        return { ...t, pokemon: nextPokemon, movesets: keptMovesets };
+        const keptRoles = {};
+        Object.keys(roles).forEach((name) => {
+          if (names.has(name)) keptRoles[name] = roles[name];
+        });
+        return { ...t, pokemon: nextPokemon, movesets: keptMovesets, roles: keptRoles };
       });
       persist(teams, state.activeTeamId);
     },
@@ -184,6 +191,31 @@ function TeamProviderWithState({ children }) {
     [activeTeam, state.teams, state.activeTeamId, persist]
   );
 
+  const getRole = React.useCallback(
+    (pokemonName) => {
+      if (!activeTeam?.roles) return "";
+      return activeTeam.roles[pokemonName] || "";
+    },
+    [activeTeam]
+  );
+
+  const setRole = React.useCallback(
+    (pokemonName, role) => {
+      if (!activeTeam) return;
+      const roles = { ...(activeTeam.roles || {}) };
+      if (!role) {
+        delete roles[pokemonName];
+      } else {
+        roles[pokemonName] = role;
+      }
+      const teams = state.teams.map((t) =>
+        t.id === activeTeam.id ? { ...t, roles } : t
+      );
+      persist(teams, state.activeTeamId);
+    },
+    [activeTeam, state.teams, state.activeTeamId, persist]
+  );
+
   const value = {
     teams: state.teams,
     activeTeamId: state.activeTeamId,
@@ -197,6 +229,8 @@ function TeamProviderWithState({ children }) {
     getMoveset,
     setMoveset,
     setMovesets,
+    getRole,
+    setRole,
     addToTeam,
     removeFromTeam,
     clearTeam,

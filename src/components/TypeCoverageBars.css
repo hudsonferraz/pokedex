@@ -1,0 +1,54 @@
+.type-coverage-bars {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-height: 320px;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+.coverage-bar-row {
+  display: grid;
+  grid-template-columns: 72px 1fr 32px;
+  align-items: center;
+  gap: 8px;
+}
+
+.coverage-bar-label {
+  font-size: 0.72rem;
+  font-weight: 600;
+  text-transform: capitalize;
+  color: var(--text-color);
+  opacity: 0.85;
+}
+
+.coverage-bar-track {
+  height: 10px;
+  background-color: var(--filter-bg);
+  border-radius: var(--radius-pill);
+  overflow: hidden;
+}
+
+.coverage-bar-fill {
+  height: 100%;
+  border-radius: var(--radius-pill);
+  min-width: 4px;
+  opacity: 0.85;
+  transition: width 0.35s ease;
+}
+
+.coverage-bar-fill.level-super_effective {
+  opacity: 1;
+}
+
+.coverage-bar-fill.level-no_effect {
+  opacity: 0.35;
+}
+
+.coverage-bar-multiplier {
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-align: right;
+  color: var(--text-color);
+  opacity: 0.8;
+}

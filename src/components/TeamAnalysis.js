@@ -1,21 +1,32 @@
 import React from "react";
-import { getTeamWeaknesses, getTeamTypeCoverage, getTeamStats, getUniqueTypes } from "../utils/teamAnalysis";
+import { useNavigate } from "react-router-dom";
+import {
+  getTeamWeaknesses,
+  getTeamTypeCoverage,
+  getTeamStats,
+  getUniqueTypes,
+} from "../utils/teamAnalysis";
+import { getTypeColor, ALL_POKEMON_TYPES } from "../constants/typeColors";
+import CollapsibleSection from "./CollapsibleSection";
+import TeamAverageRadar from "./TeamAverageRadar";
+import TypeCoverageBars from "./TypeCoverageBars";
 import "./TeamAnalysis.css";
 
-const getTypeColor = (typeName) => {
-  const typeColors = {
-    normal: "#A8A878", fire: "#F08030", water: "#6890F0", electric: "#F8D030", grass: "#78C850", ice: "#98D8D8",
-    fighting: "#C03028", poison: "#A040A0", ground: "#E0C068", flying: "#A890F0", psychic: "#F85888", bug: "#A8B820",
-    rock: "#B8A038", ghost: "#705898", dragon: "#7038F8", dark: "#705848", steel: "#B8B8D0", fairy: "#EE99AC",
-  };
-  return typeColors[typeName] || "#A8A878";
-};
-
 const TeamAnalysis = ({ team }) => {
+  const navigate = useNavigate();
+
   if (!team || team.length === 0) {
     return (
-      <div className="team-analysis-empty">
-        <p>Add Pokemon to your team to see analysis</p>
+      <div className="team-analysis-empty card-surface">
+        <h2 className="team-analysis-empty-title">Team analysis</h2>
+        <p>Add Pokémon to your team to see coverage, weaknesses, and average stats.</p>
+        <button
+          type="button"
+          className="team-analysis-empty-cta"
+          onClick={() => navigate("/browse")}
+        >
+          Browse Pokédex
+        </button>
       </div>
     );
   }
@@ -26,162 +37,140 @@ const TeamAnalysis = ({ team }) => {
   const uniqueTypes = getUniqueTypes(team);
 
   const superEffectiveWeaknesses = Object.entries(weaknesses)
-    .filter(([_, value]) => value === "super-effective")
+    .filter(([, value]) => value === "super-effective")
     .map(([type]) => type);
 
   const resistantTypes = Object.entries(weaknesses)
-    .filter(([_, value]) => value === "resistant" || value === "immune")
+    .filter(([, value]) => value === "resistant" || value === "immune")
     .map(([type]) => type);
 
   const superEffectiveCoverage = Object.entries(coverage)
-    .filter(([_, value]) => value === "super-effective")
+    .filter(([, value]) => value === "super-effective")
     .map(([type]) => type);
 
   const noCoverageTypes = Object.entries(coverage)
-    .filter(([_, value]) => value === "no-effect")
+    .filter(([, value]) => value === "no-effect")
     .map(([type]) => type);
 
-  const allTypes = ["normal", "fire", "water", "electric", "grass", "ice", "fighting", "poison", "ground", "flying", "psychic", "bug", "rock", "ghost", "dragon", "dark", "steel", "fairy"];
-
   return (
-    <div className="team-analysis">
-      <h2 className="team-analysis-title">Team Analysis</h2>
-      
-      <div className="analysis-section">
-        <h3>Team Composition</h3>
-        <div className="team-types-display">
-          {uniqueTypes.map(type => (
-            <span 
-              key={type}
-              className="type-badge"
-              style={{ backgroundColor: getTypeColor(type) }}
-            >
-              {type}
-            </span>
-          ))}
-        </div>
-        <p className="analysis-note">{team.length}/6 Pokemon</p>
-      </div>
-
-      <div className="analysis-section">
-        <h3>Average Base Stats</h3>
-        <div className="stats-grid">
-          <div className="stat-item">
-            <span className="stat-label">HP</span>
-            <span className="stat-value">{stats.hp}</span>
-          </div>
-          <div className="stat-item">
-            <span className="stat-label">Attack</span>
-            <span className="stat-value">{stats.attack}</span>
-          </div>
-          <div className="stat-item">
-            <span className="stat-label">Defense</span>
-            <span className="stat-value">{stats.defense}</span>
-          </div>
-          <div className="stat-item">
-            <span className="stat-label">Sp. Atk</span>
-            <span className="stat-value">{stats["special-attack"]}</span>
-          </div>
-          <div className="stat-item">
-            <span className="stat-label">Sp. Def</span>
-            <span className="stat-value">{stats["special-defense"]}</span>
-          </div>
-          <div className="stat-item">
-            <span className="stat-label">Speed</span>
-            <span className="stat-value">{stats.speed}</span>
-          </div>
-        </div>
-      </div>
-
-      <div className="analysis-section">
-        <h3>Team Weaknesses</h3>
-        {superEffectiveWeaknesses.length > 0 ? (
-          <div className="weakness-list">
-            {superEffectiveWeaknesses.map(type => (
-              <span 
-                key={type}
-                className="weakness-badge critical"
-                style={{ backgroundColor: getTypeColor(type) }}
-              >
-                {type} (2×)
-              </span>
-            ))}
-          </div>
-        ) : (
-          <p className="analysis-note positive">No critical weaknesses!</p>
-        )}
-      </div>
-
-      <div className="analysis-section">
-        <h3>Type Resistances</h3>
-        {resistantTypes.length > 0 ? (
-          <div className="weakness-list">
-            {resistantTypes.map(type => (
-              <span 
-                key={type}
-                className="weakness-badge positive"
-                style={{ backgroundColor: getTypeColor(type) }}
-              >
-                {type}
-              </span>
-            ))}
-          </div>
-        ) : (
-          <p className="analysis-note">No notable resistances</p>
-        )}
-      </div>
-
-      <div className="analysis-section">
-        <h3>Type Coverage</h3>
-        <p className="analysis-note">
-          Super-effective against: {superEffectiveCoverage.length}/18 types
-          {noCoverageTypes.length > 0 && (
-            <span className="coverage-gap-hint"> — Consider moves that hit: {noCoverageTypes.slice(0, 6).join(", ")}</span>
-          )}
+    <div className="team-analysis card-surface">
+      <header className="team-analysis-header">
+        <h2 className="team-analysis-title">Team analysis</h2>
+        <p className="team-analysis-subtitle">
+          {team.length}/6 Pokémon · {superEffectiveCoverage.length}/18 super-effective types
         </p>
-        <div className="coverage-grid">
-          {allTypes.map(type => {
-            const coverageValue = coverage[type];
-            const coverageClass = coverageValue === "super-effective" ? "super" :
-                                 coverageValue === "effective" ? "effective" :
-                                 coverageValue === "no-effect" ? "no-effect" : "not-very";
-            return (
-              <div 
-                key={type}
-                className={`coverage-item ${coverageClass}`}
-                style={{ borderColor: getTypeColor(type) }}
-                title={`${type}: ${coverageValue}`}
-              >
-                <span className="coverage-type-name">{type}</span>
-                <span className="coverage-indicator">
-                  {coverageValue === "super-effective" ? "2×" :
-                   coverageValue === "effective" ? "1×" :
-                   coverageValue === "no-effect" ? "0×" : "0.5×"}
-                </span>
-              </div>
-            );
-          })}
-        </div>
-      </div>
+      </header>
 
-      <div className="analysis-section matchup-section">
-        <h3>Matchup summary</h3>
-        <p className="analysis-note">
-          Weak to: {superEffectiveWeaknesses.length > 0 ? superEffectiveWeaknesses.join(", ") : "none"}.
-          Resist/immune: {resistantTypes.length > 0 ? resistantTypes.join(", ") : "none"}.
-        </p>
-        <a
-          href="https://calc.pokemonshowdown.com/"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="damage-calc-link"
+      <div className="team-analysis-dashboard">
+        <CollapsibleSection
+          title="Overview"
+          summary={`${uniqueTypes.length} types on roster`}
+          defaultOpen
         >
-          Open Pokémon Showdown damage calculator →
-        </a>
+          <div className="analysis-overview-grid">
+            <div className="analysis-overview-types">
+              <p className="analysis-label">Types represented</p>
+              <div className="team-types-display">
+                {uniqueTypes.map((type) => (
+                  <span
+                    key={type}
+                    className="type-badge"
+                    style={{ backgroundColor: getTypeColor(type) }}
+                  >
+                    {type}
+                  </span>
+                ))}
+              </div>
+            </div>
+            <div className="analysis-overview-radar">
+              <p className="analysis-label">Average base stats</p>
+              <TeamAverageRadar averages={stats} color="#6890F0" />
+            </div>
+          </div>
+        </CollapsibleSection>
+
+        <CollapsibleSection
+          title="Defensive matchups"
+          summary={
+            superEffectiveWeaknesses.length > 0
+              ? `Weak to ${superEffectiveWeaknesses.slice(0, 3).join(", ")}`
+              : "No critical weaknesses"
+          }
+        >
+          <h4 className="analysis-subheading">Critical weaknesses (2×)</h4>
+          {superEffectiveWeaknesses.length > 0 ? (
+            <div className="weakness-list">
+              {superEffectiveWeaknesses.map((type) => (
+                <span
+                  key={type}
+                  className="weakness-badge critical"
+                  style={{ backgroundColor: getTypeColor(type) }}
+                >
+                  {type}
+                </span>
+              ))}
+            </div>
+          ) : (
+            <p className="analysis-note positive">No critical weaknesses.</p>
+          )}
+          <h4 className="analysis-subheading">Resistances &amp; immunities</h4>
+          {resistantTypes.length > 0 ? (
+            <div className="weakness-list">
+              {resistantTypes.map((type) => (
+                <span
+                  key={type}
+                  className="weakness-badge positive"
+                  style={{ backgroundColor: getTypeColor(type) }}
+                >
+                  {type}
+                </span>
+              ))}
+            </div>
+          ) : (
+            <p className="analysis-note">No notable resistances.</p>
+          )}
+        </CollapsibleSection>
+
+        <CollapsibleSection
+          title="Offensive coverage"
+          summary={`${superEffectiveCoverage.length} types at 2×`}
+          defaultOpen={team.length >= 3}
+        >
+          <p className="analysis-note">
+            Super-effective against {superEffectiveCoverage.length} of{" "}
+            {ALL_POKEMON_TYPES.length} types.
+            {noCoverageTypes.length > 0 && (
+              <span className="coverage-gap-hint">
+                {" "}
+                Gaps: {noCoverageTypes.slice(0, 5).join(", ")}
+                {noCoverageTypes.length > 5 ? "…" : ""}
+              </span>
+            )}
+          </p>
+          <TypeCoverageBars coverage={coverage} />
+        </CollapsibleSection>
+
+        <CollapsibleSection title="Tools" defaultOpen={false}>
+          <p className="analysis-note">
+            Weak to:{" "}
+            {superEffectiveWeaknesses.length > 0
+              ? superEffectiveWeaknesses.join(", ")
+              : "none"}
+            . Resist/immune:{" "}
+            {resistantTypes.length > 0 ? resistantTypes.join(", ") : "none"}.
+          </p>
+          <a
+            href="https://calc.pokemonshowdown.com/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="damage-calc-link"
+          >
+            Open Pokémon Showdown damage calculator →
+          </a>
+        </CollapsibleSection>
       </div>
     </div>
   );
 };
 
 export default TeamAnalysis;
-

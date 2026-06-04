@@ -8,8 +8,10 @@ import SearchSuggestions from "./SearchSuggestions";
 import TeamSlot from "./TeamSlot";
 import TeamAnalysis from "./TeamAnalysis";
 import TeamAITips from "./TeamAITips";
+import TeamEmptyState from "./TeamEmptyState";
 import MovePickerModal from "./MovePickerModal";
 import Navbar from "./Navbar";
+import { useModalAccessibility } from "../hooks/useModalAccessibility";
 import { getTeamExportText, encodeTeamForShare, decodeTeamFromShare } from "../utils/teamExport";
 import "./TeamBuilder.css";
 
@@ -26,6 +28,8 @@ const TeamBuilder = () => {
     setCurrentTeamPokemon,
     getMoveset,
     setMoveset,
+    getRole,
+    setRole,
     addToTeam,
     removeFromTeam,
     clearTeam,
@@ -47,9 +51,13 @@ const TeamBuilder = () => {
   const [movePickerPokemon, setMovePickerPokemon] = useState(null);
   const [movePickerDetails, setMovePickerDetails] = useState({});
   const [movePickerDetailsLoading, setMovePickerDetailsLoading] = useState(false);
+  const [shareLinkCopied, setShareLinkCopied] = useState(false);
   const searchContainerRef = useRef(null);
   const searchInputRef = useRef(null);
   const exportMenuRef = useRef(null);
+  const addModalRef = useModalAccessibility(showAddModal, () => setShowAddModal(false));
+  const renameModalRef = useModalAccessibility(showRenameModal, () => setShowRenameModal(false));
+  const deleteModalRef = useModalAccessibility(!!teamToDelete, () => setTeamToDelete(null));
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -264,7 +272,8 @@ const TeamBuilder = () => {
     const url = `${window.location.origin}${window.location.pathname}?team=${encoded}`;
     navigator.clipboard.writeText(url).then(() => {
       showToast("Share link copied", "success");
-      setShowExportMenu(false);
+      setShareLinkCopied(true);
+      setTimeout(() => setShareLinkCopied(false), 2000);
     });
   };
 
@@ -272,10 +281,24 @@ const TeamBuilder = () => {
     <div className="team-builder-container">
       <Navbar />
       <div className="team-builder-content">
+        <section className="team-builder-hero card-surface">
+          <div className="team-builder-hero-text">
+            <p className="team-builder-hero-eyebrow">VGC team lab</p>
+            <h1>Build your Regulation I squad</h1>
+            <p className="team-builder-hero-copy">
+              Six slots, typed roles, custom movesets, and live analysis — built for doubles prep, not a generic form.
+            </p>
+          </div>
+          <ul className="team-builder-hero-features" aria-label="Features">
+            <li>Type coverage &amp; weaknesses</li>
+            <li>4-move sets per Pokémon</li>
+            <li>AI tips via Hugging Face</li>
+          </ul>
+        </section>
+
         <div className="team-builder-header">
           <div className="team-builder-title-block">
-            <h1>Team Builder</h1>
-            <p className="team-builder-tagline">Build a balanced squad with type coverage, weakness analysis, and AI tips.</p>
+            <h2 className="team-builder-section-title">Your teams</h2>
           </div>
           <div className="team-builder-actions">
             <div className="team-selector-row">
@@ -313,7 +336,13 @@ const TeamBuilder = () => {
                 {showExportMenu && (
                   <div className="export-menu">
                     <button type="button" onClick={handleCopyAsText}>Copy as text</button>
-                    <button type="button" onClick={handleCopyShareLink}>Copy share link</button>
+                    <button
+                      type="button"
+                      className={shareLinkCopied ? "copied-flash" : ""}
+                      onClick={handleCopyShareLink}
+                    >
+                      {shareLinkCopied ? "Link copied ✓" : "Copy share link"}
+                    </button>
                   </div>
                 )}
               </div>
@@ -329,9 +358,19 @@ const TeamBuilder = () => {
           </div>
         </div>
 
+        {team.length === 0 && (
+          <TeamEmptyState onAddFirst={() => handleSlotClick(0)} />
+        )}
+
         {teamToDelete && (
-          <div className="modal-overlay" onClick={() => setTeamToDelete(null)}>
-            <div className="confirm-modal" onClick={(e) => e.stopPropagation()}>
+          <div className="modal-overlay" onClick={() => setTeamToDelete(null)} role="presentation">
+            <div
+              className="confirm-modal"
+              ref={deleteModalRef}
+              role="dialog"
+              aria-modal="true"
+              onClick={(e) => e.stopPropagation()}
+            >
               <p>Delete this team? This cannot be undone.</p>
               <div className="confirm-modal-actions">
                 <button type="button" className="action-btn" onClick={() => setTeamToDelete(null)}>Cancel</button>
@@ -342,8 +381,14 @@ const TeamBuilder = () => {
         )}
 
         {showRenameModal && (
-          <div className="modal-overlay" onClick={() => setShowRenameModal(false)}>
-            <div className="rename-modal" onClick={(e) => e.stopPropagation()}>
+          <div className="modal-overlay" onClick={() => setShowRenameModal(false)} role="presentation">
+            <div
+              className="rename-modal"
+              ref={renameModalRef}
+              role="dialog"
+              aria-modal="true"
+              onClick={(e) => e.stopPropagation()}
+            >
               <h3>Rename team</h3>
               <input
                 type="text"
@@ -370,9 +415,11 @@ const TeamBuilder = () => {
                 slotNumber={slotIndex + 1}
                 pokemon={team[slotIndex] || null}
                 selectedMoves={team[slotIndex] ? getMoveset(team[slotIndex].name) : []}
+                role={team[slotIndex] ? getRole(team[slotIndex].name) : ""}
+                onRoleChange={(name, value) => setRole(name, value)}
                 onRemove={handleRemovePokemon}
                 onAdd={() => handleSlotClick(slotIndex)}
-                onEditMoves={(p) => setMovePickerPokemon(p)}
+                onEditMoves={(pokemon) => setMovePickerPokemon(pokemon)}
               />
             ))}
           </div>
@@ -396,10 +443,17 @@ const TeamBuilder = () => {
         <TeamAITips team={team} />
 
         {showAddModal && (
-          <div className="add-pokemon-modal-overlay" onClick={() => setShowAddModal(false)}>
-            <div className="add-pokemon-modal" onClick={(e) => e.stopPropagation()}>
+          <div className="add-pokemon-modal-overlay" onClick={() => setShowAddModal(false)} role="presentation">
+            <div
+              className="add-pokemon-modal"
+              ref={addModalRef}
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="add-pokemon-title"
+              onClick={(e) => e.stopPropagation()}
+            >
               <div className="modal-header">
-                <h2>Add Pokemon to Team</h2>
+                <h2 id="add-pokemon-title">Add Pokémon to team</h2>
                 <button 
                   className="modal-close-btn"
                   onClick={() => setShowAddModal(false)}
@@ -438,7 +492,12 @@ const TeamBuilder = () => {
                     />
                   )}
                 </div>
-                {isSearching && <div className="search-loading">Searching...</div>}
+                {isSearching && (
+                  <div className="search-loading-skeleton" aria-busy="true" aria-label="Searching">
+                    <div className="search-skeleton-row skeleton-shimmer" />
+                    <div className="search-skeleton-row skeleton-shimmer" />
+                  </div>
+                )}
                 {searchResults.length > 0 && (
                   <div className="search-results">
                     {searchResults.map((pokemon) => (

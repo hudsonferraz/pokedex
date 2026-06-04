@@ -1,111 +1,122 @@
 <div align="center">
   <img src="public/pokedex.png" alt="Pokedex" width="400"/>
   
-  # Pokedex
+  # Pokedex + VGC Team Lab
   
-  A modern, feature-rich Pokemon encyclopedia built with React
+  React Pokédex with a doubles-focused team builder, analysis dashboard, and AI tips.
   
   [![Live Demo](https://img.shields.io/badge/Live%20Demo-View%20Here-blue?style=for-the-badge)](https://hudsonferraz.github.io/pokedex/)
 </div>
 
-## Features
+## Live links
 
-- **Search Pokemon** - Quick search with autocomplete suggestions
-- **Favorites** - Save your favorite Pokemon for easy access
-- **Dark Mode** - Toggle between light and dark themes
-- **Detailed Stats** - View comprehensive Pokemon statistics with radar charts
-- **Compare Pokemon** - Side-by-side comparison of Pokemon stats
-- **Type-based Colors** - Pokemon cards colored by their types
-- **Evolution Chains** - Visual evolution paths for each Pokemon
-- **Responsive Design** - Works seamlessly on desktop and mobile
-- **Type & Generation Filters** - Filter Pokemon by type or generation
-- **Recently Viewed** - Quick access to recently viewed Pokemon
-- **Move Details** - Hover to see detailed move information
+| Service | URL |
+|---------|-----|
+| Frontend (GitHub Pages) | [https://hudsonferraz.github.io/pokedex/](https://hudsonferraz.github.io/pokedex/) |
+| Backend API (Render) | [https://pokedex-5p5t.onrender.com](https://pokedex-5p5t.onrender.com) |
 
-## Live Demo
+Build the frontend with the API URL:
 
-Visit the live application: **[https://hudsonferraz.github.io/pokedex/](https://hudsonferraz.github.io/pokedex/)**
-
-## Tech Stack
-
-- **React 18.2.0** - UI library
-- **React Router DOM 6.20.0** - Client-side routing
-- **PokeAPI** - Pokemon data source
-- **CSS3** - Styling with CSS variables for theming
-
-## Installation
-
-1. Clone the repository:
 ```bash
-git clone https://github.com/hudsonferraz/pokedex.git
-cd pokedex
-```
-
-2. Install dependencies:
-```bash
-npm install
-```
-
-## Usage
-
-### Development
-Start the development server:
-```bash
-npm start
-```
-The app will open at `http://localhost:3000`
-
-### Build
-Create a production build:
-```bash
+set REACT_APP_API_URL=https://pokedex-5p5t.onrender.com
 npm run build
 ```
 
-### Deploy
-Deploy to GitHub Pages:
+## Architecture
+
+```mermaid
+flowchart LR
+  subgraph browser [Browser]
+    React[React SPA]
+    LS[localStorage teams]
+  end
+  subgraph apis [APIs]
+    PokeAPI[PokeAPI]
+    HF[Hugging Face via proxy]
+  end
+  React --> PokeAPI
+  React --> LS
+  React -->|REACT_APP_API_URL| Render[Node server on Render]
+  Render --> HF
+```
+
+- **Browse / detail**: React calls PokeAPI directly for Pokémon data.
+- **Team builder**: Teams, movesets, and roles persist in `localStorage`.
+- **AI tips**: Browser calls your Node proxy; the server holds `HUGGINGFACE_TOKEN` (never exposed to the client).
+
+## Features
+
+- **VGC team lab** — Hero landing, six slots, role tags (Lead / Attacker / Support…), 4-move summaries
+- **Team analysis** — Collapsible dashboard, average-stats radar, type coverage bars, weakness badges
+- **AI team tips** — Rule-based tips + optional Hugging Face answers (format-aware)
+- **Browse** — Search, type/generation filters, skeleton loading grid
+- **Dark mode** — Theme toggle with CSS variables
+- **Compare Pokémon** — Side-by-side stats from detail pages
+- **Share teams** — Copy text or share link (`?team=…`)
+
+## Tech stack
+
+- React 18, React Router 6
+- PokeAPI (Pokémon data)
+- Node + Express proxy (AI tips, deploy on Render)
+- CSS design tokens (`src/styles/designTokens.css`, `src/constants/typeColors.js`)
+
+## Installation
+
 ```bash
+git clone https://github.com/hudsonferraz/pokedex.git
+cd pokedex
+npm install
+```
+
+### Development
+
+```bash
+npm start
+```
+
+Optional API proxy (for AI tips locally):
+
+```bash
+npm run start:server
+```
+
+Set `REACT_APP_API_URL=http://localhost:3001` when running the React app against the local server.
+
+### Deploy
+
+```bash
+npm run build
 npm run deploy
 ```
 
-## Project Structure
+See [DEPLOYMENT.md](DEPLOYMENT.md) for Render + GitHub Pages details.
+
+## Project structure
 
 ```
 pokedex/
-├── public/          # Static assets
+├── public/
+├── server/              # Express proxy (AI, health)
 ├── src/
-│   ├── components/  # React components
-│   ├── contexts/    # Context providers (Theme, Favorites, Comparison)
-│   ├── utils/       # Utility functions
-│   └── api.js       # PokeAPI integration
+│   ├── components/      # UI (TeamBuilder, TeamAnalysis, …)
+│   ├── constants/       # typeColors, roles
+│   ├── contexts/        # Team, Theme, Comparison
+│   ├── hooks/           # useModalAccessibility
+│   ├── styles/          # design tokens
+│   └── utils/           # team analysis, export, tips
 └── package.json
 ```
 
-## Key Features
-
-### Dark Mode
-Toggle between light and dark themes with persistent preference storage.
-
-### Pokemon Comparison
-Select two Pokemon from their detail pages to compare stats side-by-side with visual indicators.
-
-### Type Filtering
-Filter Pokemon by type across all generations with pagination support.
-
-### Generation Filtering
-Browse Pokemon by generation (Gen 1-9) with ID range filtering.
-
 ## API
 
-This project uses the [PokeAPI](https://pokeapi.co/) - a free, open-source RESTful API for Pokemon data.
+- [PokeAPI](https://pokeapi.co/) — Pokémon species, moves, stats
+- Custom server — `POST` team tips (proxies Hugging Face)
 
 ## License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE.txt) file for details.
+MIT — see [LICENSE](LICENSE.txt).
 
 ## Author
 
-**Hudson Ferraz**
-- GitHub: [@hudsonferraz](https://github.com/hudsonferraz)
-- Live Demo: [https://hudsonferraz.github.io/pokedex/](https://hudsonferraz.github.io/pokedex/)
-
----
+**Hudson Ferraz** — [@hudsonferraz](https://github.com/hudsonferraz)

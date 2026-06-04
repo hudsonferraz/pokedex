@@ -1,3 +1,15 @@
+.move-picker-skeleton-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 8px 0;
+}
+
+.move-picker-skeleton-row {
+  height: 44px;
+  border-radius: var(--radius-md);
+}
+
 .move-picker-overlay {
   position: fixed;
   inset: 0;
