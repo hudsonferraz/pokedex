@@ -1,0 +1,101 @@
+.speed-tier-table {
+  padding: var(--space-5);
+  margin-bottom: var(--space-5);
+}
+
+.speed-tier-header h2 {
+  margin: 0 0 var(--space-2);
+  font-size: 1.2rem;
+  color: var(--text-color);
+}
+
+.speed-tier-copy {
+  margin: 0 0 var(--space-4);
+  font-size: 0.85rem;
+  line-height: 1.45;
+  color: var(--text-color);
+  opacity: 0.85;
+}
+
+.speed-tier-table-wrap {
+  overflow-x: auto;
+}
+
+.speed-tier-grid {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+}
+
+.speed-tier-grid th,
+.speed-tier-grid td {
+  padding: 8px 10px;
+  text-align: left;
+  border-bottom: 1px solid var(--border-color);
+  color: var(--text-color);
+}
+
+.speed-tier-grid th {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  opacity: 0.75;
+}
+
+.speed-tier-name {
+  text-transform: capitalize;
+  font-weight: 600;
+}
+
+.speed-tier-speed,
+.speed-tier-tw {
+  font-weight: 700;
+  color: var(--accent);
+}
+
+.speed-tier-insights {
+  margin-top: var(--space-4);
+}
+
+.speed-tier-insight {
+  margin: 0 0 6px;
+  font-size: 0.82rem;
+  color: var(--text-color);
+  opacity: 0.9;
+}
+
+.speed-tier-insight-name {
+  text-transform: capitalize;
+}
+
+.speed-tier-benchmarks {
+  margin-top: var(--space-4);
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--border-color);
+}
+
+.speed-tier-benchmarks h3 {
+  margin: 0 0 var(--space-2);
+  font-size: 0.9rem;
+  color: var(--text-color);
+}
+
+.speed-tier-benchmarks ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 6px;
+}
+
+.speed-tier-benchmarks li {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.8rem;
+  color: var(--text-color);
+}
+
+.benchmark-speed {
+  font-weight: 700;
+  opacity: 0.85;
+}

@@ -1,0 +1,17 @@
+{
+  "level": 50,
+  "note": "Benchmarks for Gen 9 VGC doubles (level 50). Tailwind = 1.5× speed.",
+  "entries": [
+    { "label": "Max speed Dragapult", "speed": 177 },
+    { "label": "Max speed Flutter Mane", "speed": 175 },
+    { "label": "Max speed Raging Bolt", "speed": 166 },
+    { "label": "Tailwind +1 (base 145)", "baseSpeed": 145, "tailwind": true },
+    { "label": "Tailwind +1 (base 136)", "baseSpeed": 136, "tailwind": true },
+    { "label": "Tailwind +1 (base 100)", "baseSpeed": 100, "tailwind": true },
+    { "label": "Unboosted 145", "speed": 145 },
+    { "label": "Unboosted 136", "speed": 136 },
+    { "label": "Unboosted 100", "speed": 100 },
+    { "label": "Unboosted 85", "speed": 85 },
+    { "label": "TR slow (base 43)", "baseSpeed": 43, "trickRoom": true }
+  ]
+}

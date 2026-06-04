@@ -4,24 +4,42 @@ import { askAIForTeamTips } from "../services/aiTeamHelper";
 import { FORMAT_OPTIONS, getStoredFormat, setStoredFormat } from "../utils/formatOptions";
 import "./TeamAITips.css";
 
-const TeamAITips = ({ team }) => {
+const TeamAITips = ({
+  team,
+  sets,
+  roles,
+  bringList,
+  regulationId,
+  regulationLabel,
+}) => {
   const [aiQuestion, setAiQuestion] = useState("");
   const [aiResponse, setAiResponse] = useState("");
   const [aiLoading, setAiLoading] = useState(false);
   const [aiError, setAiError] = useState("");
   const [format, setFormat] = useState(getStoredFormat);
 
-  const ruleBasedTips = getRuleBasedTips(team);
+  const tipContext = {
+    sets,
+    roles,
+    bringList,
+    regulationId,
+    regulationLabel,
+  };
+
+  const ruleBasedTips = getRuleBasedTips(team, tipContext);
 
   const handleAskAI = async () => {
-    const question = (aiQuestion || "Give me tips for forming a good team.").trim();
+    const question = (aiQuestion || "Give me VGC tips for this team.").trim();
     setAiError("");
     setAiResponse("");
     setAiLoading(true);
 
     try {
-      const teamSummary = getTeamSummaryForAI(team);
-      const text = await askAIForTeamTips(teamSummary, question, format);
+      const teamSummary = getTeamSummaryForAI(team, tipContext);
+      const aiFormat =
+        format ||
+        (regulationLabel ? `VGC ${regulationLabel}` : "VGC doubles");
+      const text = await askAIForTeamTips(teamSummary, question, aiFormat);
       setAiResponse(text);
     } catch (err) {
       setAiError(err.message || "Something went wrong. Try again.");
@@ -35,7 +53,10 @@ const TeamAITips = ({ team }) => {
       <h2 className="team-ai-tips-title">Team tips</h2>
 
       <div className="tips-section">
-        <h3>Quick tips (no API)</h3>
+        <h3>VGC quick tips (no API)</h3>
+        <p className="tips-section-note">
+          Uses your roles, moves, abilities, and regulation meta data.
+        </p>
         <ul className="tips-list">
           {ruleBasedTips.map((tip, index) => (
             <li key={index}>{tip}</li>
@@ -44,13 +65,14 @@ const TeamAITips = ({ team }) => {
       </div>
 
       <div className="tips-section ai-section">
-        <h3>Ask for more tips</h3>
+        <h3>Ask AI (VGC-tuned)</h3>
         <p className="ai-hint">
-          Ask the AI for advice on your team (balance, coverage, roles). Runs on our server — no key in your browser.
+          Sends regulation, roles, items, Tera, bring-4, and moves to our server — tuned for doubles
+          (Tailwind, TR, restricteds).
         </p>
         <div className="ai-format-row">
           <label htmlFor="ai-format" className="ai-format-label">
-            Format:
+            Extra format hint:
           </label>
           <select
             id="ai-format"
@@ -74,7 +96,7 @@ const TeamAITips = ({ team }) => {
           <input
             type="text"
             className="ai-input"
-            placeholder="e.g. How can I improve type coverage for Regulation I?"
+            placeholder="e.g. What should I bring into rain teams? Is my Tailwind plan ok?"
             value={aiQuestion}
             onChange={(event) => setAiQuestion(event.target.value)}
             onKeyDown={(event) => event.key === "Enter" && !aiLoading && handleAskAI()}

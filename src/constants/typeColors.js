@@ -32,4 +32,7 @@ export const TEAM_ROLE_OPTIONS = [
   { value: "support", label: "Support" },
   { value: "tank", label: "Tank" },
   { value: "sweeper", label: "Sweeper" },
+  { value: "weather", label: "Weather" },
+  { value: "tr", label: "Trick Room" },
+  { value: "anti-meta", label: "Anti-meta" },
 ];

@@ -244,9 +244,34 @@
   padding-top: 20px;
 }
 
+.analysis-tools-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  align-items: center;
+  margin-top: var(--space-3);
+}
+
+.damage-calc-btn {
+  padding: 10px 16px;
+  border: none;
+  border-radius: var(--radius-md);
+  background: var(--accent);
+  color: #fff;
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.damage-calc-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-sm);
+}
+
 .damage-calc-link {
   display: inline-block;
-  margin-top: 10px;
+  margin-top: 0;
   padding: 8px 14px;
   background-color: var(--filter-bg);
   color: #6890F0;

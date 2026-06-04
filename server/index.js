@@ -144,8 +144,14 @@ app.post("/api/ai-team-tips", async (req, res) => {
   const formatHint =
     typeof format === "string" && format.trim()
       ? ` Format: ${format.trim()}.`
-      : "";
-  const prompt = `You are a Pokémon team-building advisor. Context: ${summary}.${formatHint} User question: ${message}. Give a short, practical tip (2-4 sentences).`;
+      : " Format: Pokémon VGC doubles (6 registered, bring 4).";
+  const prompt = `Team context: ${summary}.${formatHint} User question: ${message}. Answer with VGC doubles advice (speed control, Tera, restricteds, common cores). Keep it to 2-4 sentences.`;
+
+  const vgcInstructions =
+    "You are a Pokémon VGC (Video Game Championships) doubles coach. " +
+    "Teams register 6 Pokémon and bring 4 each round. " +
+    "Give practical advice on Tailwind, Trick Room, Tera types, Intimidate, regulation restricteds, " +
+    "Fire/Grass cores, and team preview. Use 2-4 sentences.";
 
   try {
     const hfRes = await fetchApi(HF_ROUTER_URL, {
@@ -156,8 +162,7 @@ app.post("/api/ai-team-tips", async (req, res) => {
       },
       body: JSON.stringify({
         model: MODEL_ID,
-        instructions:
-          "You are a Pokémon team-building advisor. Give short, practical tips in 2-4 sentences.",
+        instructions: vgcInstructions,
         input: prompt,
       }),
     });

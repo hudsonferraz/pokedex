@@ -1,0 +1,58 @@
+.meta-threat-hints {
+  padding: var(--space-5);
+  margin-bottom: var(--space-5);
+}
+
+.meta-threat-hints h2 {
+  margin: 0 0 var(--space-2);
+  font-size: 1.2rem;
+  color: var(--text-color);
+}
+
+.meta-threat-source {
+  margin: 0 0 var(--space-3);
+  font-size: 0.78rem;
+  font-style: italic;
+  color: var(--text-color);
+  opacity: 0.75;
+}
+
+.meta-threat-list {
+  margin: 0 0 var(--space-4);
+  padding-left: 1.2rem;
+  color: var(--text-color);
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+.meta-threat-empty {
+  margin: 0 0 var(--space-4);
+  font-size: 0.9rem;
+  color: var(--text-color);
+  opacity: 0.85;
+}
+
+.meta-threat-top-label {
+  display: block;
+  font-size: 0.8rem;
+  font-weight: 600;
+  margin-bottom: var(--space-2);
+  color: var(--text-color);
+  text-transform: capitalize;
+}
+
+.meta-threat-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.meta-threat-chip {
+  font-size: 0.72rem;
+  padding: 4px 10px;
+  border-radius: var(--radius-pill);
+  background: var(--filter-bg);
+  border: 1px solid var(--border-color);
+  color: var(--text-color);
+  text-transform: capitalize;
+}

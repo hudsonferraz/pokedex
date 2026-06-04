@@ -1,14 +1,131 @@
-import { getTeamWeaknesses, getTeamTypeCoverage, getTeamStats, getUniqueTypes } from "./teamAnalysis";
+import {
+  getTeamWeaknesses,
+  getTeamTypeCoverage,
+  getTeamStats,
+  getUniqueTypes,
+} from "./teamAnalysis";
+import { getMetaThreatTips } from "./vgcMeta";
+import { normalizeSetEntry } from "./pokemonSets";
+
+const VGC_MOVES = {
+  tailwind: ["tailwind"],
+  trickRoom: ["trick-room"],
+  fakeOut: ["fake-out"],
+  protect: ["protect"],
+  followMe: ["follow-me", "rage-powder"],
+};
+
+const WEATHER_ABILITIES = {
+  sun: ["drought", "orichalcum pulse"],
+  rain: ["drizzle", "primordial sea"],
+  snow: ["snow warning", "snowscape"],
+};
+
+function teamHasMove(team, setsByName, moveIds) {
+  return team.some((pokemon) => {
+    const set = normalizeSetEntry(setsByName?.[pokemon.name]);
+    return set.moves.some((move) => moveIds.includes(move));
+  });
+}
+
+function countTeamsWithAbility(team, setsByName, abilityNeedle) {
+  const needle = abilityNeedle.toLowerCase();
+  return team.filter((pokemon) => {
+    const set = normalizeSetEntry(setsByName?.[pokemon.name]);
+    return (set.ability || "").toLowerCase().includes(needle);
+  }).length;
+}
+
+function getRoleCounts(rolesByName) {
+  const counts = {};
+  Object.values(rolesByName || {}).forEach((role) => {
+    if (!role) return;
+    counts[role] = (counts[role] || 0) + 1;
+  });
+  return counts;
+}
+
+function getVgcCompositionTips(team, setsByName, rolesByName) {
+  const tips = [];
+  if (!team?.length) return tips;
+
+  const hasTailwind = teamHasMove(team, setsByName, VGC_MOVES.tailwind);
+  const hasTrickRoom = teamHasMove(team, setsByName, VGC_MOVES.trickRoom);
+  const hasFakeOut = teamHasMove(team, setsByName, VGC_MOVES.fakeOut);
+  const hasRedirect = teamHasMove(team, setsByName, VGC_MOVES.followMe);
+  const intimidateCount = countTeamsWithAbility(team, setsByName, "intimidate");
+  const roleCounts = getRoleCounts(rolesByName);
+  const leadCount = roleCounts.lead || 0;
+
+  if (!hasTailwind && !hasTrickRoom && team.length >= 4) {
+    tips.push(
+      "No Tailwind or Trick Room detected. Most VGC teams want speed control — consider one unless your matchup plan is hard anti-meta.",
+    );
+  }
+
+  if (hasTailwind && hasTrickRoom) {
+    tips.push(
+      "You have both Tailwind and Trick Room. Make sure only one game plan is active per matchup (often split across different Pokémon).",
+    );
+  }
+
+  if (intimidateCount > 1) {
+    tips.push(
+      `You have ${intimidateCount} Intimidate sources. Diminishing returns — one cycle is usually enough unless you target specific matchups.`,
+    );
+  }
+
+  if (intimidateCount === 0 && team.length >= 5) {
+    tips.push(
+      "No Intimidate on the team. Many meta teams use physical attackers — consider how you handle -1 Attack pressure.",
+    );
+  }
+
+  if (leadCount === 0 && team.length >= 4) {
+    tips.push('Tag at least one "Lead" role and consider Fake Out or redirection for turn-one safety.');
+  } else if (leadCount > 0 && !hasFakeOut && !hasRedirect && team.length >= 4) {
+    tips.push(
+      "Leads without Fake Out or Follow Me / Rage Powder can be punished. Ensure your turn-one plan is still safe.",
+    );
+  }
+
+  if (roleCounts.weather >= 1) {
+    const hasSun = team.some((pokemon) => {
+      const set = normalizeSetEntry(setsByName?.[pokemon.name]);
+      return WEATHER_ABILITIES.sun.some((ability) =>
+        (set.ability || "").toLowerCase().includes(ability),
+      );
+    });
+    const hasRain = team.some((pokemon) => {
+      const set = normalizeSetEntry(setsByName?.[pokemon.name]);
+      return WEATHER_ABILITIES.rain.some((ability) =>
+        (set.ability || "").toLowerCase().includes(ability),
+      );
+    });
+    if (hasSun && hasRain) {
+      tips.push("Both sun and rain tools detected — avoid conflicting weather timers on the same board.");
+    }
+  }
+
+  if (roleCounts.tr >= 2) {
+    tips.push("Multiple Trick Room role tags — confirm you are not over-investing in slow mode without anti-speed answers.");
+  }
+
+  return tips;
+}
 
 /**
- * Builds rule-based tips for the current team (no API, always free).
- * Used as fallback and alongside optional AI tips.
+ * Rule-based tips (no API). VGC-aware when sets/roles/regulation are provided.
  */
-export function getRuleBasedTips(team) {
+export function getRuleBasedTips(team, context = {}) {
+  const { sets, roles, regulationId } = context;
+  const setsByName = sets || {};
+  const rolesByName = roles || {};
+
   if (!team || team.length === 0) {
     return [
-      "Add 1–6 Pokémon to your team to get tips.",
-      "A balanced team usually has mixed types and roles (sweeper, wall, support).",
+      "Add 1–6 Pokémon to your team to get VGC tips.",
+      "Use Showdown paste import, then set roles, items, and moves for doubles-specific advice.",
     ];
   }
 
@@ -27,71 +144,112 @@ export function getRuleBasedTips(team) {
 
   const tips = [];
 
+  tips.push(...getVgcCompositionTips(team, setsByName, rolesByName));
+
+  if (regulationId) {
+    tips.push(...getMetaThreatTips(team, regulationId));
+  }
+
   if (team.length < 6) {
-    tips.push(`You have ${team.length}/6 Pokémon. Consider adding more for coverage and flexibility.`);
+    tips.push(`You have ${team.length}/6 Pokémon. Register a full box for real VGC team preview.`);
   }
 
   if (superEffectiveWeaknesses.length > 0) {
     const types = superEffectiveWeaknesses.slice(0, 5).join(", ");
-    tips.push(`Your team is weak to: ${types}. Add a Pokémon that resists or can handle these types.`);
+    tips.push(`Team is weak to: ${types}. In doubles, spread damage punishes shared weaknesses — patch with typings or Tera.`);
   }
 
   if (noCoverageTypes.length > 0 && noCoverageTypes.length <= 5) {
-    const types = noCoverageTypes.join(", ");
-    tips.push(`You have no super-effective damage against: ${types}. Consider a Pokémon with these attacking types.`);
+    tips.push(
+      `Limited offensive pressure into: ${noCoverageTypes.join(", ")}. Add move types or Tera blast targets.`,
+    );
   }
 
   if (uniqueTypes.length <= 2 && team.length >= 3) {
-    tips.push("Your team has limited type diversity. Adding different types improves matchup options.");
+    tips.push("Low type diversity — doubles rewards resisting common spread attacks (Heat Wave, Dazzling Gleam, etc.).");
   }
 
-  const lowSpeed = stats.speed < 70 && team.length >= 4;
-  const lowDefense = (stats.defense + stats["special-defense"]) / 2 < 75 && team.length >= 4;
-  if (lowSpeed) {
-    tips.push("Average Speed is on the lower side. Consider a fast Pokémon for revenge killing or setup.");
-  }
-  if (lowDefense) {
-    tips.push("Bulk is a bit low. A defensive or support Pokémon can help your team last longer.");
+  if (stats.speed < 70 && team.length >= 4 && !teamHasMove(team, setsByName, VGC_MOVES.trickRoom)) {
+    tips.push("Slow average Speed without Trick Room — you may need Tailwind, priority, or a TR mode.");
   }
 
-  if (tips.length === 0) {
-    tips.push("Your team has decent type coverage and balance. Consider roles (lead, sweeper, wall) and move sets next.");
+  const seen = new Set();
+  const unique = tips.filter((tip) => {
+    if (seen.has(tip)) return false;
+    seen.add(tip);
+    return true;
+  });
+
+  if (unique.length === 0) {
+    unique.push(
+      "Solid baseline. Refine bring-4, speed tiers, and Tera plans for your regulation meta.",
+    );
   }
 
-  return tips;
+  return unique.slice(0, 10);
 }
 
 /**
- * Builds a short text summary of the team for the AI context (names, types, weaknesses, coverage).
+ * Rich team summary for AI (doubles / VGC context).
  */
-export function getTeamSummaryForAI(team) {
+export function getTeamSummaryForAI(team, context = {}) {
   if (!team || team.length === 0) {
-    return "The user has no Pokémon in their team yet.";
+    return "The user has no Pokémon in their team yet. They are building for Pokémon VGC doubles (6 registered, bring 4).";
   }
 
+  const {
+    sets,
+    roles,
+    bringList,
+    regulationLabel,
+    regulationId,
+  } = context;
+
+  const setsByName = sets || {};
+  const rolesByName = roles || {};
   const weaknesses = getTeamWeaknesses(team);
-  const coverage = getTeamTypeCoverage(team);
   const superEffectiveWeaknesses = Object.entries(weaknesses)
     .filter(([, value]) => value === "super-effective")
     .map(([type]) => type);
-  const noCoverage = Object.entries(coverage)
-    .filter(([, value]) => value === "no-effect")
-    .map(([type]) => type);
 
-  const namesAndTypes = team
-    .filter(Boolean)
-    .map((p) => {
-      const types = (p.types || []).map((t) => t.type.name).join("/");
-      return `${p.name} (${types})`;
-    })
-    .join(", ");
+  const memberLines = team.filter(Boolean).map((pokemon) => {
+    const types = (pokemon.types || []).map((entry) => entry.type.name).join("/");
+    const set = normalizeSetEntry(setsByName[pokemon.name]);
+    const role = rolesByName[pokemon.name] || "unspecified";
+    const moves =
+      set.moves.length > 0
+        ? set.moves.map((move) => move.replace(/-/g, " ")).join(", ")
+        : "moves not set";
+    const parts = [
+      `${pokemon.name} (${types})`,
+      `role: ${role}`,
+      set.ability ? `ability: ${set.ability}` : null,
+      set.item ? `item: ${set.item}` : null,
+      set.nature ? `nature: ${set.nature}` : null,
+      set.teraType ? `Tera: ${set.teraType}` : null,
+      `moves: ${moves}`,
+    ].filter(Boolean);
+    return parts.join("; ");
+  });
 
-  let summary = `Team (${team.length}/6): ${namesAndTypes}.`;
+  let summary = `VGC doubles team (${team.length}/6 registered).`;
+  if (regulationLabel || regulationId) {
+    summary += ` Regulation: ${regulationLabel || regulationId}.`;
+  }
+  summary += ` Roster: ${memberLines.join(" | ")}.`;
+
+  if (bringList?.length) {
+    summary += ` Planned bring-4: ${bringList.join(", ")}.`;
+  }
+
   if (superEffectiveWeaknesses.length > 0) {
-    summary += ` Weak to: ${superEffectiveWeaknesses.join(", ")}.`;
+    summary += ` Shared weaknesses: ${superEffectiveWeaknesses.join(", ")}.`;
   }
-  if (noCoverage.length > 0) {
-    summary += ` No super-effective coverage vs: ${noCoverage.slice(0, 6).join(", ")}.`;
-  }
+
+  const hasTailwind = teamHasMove(team, setsByName, VGC_MOVES.tailwind);
+  const hasTr = teamHasMove(team, setsByName, VGC_MOVES.trickRoom);
+  if (hasTailwind) summary += " Has Tailwind.";
+  if (hasTr) summary += " Has Trick Room.";
+
   return summary;
 }

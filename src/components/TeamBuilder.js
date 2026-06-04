@@ -9,6 +9,8 @@ import SearchSuggestions from "./SearchSuggestions";
 import TeamSlot from "./TeamSlot";
 import TeamAnalysis from "./TeamAnalysis";
 import TeamAITips from "./TeamAITips";
+import SpeedTierTable from "./SpeedTierTable";
+import MetaThreatHints from "./MetaThreatHints";
 import TeamEmptyState from "./TeamEmptyState";
 import MovePickerModal from "./MovePickerModal";
 import RegulationSelector from "./RegulationSelector";
@@ -53,7 +55,7 @@ const TeamBuilder = () => {
     canAddToTeam,
   } = useContext(TeamContext);
   const { showToast } = useToast();
-  const { regulation } = useRegulation();
+  const { regulation, regulationId } = useRegulation();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const [showAddModal, setShowAddModal] = useState(false);
@@ -573,8 +575,21 @@ const TeamBuilder = () => {
           />
         )}
 
-        <TeamAnalysis team={team} sets={activeTeam?.sets} />
-        <TeamAITips team={team} />
+        <SpeedTierTable team={team} sets={activeTeam?.sets} />
+        <MetaThreatHints team={team} regulationId={regulationId} />
+        <TeamAnalysis
+          team={team}
+          sets={activeTeam?.sets}
+          teamName={activeTeam?.name || "Team"}
+        />
+        <TeamAITips
+          team={team}
+          sets={activeTeam?.sets}
+          roles={activeTeam?.roles}
+          bringList={bringList}
+          regulationId={regulationId}
+          regulationLabel={regulation.label}
+        />
 
         {showAddModal && (
           <div className="add-pokemon-modal-overlay" onClick={() => setShowAddModal(false)} role="presentation">

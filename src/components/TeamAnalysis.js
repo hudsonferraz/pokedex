@@ -1,5 +1,7 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
+import { useToast } from "./ToastProvider";
+import { openDamageCalcWithTeam, SHOWDOWN_DAMAGE_CALC_URL } from "../utils/damageCalcLink";
 import {
   getTeamWeaknesses,
   getTeamTypeCoverage,
@@ -14,8 +16,22 @@ import TeamAverageRadar from "./TeamAverageRadar";
 import TypeCoverageBars from "./TypeCoverageBars";
 import "./TeamAnalysis.css";
 
-const TeamAnalysis = ({ team, sets }) => {
+const TeamAnalysis = ({ team, sets, teamName = "Team" }) => {
   const navigate = useNavigate();
+  const { showToast } = useToast();
+
+  const handleOpenDamageCalc = async () => {
+    try {
+      const result = await openDamageCalcWithTeam(team, sets, teamName);
+      if (result.copied) {
+        showToast("Showdown paste copied — paste into the damage calc", "success");
+      } else {
+        showToast("Opened damage calc — export your team paste from Export menu", "info");
+      }
+    } catch {
+      showToast("Could not open damage calc", "error");
+    }
+  };
 
   if (!team || team.length === 0) {
     return (
@@ -181,14 +197,19 @@ const TeamAnalysis = ({ team, sets }) => {
             . Resist/immune:{" "}
             {resistantTypes.length > 0 ? resistantTypes.join(", ") : "none"}.
           </p>
-          <a
-            href="https://calc.pokemonshowdown.com/"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="damage-calc-link"
-          >
-            Open Pokémon Showdown damage calculator →
-          </a>
+          <div className="analysis-tools-actions">
+            <button type="button" className="damage-calc-btn" onClick={handleOpenDamageCalc}>
+              Open calc + copy team paste
+            </button>
+            <a
+              href={SHOWDOWN_DAMAGE_CALC_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="damage-calc-link"
+            >
+              Gen 9 VGC calc only →
+            </a>
+          </div>
         </CollapsibleSection>
       </div>
     </div>

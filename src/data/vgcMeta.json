@@ -1,0 +1,77 @@
+{
+  "regulation-i": {
+    "sourceNote": "Curated meta snapshot for portfolio demos — update from Victory Road / official usage when preparing for a real event.",
+    "topPokemon": [
+      "incineroar",
+      "rillaboom",
+      "flutter-mane",
+      "urshifu-rapid-strike",
+      "landorus-therian",
+      "amoonguss",
+      "tornadus",
+      "gholdengo",
+      "kingambit",
+      "palafin",
+      "chi-yu",
+      "chien-pao",
+      "iron-hands",
+      "dragonite",
+      "garchomp",
+      "pelipper",
+      "torkoal",
+      "farigiraf",
+      "dondozo"
+    ],
+    "cores": [
+      {
+        "id": "fire-grass",
+        "name": "Incineroar + Rillaboom",
+        "pokemon": ["incineroar", "rillaboom"],
+        "hint": "Intimidate plus Grassy Glide is a classic backbone. Your team may struggle without Fire/Grass answers or a way to pressure Incineroar."
+      },
+      {
+        "id": "rain",
+        "name": "Pelipper rain core",
+        "pokemon": ["pelipper", "palafin", "kingambit"],
+        "hint": "Rain teams abuse Swift Swim and boosted Water. Consider Electric coverage and weather control."
+      },
+      {
+        "id": "sun",
+        "name": "Torkoal sun core",
+        "pokemon": ["torkoal", "flutter-mane", "chi-yu"],
+        "hint": "Sun boosts Fire and weakens Water. Watch for speed under sun and opposing weather."
+      },
+      {
+        "id": "trick-room",
+        "name": "Trick Room stack",
+        "pokemon": ["farigiraf", "iron-hands", "torkoal"],
+        "hint": "Trick Room reverses speed. Without anti-TR (Taunt, Imprison, fast KO) or your own TR, slow teams can run over you."
+      },
+      {
+        "id": "ghost-fighting",
+        "name": "Flutter Mane + Iron Hands",
+        "pokemon": ["flutter-mane", "iron-hands"],
+        "hint": "Special + physical spread with Booster Energy. Dark, Ghost, and Steel answers are common in meta teams."
+      }
+    ]
+  },
+  "regulation-j": {
+    "sourceNote": "Placeholder meta for Regulation J — replace when official lists publish.",
+    "topPokemon": [
+      "incineroar",
+      "rillaboom",
+      "flutter-mane",
+      "landorus-therian",
+      "amoonguss",
+      "urshifu-rapid-strike"
+    ],
+    "cores": [
+      {
+        "id": "fire-grass",
+        "name": "Incineroar + Rillaboom",
+        "pokemon": ["incineroar", "rillaboom"],
+        "hint": "Still a defining doubles core in many formats. Plan around Intimidate cycles and Rillaboom speed control."
+      }
+    ]
+  }
+}

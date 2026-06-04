@@ -48,7 +48,9 @@ flowchart LR
 
 - **VGC team lab** — Hero landing, six slots, role tags (Lead / Attacker / Support…), 4-move summaries
 - **Team analysis** — Collapsible dashboard, average-stats radar, type coverage bars, weakness badges
-- **AI team tips** — Rule-based tips + optional Hugging Face answers (format-aware)
+- **AI team tips** — VGC rule engine (Tailwind/TR/Intimidate) + meta core hints + AI with full team context
+- **Speed tiers** — Level 50 speed table with Tailwind column and benchmarks
+- **Meta threats** — Curated cores per regulation ([Victory Road](https://victoryroad.pro/) style lists in `src/data/vgcMeta.json`)
 - **Browse** — Search, type/generation filters, skeleton loading grid
 - **Dark mode** — Theme toggle with CSS variables
 - **Compare Pokémon** — Side-by-side stats from detail pages
