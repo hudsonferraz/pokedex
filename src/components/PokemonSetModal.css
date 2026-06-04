@@ -13,7 +13,7 @@
   background: var(--card-bg);
   border: 2px solid var(--border-color);
   border-radius: var(--radius-lg);
-  max-width: 420px;
+  max-width: 460px;
   width: 100%;
   box-shadow: var(--shadow-md);
 }
@@ -49,6 +49,57 @@
   gap: var(--space-4);
 }
 
+.pokemon-set-meta-strip {
+  padding: var(--space-3);
+  border-radius: var(--radius-md);
+  background: rgba(99, 102, 241, 0.08);
+  border: 1px solid rgba(99, 102, 241, 0.25);
+  font-size: 0.82rem;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.pokemon-set-meta-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.pokemon-set-meta-badge {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--accent);
+}
+
+.pokemon-set-meta-stat {
+  opacity: 0.85;
+}
+
+.pokemon-set-meta-moves,
+.pokemon-set-meta-teammates {
+  margin: 0;
+  line-height: 1.4;
+}
+
+.pokemon-set-meta-link {
+  font-size: 0.8rem;
+  color: var(--accent);
+}
+
+.pokemon-set-meta-error {
+  margin: 0;
+  color: #c2410c;
+}
+
+.pokemon-set-meta-status {
+  margin: 0;
+  opacity: 0.85;
+}
+
 .pokemon-set-field {
   display: flex;
   flex-direction: column;
@@ -75,6 +126,7 @@
 .pokemon-set-footer {
   display: flex;
   justify-content: flex-end;
+  flex-wrap: wrap;
   gap: var(--space-3);
   padding: var(--space-4) var(--space-5);
   border-top: 1px solid var(--border-color);
@@ -92,6 +144,18 @@
   background: var(--accent);
   border-color: var(--accent);
   color: #fff;
+}
+
+.pokemon-set-btn.meta {
+  background: transparent;
+  border-color: var(--accent);
+  color: var(--accent);
+  margin-right: auto;
+}
+
+.pokemon-set-btn.meta:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
 }
 
 .pokemon-set-btn.cancel {

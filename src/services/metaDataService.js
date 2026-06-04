@@ -34,8 +34,14 @@ function writeClientCache(regulationId, data) {
 async function loadFallbackMeta(regulationId) {
   const usageModule = await import("../data/vgcUsage.json");
   const metaModule = await import("../data/vgcMeta.json");
-  const usageEntry = usageModule.default[regulationId] || usageModule.default["regulation-i"];
-  const metaEntry = metaModule.default[regulationId] || metaModule.default["regulation-i"];
+  const usageEntry =
+    usageModule.default[regulationId] ||
+    usageModule.default["champions-reg-ma"] ||
+    usageModule.default["regulation-i"];
+  const metaEntry =
+    metaModule.default[regulationId] ||
+    metaModule.default["champions-reg-ma"] ||
+    metaModule.default["regulation-i"];
   return {
     live: false,
     regulationId,
@@ -91,4 +97,85 @@ export async function fetchLiveMeta(regulationId) {
   const fallback = await loadFallbackMeta(regulationId);
   writeClientCache(regulationId, fallback);
   return fallback;
+}
+
+const POKEMON_META_CACHE_PREFIX = "vgc-pokemon-meta-v1";
+
+function readPokemonMetaCache(regulationId, speciesApiId) {
+  try {
+    const raw = sessionStorage.getItem(`${POKEMON_META_CACHE_PREFIX}:${regulationId}:${speciesApiId}`);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    if (Date.now() - parsed.timestamp > CLIENT_CACHE_TTL_MS) return null;
+    return parsed.data;
+  } catch {
+    return null;
+  }
+}
+
+function writePokemonMetaCache(regulationId, speciesApiId, data) {
+  try {
+    sessionStorage.setItem(
+      `${POKEMON_META_CACHE_PREFIX}:${regulationId}:${speciesApiId}`,
+      JSON.stringify({ timestamp: Date.now(), data }),
+    );
+  } catch {
+    // ignore quota
+  }
+}
+
+/**
+ * Fetches per-Pokémon meta (moves, items, abilities, suggested set) from Pikalytics proxy.
+ */
+export async function fetchPokemonMeta(regulationId, speciesName) {
+  const speciesApiId = (speciesName || "")
+    .trim()
+    .toLowerCase()
+    .replace(/['.]/g, "")
+    .replace(/\s+/g, "-")
+    .replace(/[^a-z0-9-]/g, "");
+
+  if (!speciesApiId) {
+    return { error: "Invalid species name", live: false };
+  }
+
+  const cached = readPokemonMetaCache(regulationId, speciesApiId);
+  if (cached) return cached;
+
+  const mapping = getPikalyticsFormatForRegulation(regulationId);
+  const base = getApiBase();
+  const url = base
+    ? `${base.replace(/\/$/, "")}/api/meta/pokemon/${mapping.formatCode}/${speciesApiId}`
+    : `/api/meta/pokemon/${mapping.formatCode}/${speciesApiId}`;
+
+  try {
+    const response = await fetch(url);
+    const body = await response.json().catch(() => ({}));
+
+    if (response.ok && body.suggestedSet) {
+      const data = {
+        live: true,
+        regulationId,
+        formatCode: body.formatCode || mapping.formatCode,
+        speciesApiId,
+        ...body,
+      };
+      writePokemonMetaCache(regulationId, speciesApiId, data);
+      return data;
+    }
+
+    return {
+      live: false,
+      regulationId,
+      speciesApiId,
+      error: body.error || "Could not load Pokémon meta",
+    };
+  } catch {
+    return {
+      live: false,
+      regulationId,
+      speciesApiId,
+      error: "Network error loading Pokémon meta",
+    };
+  }
 }

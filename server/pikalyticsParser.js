@@ -107,7 +107,174 @@ function buildDefaultCores(topPokemon) {
   ];
 }
 
+function pikalyticsApiIdToUrlName(apiId) {
+  return (apiId || "")
+    .split("-")
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join("-");
+}
+
+function pikalyticsMoveToApiId(displayName) {
+  return (displayName || "")
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g, "-");
+}
+
+function extractSection(markdown, sectionTitle) {
+  const regex = new RegExp(`## ${sectionTitle}[\\s\\S]*?(?=\\n## |$)`, "i");
+  return markdown.match(regex)?.[0] || "";
+}
+
+function parsePercentBullets(sectionText) {
+  const items = [];
+  const lineRegex = /-\s+\*\*([^*]+)\*\*:\s*([\d.]+)%/g;
+  let match = lineRegex.exec(sectionText);
+  while (match) {
+    const name = match[1].trim();
+    if (name.toLowerCase() === "other") {
+      match = lineRegex.exec(sectionText);
+      continue;
+    }
+    items.push({ name, percent: parseFloat(match[2]) });
+    match = lineRegex.exec(sectionText);
+  }
+  return items.sort((left, right) => right.percent - left.percent);
+}
+
+function parsePokemonQuickInfo(markdown) {
+  const info = {};
+  const lines = markdown.split("\n");
+  for (const line of lines) {
+    if (!line.startsWith("|")) continue;
+    const cells = line
+      .split("|")
+      .map((cell) => cell.trim())
+      .filter(Boolean);
+    if (cells.length < 2) continue;
+    const key = cells[0].replace(/\*\*/g, "").trim();
+    const value = cells[1].replace(/\*\*/g, "").trim();
+    if (key === "Usage") {
+      const percentMatch = value.match(/([\d.]+)\s*%/);
+      if (percentMatch) info.usage = parseFloat(percentMatch[1]);
+    }
+    if (key === "Win Rate") {
+      const percentMatch = value.match(/([\d.]+)\s*%/);
+      if (percentMatch) info.winRate = parseFloat(percentMatch[1]);
+    }
+  }
+  return info;
+}
+
+function pikalyticsEvsToShowdown(spread) {
+  if (!spread || typeof spread !== "string") return "";
+  const parts = spread.split("/").map((part) => parseInt(part, 10));
+  if (parts.length !== 6 || parts.some((value) => Number.isNaN(value))) {
+    return spread.trim();
+  }
+  const labels = ["HP", "Atk", "Def", "SpA", "SpD", "Spe"];
+  return parts
+    .map((value, index) => (value > 0 ? `${value} ${labels[index]}` : null))
+    .filter(Boolean)
+    .join(" / ");
+}
+
+function parseNatureAndEvs(markdown) {
+  const match = markdown.match(
+    /features a \*\*([A-Za-z]+)\*\* nature with an EV spread of [`']([^`']+)[`']/i,
+  );
+  if (!match) return { nature: "", evs: "" };
+  return {
+    nature: match[1].trim(),
+    evs: pikalyticsEvsToShowdown(match[2].trim()),
+  };
+}
+
+function parseFeaturedTeamSet(markdown, speciesUrlName) {
+  const sectionRegex = new RegExp(
+    `\\*\\*${speciesUrlName.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")} Set\\*\\*:[\\s\\S]*?(?=\\n\\n|### Team|$)`,
+    "i",
+  );
+  const block = markdown.match(sectionRegex)?.[0] || "";
+  if (!block) return null;
+
+  const abilityMatch = block.match(/\*\*Ability\*\*:\s*(.+)/i);
+  const itemMatch = block.match(/\*\*Item\*\*:\s*(.+)/i);
+  const movesMatch = block.match(/\*\*Moves\*\*:\s*(.+)/i);
+  const moves = movesMatch
+    ? movesMatch[1]
+        .split(",")
+        .map((move) => move.trim())
+        .filter(Boolean)
+    : [];
+
+  return {
+    ability: abilityMatch ? abilityMatch[1].trim() : "",
+    item: itemMatch ? itemMatch[1].trim() : "",
+    moves,
+  };
+}
+
+function parsePokemonMetaMarkdown(markdown, formatCode, speciesApiId) {
+  const speciesUrlName = pikalyticsApiIdToUrlName(speciesApiId);
+  const moves = parsePercentBullets(extractSection(markdown, "Common Moves"));
+  const abilities = parsePercentBullets(extractSection(markdown, "Common Abilities"));
+  const items = parsePercentBullets(extractSection(markdown, "Common Items"));
+  const teammates = parsePercentBullets(extractSection(markdown, "Common Teammates"));
+  const quickInfo = parsePokemonQuickInfo(markdown);
+  const { nature, evs } = parseNatureAndEvs(markdown);
+  const featuredSet = parseFeaturedTeamSet(markdown, speciesUrlName);
+
+  const topMoves = moves.slice(0, 4).map((entry) => ({
+    ...entry,
+    apiId: pikalyticsMoveToApiId(entry.name),
+  }));
+
+  const teraSection = extractSection(markdown, "Which Tera Types");
+  const teraUnavailable =
+    /not available|not applicable/i.test(teraSection) || teraSection.length === 0;
+  const teraTypes = teraUnavailable
+    ? []
+    : parsePercentBullets(teraSection).map((entry) => entry.name);
+
+  const suggestedSet = {
+    ability: abilities[0]?.name || featuredSet?.ability || "",
+    item: items[0]?.name || featuredSet?.item || "",
+    nature: nature || "",
+    evs: evs || "",
+    teraType: teraTypes[0] || "",
+    moves: topMoves.length
+      ? topMoves.map((entry) => entry.apiId)
+      : (featuredSet?.moves || []).map((move) => pikalyticsMoveToApiId(move)),
+    moveLabels: topMoves.length
+      ? topMoves.map((entry) => entry.name)
+      : featuredSet?.moves || [],
+  };
+
+  return {
+    formatCode,
+    speciesApiId,
+    speciesUrlName,
+    label: parseFormatLabel(markdown),
+    updated: parseDataDate(markdown),
+    source: "Pikalytics (live battle usage)",
+    sourceUrl: `https://www.pikalytics.com/pokedex/${formatCode}/${speciesUrlName}`,
+    usage: quickInfo.usage ?? null,
+    winRate: quickInfo.winRate ?? null,
+    moves,
+    abilities,
+    items,
+    teammates,
+    teraTypes,
+    suggestedSet,
+  };
+}
+
 module.exports = {
   parsePikalyticsMarkdown,
+  parsePokemonMetaMarkdown,
   pikalyticsDisplayNameToApiId,
+  pikalyticsApiIdToUrlName,
+  pikalyticsMoveToApiId,
+  pikalyticsEvsToShowdown,
 };

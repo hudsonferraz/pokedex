@@ -314,6 +314,24 @@
 
 .move-picker-item-name {
   font-weight: 500;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.move-picker-item.meta-move {
+  border-color: rgba(99, 102, 241, 0.45);
+}
+
+.move-picker-meta-tag {
+  font-size: 0.62rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 1px 5px;
+  border-radius: 4px;
+  background: rgba(99, 102, 241, 0.15);
+  color: var(--accent);
 }
 
 .move-picker-footer {

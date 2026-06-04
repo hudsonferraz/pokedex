@@ -1,4 +1,13 @@
 {
+  "champions-reg-ma": {
+    "id": "champions-reg-ma",
+    "label": "Champions Reg M-A",
+    "series": "Pokémon Champions",
+    "maxRestricted": 2,
+    "notes": "Pokémon Champions VGC Regulation Set M-A — live meta from Pikalytics. Ban/restricted lists are not bundled; verify official Champions VGC rules before events.",
+    "banned": [],
+    "restricted": []
+  },
   "regulation-i": {
     "id": "regulation-i",
     "label": "Regulation I",

@@ -3,6 +3,10 @@
  * @see https://www.pikalytics.com/llms-full.txt
  */
 export const PIKALYTICS_FORMAT_BY_REGULATION = {
+  "champions-reg-ma": {
+    formatCode: "gen9championsvgc2026regma",
+    label: "Pokémon Champions VGC 2026 Reg M-A",
+  },
   "regulation-i": {
     formatCode: "gen9vgc2025regi",
     label: "VGC 2025 Regulation I",
@@ -20,6 +24,6 @@ export const PIKALYTICS_FORMAT_BY_REGULATION = {
 export function getPikalyticsFormatForRegulation(regulationId) {
   return (
     PIKALYTICS_FORMAT_BY_REGULATION[regulationId] ||
-    PIKALYTICS_FORMAT_BY_REGULATION["regulation-i"]
+    PIKALYTICS_FORMAT_BY_REGULATION["champions-reg-ma"]
   );
 }

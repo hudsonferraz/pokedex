@@ -20,7 +20,11 @@ const HF_ROUTER_URL = "https://router.huggingface.co/v1/responses";
 // Chat model on the new Inference Providers (router). FLAN-T5 may not return output_text.
 const MODEL_ID = "meta-llama/Llama-3.2-3B-Instruct";
 const { getCached, setCached, getCacheStats } = require("./pikalyticsCache");
-const { parsePikalyticsMarkdown } = require("./pikalyticsParser");
+const {
+  parsePikalyticsMarkdown,
+  parsePokemonMetaMarkdown,
+  pikalyticsApiIdToUrlName,
+} = require("./pikalyticsParser");
 
 function getToken() {
   return (
@@ -184,6 +188,60 @@ app.get("/api/meta/usage/:formatCode", async (req, res) => {
     console.error("Pikalytics meta error:", message);
     return res.status(502).json({
       error: `Could not load live meta from Pikalytics: ${message}`,
+    });
+  }
+});
+
+function pokemonMetaCacheKey(formatCode, speciesApiId) {
+  return `pokemon:${formatCode}:${speciesApiId}`;
+}
+
+app.get("/api/meta/pokemon/:formatCode/:speciesApiId", async (req, res) => {
+  const formatCode = (req.params.formatCode || "").trim();
+  const speciesApiId = (req.params.speciesApiId || "").trim().toLowerCase();
+  if (!formatCode || !/^[a-z0-9]+$/i.test(formatCode)) {
+    return res.status(400).json({ error: "Invalid format code" });
+  }
+  if (!speciesApiId || !/^[a-z0-9-]+$/.test(speciesApiId)) {
+    return res.status(400).json({ error: "Invalid species id" });
+  }
+
+  const cacheKey = pokemonMetaCacheKey(formatCode, speciesApiId);
+  const cached = getCached(cacheKey);
+  if (cached) {
+    return res.json({ ...cached, cached: true });
+  }
+
+  const urlName = pikalyticsApiIdToUrlName(speciesApiId);
+  const url = `https://www.pikalytics.com/ai/pokedex/${formatCode}/${encodeURIComponent(urlName)}`;
+  try {
+    const response = await fetchApi(url, {
+      headers: { Accept: "text/plain", "User-Agent": "PokedexTeamBuilder/1.0" },
+    });
+    if (response.status === 404) {
+      return res.status(404).json({
+        error: `No Pikalytics data for ${urlName} in ${formatCode}`,
+      });
+    }
+    if (!response.ok) {
+      return res.status(502).json({
+        error: `Pikalytics returned ${response.status} for ${urlName}`,
+      });
+    }
+    const markdown = await response.text();
+    const parsed = parsePokemonMetaMarkdown(markdown, formatCode, speciesApiId);
+    const payload = {
+      ...parsed,
+      fetchedAt: new Date().toISOString(),
+      cached: false,
+    };
+    setCached(cacheKey, payload);
+    return res.json(payload);
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Fetch failed";
+    console.error("Pikalytics pokemon meta error:", message);
+    return res.status(502).json({
+      error: `Could not load Pokémon meta from Pikalytics: ${message}`,
     });
   }
 });

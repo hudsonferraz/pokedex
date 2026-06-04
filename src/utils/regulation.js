@@ -2,7 +2,7 @@ import regulationsData from "../data/regulations.json";
 
 export const REGULATIONS = Object.values(regulationsData);
 
-export const DEFAULT_REGULATION_ID = "regulation-i";
+export const DEFAULT_REGULATION_ID = "champions-reg-ma";
 
 const REGULATION_MAP = regulationsData;
 

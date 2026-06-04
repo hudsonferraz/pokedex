@@ -39,7 +39,7 @@ export function getUsageMetaFromLive(meta) {
 
 /** Bundled fallback when API unavailable */
 export function getUsageMeta(regulationId) {
-  const entry = usageData[regulationId] || usageData["regulation-i"];
+  const entry = usageData[regulationId] || usageData["champions-reg-ma"] || usageData["regulation-i"];
   return {
     updated: entry?.updated || "",
     source: entry?.source || "",

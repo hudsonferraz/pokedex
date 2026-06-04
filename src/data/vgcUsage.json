@@ -1,4 +1,25 @@
 {
+  "champions-reg-ma": {
+    "updated": "2026-05",
+    "source": "Curated Champions Reg M-A usage estimates — live data from Pikalytics when the API is available.",
+    "usage": {
+      "incineroar": 26,
+      "sinistcha": 24,
+      "garchomp": 22,
+      "floette-mega": 21,
+      "sneasler": 18,
+      "basculegion": 17,
+      "charizard-mega-y": 16,
+      "pelipper": 14,
+      "whimsicott": 13,
+      "archaludon": 12,
+      "dragonite-mega": 11,
+      "scizor-mega": 10,
+      "venusaur": 9,
+      "aegislash": 8,
+      "rotom-wash": 7
+    }
+  },
   "regulation-i": {
     "updated": "2025-06",
     "source": "Curated VGC usage estimates for portfolio UI — refresh from Victory Road / Smogon charts for live events.",

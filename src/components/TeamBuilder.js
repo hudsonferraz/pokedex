@@ -375,7 +375,8 @@ const TeamBuilder = () => {
             <p className="team-builder-hero-eyebrow">VGC team lab</p>
             <h1>Build your {regulation.label} squad</h1>
             <p className="team-builder-hero-copy">
-              Six slots, typed roles, custom movesets, and live analysis — built for doubles prep, not a generic form.
+              Six slots, typed roles, Pikalytics meta sets, and live analysis — tuned for{" "}
+              {regulation.series || "VGC"} doubles prep.
             </p>
           </div>
           <ul className="team-builder-hero-features" aria-label="Features">
@@ -551,6 +552,7 @@ const TeamBuilder = () => {
             currentMoves={getMoveset(movePickerPokemon.name)}
             moveDetails={movePickerDetails}
             moveDetailsLoading={movePickerDetailsLoading}
+            regulationId={regulationId}
             onSave={(moves) => {
               const moveTypes = {};
               moves.forEach((moveName) => {
@@ -570,7 +572,9 @@ const TeamBuilder = () => {
             currentSet={getPokemonSet(setEditorPokemon.name)}
             onSave={(patch) => {
               updatePokemonSet(setEditorPokemon.name, patch);
-              showToast("Set saved");
+              showToast(
+                patch.moves?.length ? "Meta set applied (moves + EVs)" : "Set saved",
+              );
             }}
             onClose={() => setSetEditorPokemon(null)}
           />

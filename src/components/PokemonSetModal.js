@@ -1,6 +1,9 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { VGC_ITEMS, VGC_NATURES, TERA_TYPES } from "../constants/vgcOptions";
 import { useModalAccessibility } from "../hooks/useModalAccessibility";
+import { useRegulation } from "../contexts/RegulationContext";
+import { fetchPokemonMeta } from "../services/metaDataService";
+import { buildSetPatchFromPokemonMeta } from "../utils/pikalyticsNames";
 import "./PokemonSetModal.css";
 
 const formatAbilityName = (name) =>
@@ -8,11 +11,21 @@ const formatAbilityName = (name) =>
 
 const PokemonSetModal = ({ pokemon, currentSet, onSave, onClose }) => {
   const modalRef = useModalAccessibility(true, onClose);
+  const { regulationId } = useRegulation();
   const [ability, setAbility] = useState(currentSet.ability || "");
   const [item, setItem] = useState(currentSet.item || "");
   const [nature, setNature] = useState(currentSet.nature || "");
   const [teraType, setTeraType] = useState(currentSet.teraType || "");
   const [evs, setEvs] = useState(currentSet.evs || "");
+  const [metaPreview, setMetaPreview] = useState(null);
+  const [metaLoading, setMetaLoading] = useState(false);
+  const [metaError, setMetaError] = useState("");
+  const [applyingMeta, setApplyingMeta] = useState(false);
+
+  const speciesId = pokemon?.name || "";
+  const learnsetMoveIds = (pokemon?.moves || [])
+    .map((entry) => entry.move?.name)
+    .filter(Boolean);
 
   useEffect(() => {
     setAbility(currentSet.ability || "");
@@ -21,6 +34,24 @@ const PokemonSetModal = ({ pokemon, currentSet, onSave, onClose }) => {
     setTeraType(currentSet.teraType || "");
     setEvs(currentSet.evs || "");
   }, [pokemon?.name, currentSet]);
+
+  const loadMetaPreview = useCallback(async () => {
+    if (!speciesId) return;
+    setMetaLoading(true);
+    setMetaError("");
+    const result = await fetchPokemonMeta(regulationId, speciesId);
+    setMetaLoading(false);
+    if (result.error || !result.suggestedSet) {
+      setMetaPreview(null);
+      setMetaError(result.error || "No meta data for this Pokémon in the current format.");
+      return;
+    }
+    setMetaPreview(result);
+  }, [regulationId, speciesId]);
+
+  useEffect(() => {
+    loadMetaPreview();
+  }, [loadMetaPreview]);
 
   const abilityOptions = (pokemon?.abilities || []).map((entry) => {
     const name = entry.ability?.name || entry.ability;
@@ -43,6 +74,45 @@ const PokemonSetModal = ({ pokemon, currentSet, onSave, onClose }) => {
     onClose();
   };
 
+  const handleApplyMetaSet = async () => {
+    setApplyingMeta(true);
+    setMetaError("");
+    const result = metaPreview?.suggestedSet
+      ? metaPreview
+      : await fetchPokemonMeta(regulationId, speciesId);
+    setApplyingMeta(false);
+
+    if (result.error || !result.suggestedSet) {
+      setMetaError(result.error || "No meta set available for this format.");
+      return;
+    }
+
+    const patch = buildSetPatchFromPokemonMeta(result, learnsetMoveIds);
+    if (!patch) {
+      setMetaError("Could not build a set from meta data.");
+      return;
+    }
+
+    setAbility(patch.ability || ability);
+    setItem(patch.item || item);
+    setNature(patch.nature || nature);
+    setTeraType(patch.teraType || teraType || defaultTera);
+    setEvs(patch.evs || evs);
+    setMetaPreview(result);
+
+    onSave({
+      ...patch,
+      teraType: patch.teraType || teraType || defaultTera,
+    });
+    onClose();
+  };
+
+  const suggested = metaPreview?.suggestedSet;
+  const topMoveLabels =
+    metaPreview?.moves?.slice(0, 4).map((entry) => entry.name) ||
+    suggested?.moveLabels?.slice(0, 4) ||
+    [];
+
   return (
     <div className="pokemon-set-overlay" onClick={onClose} role="presentation">
       <div
@@ -63,6 +133,52 @@ const PokemonSetModal = ({ pokemon, currentSet, onSave, onClose }) => {
         </header>
 
         <div className="pokemon-set-body">
+          {(metaLoading || metaPreview || metaError) && (
+            <div className="pokemon-set-meta-strip" aria-live="polite">
+              {metaLoading && <p className="pokemon-set-meta-status">Loading Pikalytics meta…</p>}
+              {!metaLoading && metaPreview && (
+                <>
+                  <div className="pokemon-set-meta-header">
+                    <span className="pokemon-set-meta-badge">Live meta</span>
+                    {metaPreview.usage != null && (
+                      <span className="pokemon-set-meta-stat">{metaPreview.usage}% usage</span>
+                    )}
+                    {metaPreview.winRate != null && (
+                      <span className="pokemon-set-meta-stat">{metaPreview.winRate}% WR</span>
+                    )}
+                  </div>
+                  {topMoveLabels.length > 0 && (
+                    <p className="pokemon-set-meta-moves">
+                      Top moves: {topMoveLabels.join(", ")}
+                    </p>
+                  )}
+                  {metaPreview.teammates?.length > 0 && (
+                    <p className="pokemon-set-meta-teammates">
+                      Common partners:{" "}
+                      {metaPreview.teammates
+                        .slice(0, 3)
+                        .map((entry) => entry.name)
+                        .join(", ")}
+                    </p>
+                  )}
+                  {metaPreview.sourceUrl && (
+                    <a
+                      className="pokemon-set-meta-link"
+                      href={metaPreview.sourceUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      View on Pikalytics
+                    </a>
+                  )}
+                </>
+              )}
+              {!metaLoading && metaError && !metaPreview && (
+                <p className="pokemon-set-meta-error">{metaError}</p>
+              )}
+            </div>
+          )}
+
           <label className="pokemon-set-field">
             <span>Ability</span>
             <select value={ability} onChange={(event) => setAbility(event.target.value)}>
@@ -120,6 +236,14 @@ const PokemonSetModal = ({ pokemon, currentSet, onSave, onClose }) => {
         </div>
 
         <footer className="pokemon-set-footer">
+          <button
+            type="button"
+            className="pokemon-set-btn meta"
+            onClick={handleApplyMetaSet}
+            disabled={metaLoading || applyingMeta}
+          >
+            {applyingMeta ? "Applying…" : "Apply meta set"}
+          </button>
           <button type="button" className="pokemon-set-btn cancel" onClick={onClose}>
             Cancel
           </button>

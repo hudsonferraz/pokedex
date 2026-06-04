@@ -2,7 +2,7 @@ import React from "react";
 import { useNavigate } from "react-router-dom";
 import "./TeamEmptyState.css";
 
-const TeamEmptyState = ({ onAddFirst, regulationLabel = "Regulation I" }) => {
+const TeamEmptyState = ({ onAddFirst, regulationLabel = "Champions Reg M-A" }) => {
   const navigate = useNavigate();
 
   return (
@@ -13,7 +13,7 @@ const TeamEmptyState = ({ onAddFirst, regulationLabel = "Regulation I" }) => {
       <h2 className="team-empty-state-title">Build your {regulationLabel} squad</h2>
       <p className="team-empty-state-copy">
         Add six Pokémon to unlock type coverage, weakness analysis, and AI team tips.
-        Pick roles and movesets like a VGC team lab.
+        Pick roles, apply Pikalytics meta sets, and tune moves like a VGC team lab.
       </p>
       <div className="team-empty-state-actions">
         <button type="button" className="team-empty-state-primary" onClick={onAddFirst}>

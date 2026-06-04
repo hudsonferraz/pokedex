@@ -1,4 +1,35 @@
 {
+  "champions-reg-ma": {
+    "sourceNote": "Champions Reg M-A meta snapshot — refresh from Pikalytics live data when offline.",
+    "topPokemon": [
+      "incineroar",
+      "sinistcha",
+      "garchomp",
+      "floette-mega",
+      "sneasler",
+      "basculegion",
+      "charizard-mega-y",
+      "pelipper",
+      "whimsicott",
+      "archaludon",
+      "dragonite-mega",
+      "scizor-mega"
+    ],
+    "cores": [
+      {
+        "id": "champions-fire-grass",
+        "name": "Incineroar + Sinistcha",
+        "pokemon": ["incineroar", "sinistcha"],
+        "hint": "A common Champions backbone — Intimidate support plus a bulky win condition. Plan Fire and Ghost answers."
+      },
+      {
+        "id": "champions-speed",
+        "name": "Garchomp + Sneasler",
+        "pokemon": ["garchomp", "sneasler"],
+        "hint": "Fast physical pressure is common in Champions. Ice, Fairy, and priority can punish this pairing."
+      }
+    ]
+  },
   "regulation-i": {
     "sourceNote": "Curated meta snapshot for portfolio demos — update from Victory Road / official usage when preparing for a real event.",
     "topPokemon": [

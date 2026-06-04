@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { getTypeColor } from "../constants/typeColors";
 import { useModalAccessibility } from "../hooks/useModalAccessibility";
+import { fetchPokemonMeta } from "../services/metaDataService";
 import "./MovePickerModal.css";
 
 const MAX_MOVES = 4;
@@ -10,6 +11,7 @@ const MovePickerModal = ({
   currentMoves,
   moveDetails = null,
   moveDetailsLoading = false,
+  regulationId,
   onSave,
   onClose,
 }) => {
@@ -18,7 +20,26 @@ const MovePickerModal = ({
   );
   const [search, setSearch] = useState("");
   const [hoveredMoveName, setHoveredMoveName] = useState(null);
+  const [metaMoveIds, setMetaMoveIds] = useState([]);
   const modalRef = useModalAccessibility(true, onClose);
+
+  useEffect(() => {
+    let cancelled = false;
+    if (!regulationId || !pokemon?.name) {
+      setMetaMoveIds([]);
+      return undefined;
+    }
+
+    fetchPokemonMeta(regulationId, pokemon.name).then((result) => {
+      if (cancelled) return;
+      const moves = result?.suggestedSet?.moves || [];
+      setMetaMoveIds(moves.slice(0, 4));
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [regulationId, pokemon?.name]);
 
   const learnset = (pokemon?.moves || [])
     .map((m) => m.move.name)
@@ -180,6 +201,7 @@ const MovePickerModal = ({
           </div>
           <p className="move-picker-hint">
             Click a move below to add; click a filled slot to remove.
+            {metaMoveIds.length > 0 && " Moves marked Meta are common on Pikalytics."}
           </p>
         </div>
 
@@ -249,7 +271,9 @@ const MovePickerModal = ({
                       >
                         <button
                           type="button"
-                          className={`move-picker-item ${selected.includes(name) ? "selected" : ""}`}
+                          className={`move-picker-item ${selected.includes(name) ? "selected" : ""} ${
+                            metaMoveIds.includes(name) ? "meta-move" : ""
+                          }`}
                           onClick={() => toggle(name)}
                           disabled={
                             !selected.includes(name) &&
@@ -269,6 +293,9 @@ const MovePickerModal = ({
                             )}
                             <span className="move-picker-item-name">
                               {displayName(name)}
+                              {metaMoveIds.includes(name) && (
+                                <span className="move-picker-meta-tag">Meta</span>
+                              )}
                             </span>
                           </div>
                           {statsLine && (

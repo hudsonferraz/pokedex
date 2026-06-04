@@ -31,6 +31,7 @@ export const VGC_ITEMS = [
   "Bright Powder",
   "Lum Berry",
   "Chesto Berry",
+  "Charcoal",
   "Wiki Berry",
   "Iapapa Berry",
   "Figy Berry",

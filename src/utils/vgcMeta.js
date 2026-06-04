@@ -13,7 +13,7 @@ export function getMetaForRegulation(regulationId, liveMeta = null) {
       cores: liveMeta.cores || [],
     };
   }
-  const bundled = metaData[regulationId] || metaData["regulation-i"];
+  const bundled = metaData[regulationId] || metaData["champions-reg-ma"] || metaData["regulation-i"];
   return { ...bundled, live: false };
 }
 
