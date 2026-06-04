@@ -3,6 +3,8 @@ import { useNavigate } from "react-router-dom";
 import {
   getTeamWeaknesses,
   getTeamTypeCoverage,
+  getTeamMoveCoverage,
+  getMoveCoverageGaps,
   getTeamStats,
   getUniqueTypes,
 } from "../utils/teamAnalysis";
@@ -12,7 +14,7 @@ import TeamAverageRadar from "./TeamAverageRadar";
 import TypeCoverageBars from "./TypeCoverageBars";
 import "./TeamAnalysis.css";
 
-const TeamAnalysis = ({ team }) => {
+const TeamAnalysis = ({ team, sets }) => {
   const navigate = useNavigate();
 
   if (!team || team.length === 0) {
@@ -32,9 +34,16 @@ const TeamAnalysis = ({ team }) => {
   }
 
   const weaknesses = getTeamWeaknesses(team);
-  const coverage = getTeamTypeCoverage(team);
+  const typeCoverage = getTeamTypeCoverage(team);
+  const moveCoverage = getTeamMoveCoverage(team, sets);
   const stats = getTeamStats(team);
   const uniqueTypes = getUniqueTypes(team);
+
+  const hasSelectedMoves = team.some(
+    (pokemon) => sets?.[pokemon?.name]?.moves?.length > 0,
+  );
+  const coverage = hasSelectedMoves ? moveCoverage : typeCoverage;
+  const coverageSource = hasSelectedMoves ? "selected moves" : "Pokémon types";
 
   const superEffectiveWeaknesses = Object.entries(weaknesses)
     .filter(([, value]) => value === "super-effective")
@@ -49,15 +58,17 @@ const TeamAnalysis = ({ team }) => {
     .map(([type]) => type);
 
   const noCoverageTypes = Object.entries(coverage)
-    .filter(([, value]) => value === "no-effect")
+    .filter(([, value]) => value === "no-effect" || value === "not-very-effective")
     .map(([type]) => type);
+
+  const threatGaps = getMoveCoverageGaps(coverage);
 
   return (
     <div className="team-analysis card-surface">
       <header className="team-analysis-header">
         <h2 className="team-analysis-title">Team analysis</h2>
         <p className="team-analysis-subtitle">
-          {team.length}/6 Pokémon · {superEffectiveCoverage.length}/18 super-effective types
+          {team.length}/6 Pokémon · {superEffectiveCoverage.length}/18 at 2× ({coverageSource})
         </p>
       </header>
 
@@ -132,17 +143,28 @@ const TeamAnalysis = ({ team }) => {
         </CollapsibleSection>
 
         <CollapsibleSection
-          title="Offensive coverage"
+          title={hasSelectedMoves ? "Move-based coverage" : "Offensive coverage (types)"}
           summary={`${superEffectiveCoverage.length} types at 2×`}
           defaultOpen={team.length >= 3}
         >
+          {!hasSelectedMoves && (
+            <p className="analysis-note">
+              Select moves on each Pokémon to analyze coverage from your movesets, not just typings.
+            </p>
+          )}
           <p className="analysis-note">
             Super-effective against {superEffectiveCoverage.length} of{" "}
-            {ALL_POKEMON_TYPES.length} types.
+            {ALL_POKEMON_TYPES.length} types ({coverageSource}).
+            {threatGaps.length > 0 && (
+              <span className="coverage-gap-hint coverage-gap-threat">
+                {" "}
+                VGC threat gaps (no SE): {threatGaps.join(", ")}
+              </span>
+            )}
             {noCoverageTypes.length > 0 && (
               <span className="coverage-gap-hint">
                 {" "}
-                Gaps: {noCoverageTypes.slice(0, 5).join(", ")}
+                Weak coverage: {noCoverageTypes.slice(0, 5).join(", ")}
                 {noCoverageTypes.length > 5 ? "…" : ""}
               </span>
             )}

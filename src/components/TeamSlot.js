@@ -13,7 +13,9 @@ const TeamSlot = ({
   onRoleChange,
   onRemove,
   onAdd,
+  pokemonSet,
   onEditMoves,
+  onEditSet,
 }) => {
   const navigate = useNavigate();
 
@@ -94,25 +96,67 @@ const TeamSlot = ({
             </option>
           ))}
         </select>
+        {(pokemonSet?.item || pokemonSet?.ability) && (
+          <p className="team-slot-vgc-meta">
+            {pokemonSet.item && <span>{pokemonSet.item}</span>}
+            {pokemonSet.ability && <span>{pokemonSet.ability}</span>}
+          </p>
+        )}
         <div className="team-slot-moves-row">
           {movesLine ? (
             <>
               <p className="team-slot-moves-line" title={movesLine}>
                 {movesLine}
               </p>
-              <button
-                type="button"
-                className="team-slot-edit-moves"
-                onClick={(event) => {
-                  event.stopPropagation();
-                  onEditMoves(pokemon);
-                }}
-              >
-                Edit moves
-              </button>
+              <div className="team-slot-actions">
+                <button
+                  type="button"
+                  className="team-slot-edit-moves"
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    onEditSet(pokemon);
+                  }}
+                >
+                  Set
+                </button>
+                <button
+                  type="button"
+                  className="team-slot-edit-moves"
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    onEditMoves(pokemon);
+                  }}
+                >
+                  Moves
+                </button>
+              </div>
             </>
           ) : (
-            <span className="team-slot-no-moves">No move data</span>
+            <>
+              <span className="team-slot-no-moves">No moves yet</span>
+              <div className="team-slot-actions">
+                <button
+                  type="button"
+                  className="team-slot-edit-moves"
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    onEditSet(pokemon);
+                  }}
+                >
+                  Set
+                </button>
+                <button
+                  type="button"
+                  className="team-slot-edit-moves"
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    onEditMoves(pokemon);
+                  }}
+                >
+                  Moves
+                </button>
+              </div>
+            </>
           )}
         </div>
       </div>

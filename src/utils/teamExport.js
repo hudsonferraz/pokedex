@@ -1,16 +1,21 @@
+import { normalizeSetEntry } from "./pokemonSets";
+import { exportShowdownPaste } from "./showdownTeam";
+
 /**
- * Export team as plain text (names + types + moves if movesets provided).
+ * Export team as plain text (names + types + moves if sets provided).
  */
-export function getTeamExportText(team, teamName = "Team", movesets = null) {
+export function getTeamExportText(team, teamName = "Team", sets = null) {
   if (!team || team.length === 0) {
     return `${teamName}\n(empty)`;
   }
-  const lines = team.map((p) => {
-    const types = (p.types || []).map((t) => t.type.name).join(" / ");
-    let line = `${p.name} (${types})`;
-    const moves = movesets && movesets[p.name] && Array.isArray(movesets[p.name]) ? movesets[p.name] : [];
-    if (moves.length > 0) {
-      line += `\n  ${moves.map((m) => m.replace(/-/g, " ")).join(" / ")}`;
+  const lines = team.map((pokemon) => {
+    const types = (pokemon.types || []).map((type) => type.type.name).join(" / ");
+    const set = normalizeSetEntry(sets?.[pokemon.name]);
+    let line = `${pokemon.name} (${types})`;
+    if (set.item) line += ` @ ${set.item}`;
+    if (set.ability) line += ` — ${set.ability}`;
+    if (set.moves.length > 0) {
+      line += `\n  ${set.moves.map((move) => move.replace(/-/g, " ")).join(" / ")}`;
     }
     return line;
   });
@@ -18,14 +23,15 @@ export function getTeamExportText(team, teamName = "Team", movesets = null) {
 }
 
 /**
- * Encode team for share URL (names + optional movesets).
+ * Encode team for share URL (names + optional sets).
  */
-export function encodeTeamForShare(team, teamName = "Team", movesets = null) {
+export function encodeTeamForShare(team, teamName = "Team", sets = null, bringList = null) {
   try {
     const payload = {
       name: teamName,
-      pokemon: (team || []).map((p) => p.name),
-      movesets: movesets && typeof movesets === "object" ? movesets : undefined,
+      pokemon: (team || []).map((pokemon) => pokemon.name),
+      sets: sets && typeof sets === "object" ? sets : undefined,
+      bringList: Array.isArray(bringList) && bringList.length > 0 ? bringList : undefined,
     };
     return btoa(unescape(encodeURIComponent(JSON.stringify(payload))));
   } catch {
@@ -34,7 +40,7 @@ export function encodeTeamForShare(team, teamName = "Team", movesets = null) {
 }
 
 /**
- * Decode share URL payload into { name, pokemon: string[], movesets?: {} }.
+ * Decode share URL payload.
  */
 export function decodeTeamFromShare(encoded) {
   try {
@@ -42,9 +48,21 @@ export function decodeTeamFromShare(encoded) {
     const data = JSON.parse(json);
     const name = typeof data.name === "string" ? data.name : "Imported";
     const pokemon = Array.isArray(data.pokemon) ? data.pokemon : [];
-    const movesets = data.movesets && typeof data.movesets === "object" ? data.movesets : null;
-    return { name, pokemon, movesets };
+    let sets = null;
+
+    if (data.sets && typeof data.sets === "object") {
+      sets = data.sets;
+    } else if (data.movesets && typeof data.movesets === "object") {
+      sets = data.movesets;
+    }
+
+    const bringList = Array.isArray(data.bringList) ? data.bringList : null;
+    return { name, pokemon, sets, bringList };
   } catch {
     return null;
   }
+}
+
+export function getTeamShowdownExport(team, teamName, sets) {
+  return exportShowdownPaste(team, sets, teamName);
 }

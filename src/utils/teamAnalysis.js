@@ -19,7 +19,7 @@ const typeEffectiveness = {
   fairy: { immune: ["dragon"], weak: ["poison", "steel"], strong: ["fighting", "bug", "dark"] },
 };
 
-const calculateTypeEffectiveness = (attackingType, defendingTypes) => {
+export const calculateTypeEffectiveness = (attackingType, defendingTypes) => {
   let effectiveness = 1;
   
   defendingTypes.forEach(defendingType => {
@@ -138,6 +138,68 @@ export const getTeamStats = (team) => {
   
   return averages;
 };
+
+const ALL_DEFENDING_TYPES = [
+  "normal", "fire", "water", "electric", "grass", "ice", "fighting", "poison",
+  "ground", "flying", "psychic", "bug", "rock", "ghost", "dragon", "dark", "steel", "fairy",
+];
+
+function effectivenessToCoverageLabel(effectiveness) {
+  if (effectiveness >= 2) return "super-effective";
+  if (effectiveness >= 1) return "effective";
+  if (effectiveness === 0) return "no-effect";
+  return "not-very-effective";
+}
+
+export function getTeamMoveCoverage(team, setsByName) {
+  const coverage = {};
+  ALL_DEFENDING_TYPES.forEach((defendingType) => {
+    coverage[defendingType] = "no-effect";
+  });
+
+  if (!team || team.length === 0) return coverage;
+
+  ALL_DEFENDING_TYPES.forEach((defendingType) => {
+    let bestEffectiveness = 0;
+
+    team.forEach((pokemon) => {
+      if (!pokemon) return;
+      const set = setsByName?.[pokemon.name];
+      const moves = Array.isArray(set?.moves) ? set.moves : [];
+      const moveTypes = set?.moveTypes || {};
+
+      moves.forEach((moveName) => {
+        const attackingType = (moveTypes[moveName] || "").toLowerCase();
+        if (!attackingType || !typeEffectiveness[attackingType]) return;
+
+        const typeData = typeEffectiveness[attackingType];
+        let effectiveness = 1;
+        if (typeData.immune.includes(defendingType)) {
+          effectiveness = 0;
+        } else if (typeData.weak.includes(defendingType)) {
+          effectiveness = 0.5;
+        } else if (typeData.strong.includes(defendingType)) {
+          effectiveness = 2;
+        }
+
+        if (effectiveness > bestEffectiveness) {
+          bestEffectiveness = effectiveness;
+        }
+      });
+    });
+
+    coverage[defendingType] = effectivenessToCoverageLabel(bestEffectiveness);
+  });
+
+  return coverage;
+}
+
+export function getMoveCoverageGaps(coverage, threatTypes = ["water", "ground", "fire", "fairy", "fighting"]) {
+  return threatTypes.filter((type) => {
+    const value = coverage[type];
+    return value !== "super-effective" && value !== "effective";
+  });
+}
 
 export const getUniqueTypes = (team) => {
   const types = new Set();

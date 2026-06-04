@@ -127,6 +127,12 @@
   opacity: 0.9;
 }
 
+.coverage-gap-threat {
+  color: var(--danger);
+  font-weight: 600;
+  opacity: 1;
+}
+
 .stats-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);

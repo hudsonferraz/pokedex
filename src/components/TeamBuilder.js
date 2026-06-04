@@ -1,6 +1,7 @@
 import React, { useState, useContext, useRef, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import TeamContext from "../contexts/TeamContext";
+import { useRegulation } from "../contexts/RegulationContext";
 import { useToast } from "./ToastProvider";
 import { searchPokemon, getMoveDetails } from "../api";
 import { buildMoveInfoFromApi } from "../utils/moveDetails";
@@ -10,9 +11,20 @@ import TeamAnalysis from "./TeamAnalysis";
 import TeamAITips from "./TeamAITips";
 import TeamEmptyState from "./TeamEmptyState";
 import MovePickerModal from "./MovePickerModal";
+import RegulationSelector from "./RegulationSelector";
+import RegulationWarnings from "./RegulationWarnings";
+import BringFourPreview from "./BringFourPreview";
+import PokemonSetModal from "./PokemonSetModal";
+import ShowdownImportModal from "./ShowdownImportModal";
 import Navbar from "./Navbar";
 import { useModalAccessibility } from "../hooks/useModalAccessibility";
-import { getTeamExportText, encodeTeamForShare, decodeTeamFromShare } from "../utils/teamExport";
+import {
+  getTeamExportText,
+  getTeamShowdownExport,
+  encodeTeamForShare,
+  decodeTeamFromShare,
+} from "../utils/teamExport";
+import { parseShowdownPaste } from "../utils/showdownTeam";
 import "./TeamBuilder.css";
 
 const TeamBuilder = () => {
@@ -28,14 +40,20 @@ const TeamBuilder = () => {
     setCurrentTeamPokemon,
     getMoveset,
     setMoveset,
+    getPokemonSet,
+    updatePokemonSet,
     getRole,
     setRole,
+    getBringList,
+    toggleBringPokemon,
+    setBringList,
     addToTeam,
     removeFromTeam,
     clearTeam,
     canAddToTeam,
   } = useContext(TeamContext);
   const { showToast } = useToast();
+  const { regulation } = useRegulation();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const [showAddModal, setShowAddModal] = useState(false);
@@ -52,6 +70,10 @@ const TeamBuilder = () => {
   const [movePickerDetails, setMovePickerDetails] = useState({});
   const [movePickerDetailsLoading, setMovePickerDetailsLoading] = useState(false);
   const [shareLinkCopied, setShareLinkCopied] = useState(false);
+  const [showShowdownImport, setShowShowdownImport] = useState(false);
+  const [showdownImporting, setShowdownImporting] = useState(false);
+  const [setEditorPokemon, setSetEditorPokemon] = useState(null);
+  const bringList = getBringList();
   const searchContainerRef = useRef(null);
   const searchInputRef = useRef(null);
   const exportMenuRef = useRef(null);
@@ -97,7 +119,10 @@ const TeamBuilder = () => {
         if (!cancelled && fullTeam.length > 0) {
           addTeam(decoded.name);
           setTimeout(() => {
-            setCurrentTeamPokemon(fullTeam, decoded.movesets || null);
+            setCurrentTeamPokemon(fullTeam, decoded.sets || null);
+            if (decoded.bringList?.length) {
+              setBringList(decoded.bringList);
+            }
             showToast(`Imported "${decoded.name}"`, "success");
           }, 0);
         }
@@ -259,16 +284,77 @@ const TeamBuilder = () => {
     }
   };
 
+  const handleShowdownImport = async (pasteText) => {
+    setShowdownImporting(true);
+    const parsed = parseShowdownPaste(pasteText);
+    if (parsed.length === 0) {
+      showToast("No Pokémon found in paste", "error");
+      setShowdownImporting(false);
+      return;
+    }
+
+    try {
+      const fullTeam = [];
+      const sets = {};
+
+      for (const entry of parsed) {
+        let pokemon = await searchPokemon(entry.apiId);
+        if (!pokemon) {
+          pokemon = await searchPokemon(entry.speciesLine.toLowerCase().replace(/\s+/g, "-"));
+        }
+        if (!pokemon) continue;
+
+        fullTeam.push(pokemon);
+        sets[pokemon.name] = {
+          moves: entry.moves,
+          moveTypes: {},
+          ability: entry.ability,
+          item: entry.item,
+          nature: entry.nature,
+          teraType: entry.teraType,
+          evs: entry.evs,
+        };
+      }
+
+      if (fullTeam.length === 0) {
+        showToast("Could not resolve species from paste", "error");
+        return;
+      }
+
+      setCurrentTeamPokemon(fullTeam, sets);
+      setBringList([]);
+      showToast(`Imported ${fullTeam.length} Pokémon from Showdown`, "success");
+      setShowShowdownImport(false);
+    } catch {
+      showToast("Showdown import failed", "error");
+    } finally {
+      setShowdownImporting(false);
+    }
+  };
+
   const handleCopyAsText = () => {
-    const text = getTeamExportText(team, activeTeam?.name || "Team", activeTeam?.movesets);
+    const text = getTeamExportText(team, activeTeam?.name || "Team", activeTeam?.sets);
     navigator.clipboard.writeText(text).then(() => {
       showToast("Copied to clipboard", "success");
       setShowExportMenu(false);
     });
   };
 
+  const handleCopyShowdown = () => {
+    const text = getTeamShowdownExport(team, activeTeam?.name || "Team", activeTeam?.sets);
+    navigator.clipboard.writeText(text).then(() => {
+      showToast("Showdown paste copied", "success");
+      setShowExportMenu(false);
+    });
+  };
+
   const handleCopyShareLink = () => {
-    const encoded = encodeTeamForShare(team, activeTeam?.name || "Team", activeTeam?.movesets);
+    const encoded = encodeTeamForShare(
+      team,
+      activeTeam?.name || "Team",
+      activeTeam?.sets,
+      bringList,
+    );
     const url = `${window.location.origin}${window.location.pathname}?team=${encoded}`;
     navigator.clipboard.writeText(url).then(() => {
       showToast("Share link copied", "success");
@@ -284,7 +370,7 @@ const TeamBuilder = () => {
         <section className="team-builder-hero card-surface">
           <div className="team-builder-hero-text">
             <p className="team-builder-hero-eyebrow">VGC team lab</p>
-            <h1>Build your Regulation I squad</h1>
+            <h1>Build your {regulation.label} squad</h1>
             <p className="team-builder-hero-copy">
               Six slots, typed roles, custom movesets, and live analysis — built for doubles prep, not a generic form.
             </p>
@@ -295,6 +381,9 @@ const TeamBuilder = () => {
             <li>AI tips via Hugging Face</li>
           </ul>
         </section>
+
+        <RegulationSelector />
+        <RegulationWarnings team={team} />
 
         <div className="team-builder-header">
           <div className="team-builder-title-block">
@@ -312,6 +401,14 @@ const TeamBuilder = () => {
                   <option key={t.id} value={t.id}>{t.name}</option>
                 ))}
               </select>
+              <button
+                type="button"
+                className="action-btn"
+                onClick={() => setShowShowdownImport(true)}
+                title="Import Showdown paste"
+              >
+                Import paste
+              </button>
               <button type="button" className="action-btn" onClick={handleNewTeam} title="New team">+ New</button>
               <button type="button" className="action-btn" onClick={handleRenameOpen} title="Rename team">Rename</button>
               <button
@@ -336,6 +433,7 @@ const TeamBuilder = () => {
                 {showExportMenu && (
                   <div className="export-menu">
                     <button type="button" onClick={handleCopyAsText}>Copy as text</button>
+                    <button type="button" onClick={handleCopyShowdown}>Copy Showdown paste</button>
                     <button
                       type="button"
                       className={shareLinkCopied ? "copied-flash" : ""}
@@ -359,7 +457,10 @@ const TeamBuilder = () => {
         </div>
 
         {team.length === 0 && (
-          <TeamEmptyState onAddFirst={() => handleSlotClick(0)} />
+          <TeamEmptyState
+            onAddFirst={() => handleSlotClick(0)}
+            regulationLabel={regulation.label}
+          />
         )}
 
         {teamToDelete && (
@@ -415,15 +516,23 @@ const TeamBuilder = () => {
                 slotNumber={slotIndex + 1}
                 pokemon={team[slotIndex] || null}
                 selectedMoves={team[slotIndex] ? getMoveset(team[slotIndex].name) : []}
+                pokemonSet={team[slotIndex] ? getPokemonSet(team[slotIndex].name) : null}
                 role={team[slotIndex] ? getRole(team[slotIndex].name) : ""}
                 onRoleChange={(name, value) => setRole(name, value)}
                 onRemove={handleRemovePokemon}
                 onAdd={() => handleSlotClick(slotIndex)}
+                onEditSet={(pokemon) => setSetEditorPokemon(pokemon)}
                 onEditMoves={(pokemon) => setMovePickerPokemon(pokemon)}
               />
             ))}
           </div>
         </div>
+
+        <BringFourPreview
+          team={team}
+          bringList={bringList}
+          onToggle={toggleBringPokemon}
+        />
 
         {movePickerPokemon && (
           <MovePickerModal
@@ -432,14 +541,39 @@ const TeamBuilder = () => {
             moveDetails={movePickerDetails}
             moveDetailsLoading={movePickerDetailsLoading}
             onSave={(moves) => {
-              setMoveset(movePickerPokemon.name, moves);
+              const moveTypes = {};
+              moves.forEach((moveName) => {
+                const details = movePickerDetails[moveName];
+                if (details?.type) moveTypes[moveName] = details.type;
+              });
+              setMoveset(movePickerPokemon.name, moves, moveTypes);
               showToast("Moves saved");
             }}
             onClose={() => setMovePickerPokemon(null)}
           />
         )}
 
-        <TeamAnalysis team={team} />
+        {setEditorPokemon && (
+          <PokemonSetModal
+            pokemon={setEditorPokemon}
+            currentSet={getPokemonSet(setEditorPokemon.name)}
+            onSave={(patch) => {
+              updatePokemonSet(setEditorPokemon.name, patch);
+              showToast("Set saved");
+            }}
+            onClose={() => setSetEditorPokemon(null)}
+          />
+        )}
+
+        {showShowdownImport && (
+          <ShowdownImportModal
+            onImport={handleShowdownImport}
+            onClose={() => setShowShowdownImport(false)}
+            isLoading={showdownImporting}
+          />
+        )}
+
+        <TeamAnalysis team={team} sets={activeTeam?.sets} />
         <TeamAITips team={team} />
 
         {showAddModal && (

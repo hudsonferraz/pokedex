@@ -1,0 +1,44 @@
+.regulation-warnings,
+.regulation-status {
+  padding: var(--space-4) var(--space-5);
+  margin-bottom: var(--space-4);
+}
+
+.regulation-status-ok {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  font-size: 0.9rem;
+  color: var(--success);
+  border-color: rgba(76, 175, 80, 0.35);
+}
+
+.regulation-status-icon {
+  font-weight: 800;
+  font-size: 1.1rem;
+}
+
+.regulation-warnings-title {
+  margin: 0 0 var(--space-2);
+  font-size: 0.95rem;
+  color: var(--danger);
+}
+
+.regulation-issues ul {
+  margin: 0;
+  padding-left: 1.2rem;
+}
+
+.regulation-issue-item {
+  color: var(--danger);
+  font-size: 0.9rem;
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+.regulation-warn-item {
+  margin: var(--space-2) 0 0;
+  font-size: 0.85rem;
+  color: var(--text-color);
+  opacity: 0.9;
+}

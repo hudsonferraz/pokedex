@@ -1,0 +1,76 @@
+.bring-four {
+  padding: var(--space-5);
+  margin-bottom: var(--space-5);
+}
+
+.bring-four-header {
+  margin-bottom: var(--space-4);
+}
+
+.bring-four-header h2 {
+  margin: 0 0 var(--space-2);
+  font-size: 1.2rem;
+  color: var(--text-color);
+}
+
+.bring-four-copy {
+  margin: 0;
+  font-size: 0.9rem;
+  line-height: 1.45;
+  color: var(--text-color);
+  opacity: 0.85;
+}
+
+.bring-four-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: var(--space-3);
+}
+
+.bring-four-slot {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-3);
+  border: 2px solid var(--border-color);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: border-color 0.2s ease, background 0.2s ease;
+  background: var(--filter-bg);
+}
+
+.bring-four-slot.selected {
+  border-color: var(--accent);
+  background: var(--accent-muted);
+}
+
+.bring-four-slot.disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.bring-four-slot input {
+  accent-color: var(--accent);
+}
+
+.bring-four-sprite {
+  width: 64px;
+  height: 64px;
+  object-fit: contain;
+}
+
+.bring-four-name {
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-transform: capitalize;
+  text-align: center;
+  color: var(--text-color);
+}
+
+.bring-four-hint {
+  margin: var(--space-3) 0 0;
+  font-size: 0.85rem;
+  color: var(--text-color);
+  opacity: 0.75;
+}

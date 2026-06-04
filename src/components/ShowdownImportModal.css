@@ -1,0 +1,99 @@
+.showdown-import-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.65);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1004;
+  padding: 16px;
+}
+
+.showdown-import-modal {
+  background: var(--card-bg);
+  border: 2px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  max-width: 560px;
+  width: 100%;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: var(--shadow-md);
+}
+
+.showdown-import-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--space-4) var(--space-5);
+  border-bottom: 1px solid var(--border-color);
+}
+
+.showdown-import-header h2 {
+  margin: 0;
+  font-size: 1.15rem;
+  color: var(--text-color);
+}
+
+.showdown-import-close {
+  border: none;
+  background: transparent;
+  font-size: 1.5rem;
+  cursor: pointer;
+  color: var(--text-color);
+}
+
+.showdown-import-hint {
+  margin: 0;
+  padding: var(--space-3) var(--space-5) 0;
+  font-size: 0.85rem;
+  line-height: 1.45;
+  color: var(--text-color);
+  opacity: 0.85;
+}
+
+.showdown-import-textarea {
+  margin: var(--space-4) var(--space-5);
+  padding: var(--space-3);
+  border: 2px solid var(--border-color);
+  border-radius: var(--radius-md);
+  background: var(--input-bg);
+  color: var(--text-color);
+  font-family: ui-monospace, monospace;
+  font-size: 0.8rem;
+  line-height: 1.4;
+  resize: vertical;
+  min-height: 200px;
+}
+
+.showdown-import-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-3);
+  padding: var(--space-4) var(--space-5);
+  border-top: 1px solid var(--border-color);
+}
+
+.showdown-import-btn {
+  padding: 8px 18px;
+  border-radius: var(--radius-md);
+  font-weight: 600;
+  cursor: pointer;
+  border: 2px solid var(--border-color);
+}
+
+.showdown-import-btn.primary {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+
+.showdown-import-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.showdown-import-btn.secondary {
+  background: var(--card-bg);
+  color: var(--text-color);
+}

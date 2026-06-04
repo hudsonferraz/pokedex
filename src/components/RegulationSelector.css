@@ -1,0 +1,35 @@
+.regulation-selector {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-4) var(--space-5);
+  margin-bottom: var(--space-4);
+}
+
+.regulation-selector-label {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--text-color);
+  white-space: nowrap;
+}
+
+.regulation-select {
+  min-width: 200px;
+  padding: 8px 12px;
+  border: 2px solid var(--border-color);
+  border-radius: var(--radius-md);
+  background: var(--card-bg);
+  color: var(--text-color);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.regulation-selector-hint {
+  flex: 1;
+  min-width: 200px;
+  margin: 0;
+  font-size: 0.8rem;
+  color: var(--text-color);
+  opacity: 0.8;
+}
