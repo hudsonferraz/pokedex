@@ -251,5 +251,9 @@ export function getTeamSummaryForAI(team, context = {}) {
   if (hasTailwind) summary += " Has Tailwind.";
   if (hasTr) summary += " Has Trick Room.";
 
+  if (context.metaAppendix) {
+    summary += ` ${context.metaAppendix}`;
+  }
+
   return summary;
 }

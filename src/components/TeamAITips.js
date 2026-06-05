@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { getRuleBasedTips, getTeamSummaryForAI } from "../utils/teamTips";
 import { askAIForTeamTips } from "../services/aiTeamHelper";
+import { buildMetaContextForAI } from "../utils/aiMetaContext";
 import { FORMAT_OPTIONS, getStoredFormat, setStoredFormat } from "../utils/formatOptions";
 import { useMetaData } from "../contexts/MetaDataContext";
 import "./TeamAITips.css";
@@ -39,7 +40,11 @@ const TeamAITips = ({
     setAiLoading(true);
 
     try {
-      const teamSummary = getTeamSummaryForAI(team, tipContext);
+      const metaAppendix = await buildMetaContextForAI(regulationId, team, liveMeta);
+      const teamSummary = getTeamSummaryForAI(team, {
+        ...tipContext,
+        metaAppendix,
+      });
       const aiFormat =
         format ||
         (regulationLabel ? `VGC ${regulationLabel}` : "VGC doubles");
@@ -71,8 +76,8 @@ const TeamAITips = ({
       <div className="tips-section ai-section">
         <h3>Ask AI (VGC-tuned)</h3>
         <p className="ai-hint">
-          Sends regulation, roles, items, Tera, bring-4, and moves to our server — tuned for doubles
-          (Tailwind, TR, restricteds).
+          Sends regulation, roles, items, Tera, bring-4, moves, and live Pikalytics meta (usage, WR,
+          partners, staples) to our server — tuned for doubles.
         </p>
         <div className="ai-format-row">
           <label htmlFor="ai-format" className="ai-format-label">

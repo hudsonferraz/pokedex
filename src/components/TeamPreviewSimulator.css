@@ -183,8 +183,34 @@
 
 .preview-opponent-add {
   display: flex;
+  flex-wrap: wrap;
   gap: 8px;
   margin-bottom: var(--space-2);
+}
+
+.preview-opponent-preset {
+  padding: 8px 12px;
+  border: 2px solid var(--accent);
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: var(--accent);
+  font-weight: 600;
+  font-size: 0.82rem;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.preview-opponent-preset:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.preview-meta-quick-label {
+  font-size: 0.72rem;
+  font-weight: 600;
+  opacity: 0.75;
+  align-self: center;
+  margin-right: 4px;
 }
 
 .preview-opponent-input {

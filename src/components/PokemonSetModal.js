@@ -74,6 +74,13 @@ const PokemonSetModal = ({ pokemon, currentSet, onSave, onClose }) => {
     onClose();
   };
 
+  const handleApplySpread = (spread) => {
+    if (spread.nature) setNature(spread.nature);
+    if (spread.evs) setEvs(spread.evs);
+    if (spread.ability) setAbility(spread.ability);
+    if (spread.item) setItem(spread.item);
+  };
+
   const handleApplyMetaSet = async () => {
     setApplyingMeta(true);
     setMetaError("");
@@ -112,6 +119,11 @@ const PokemonSetModal = ({ pokemon, currentSet, onSave, onClose }) => {
     metaPreview?.moves?.slice(0, 4).map((entry) => entry.name) ||
     suggested?.moveLabels?.slice(0, 4) ||
     [];
+
+  const teraTypeOptions =
+    metaPreview?.teraTypes?.length > 0
+      ? metaPreview.teraTypes.map((entry) => entry.name)
+      : [];
 
   return (
     <div className="pokemon-set-overlay" onClick={onClose} role="presentation">
@@ -177,6 +189,109 @@ const PokemonSetModal = ({ pokemon, currentSet, onSave, onClose }) => {
                 <p className="pokemon-set-meta-error">{metaError}</p>
               )}
             </div>
+          )}
+
+          {metaPreview?.evSpreads?.length > 0 && (
+            <div className="pokemon-set-spreads">
+              <h3 className="pokemon-set-section-title">Spread comparison</h3>
+              <ul className="pokemon-set-spread-list">
+                {metaPreview.evSpreads.map((spread, index) => (
+                  <li key={`${spread.label}-${index}`} className="pokemon-set-spread-item">
+                    <div className="pokemon-set-spread-info">
+                      <span className="pokemon-set-spread-label">{spread.label}</span>
+                      {spread.nature && spread.evs && (
+                        <span className="pokemon-set-spread-detail">
+                          {spread.nature} · {spread.evs}
+                          {spread.percent != null ? ` (${spread.percent}%)` : ""}
+                        </span>
+                      )}
+                      {spread.item && (
+                        <span className="pokemon-set-spread-detail">
+                          {spread.ability ? `${spread.ability} · ` : ""}
+                          {spread.item}
+                          {spread.moves?.length ? ` · ${spread.moves.join(", ")}` : ""}
+                        </span>
+                      )}
+                      {spread.trainer && (
+                        <span className="pokemon-set-spread-trainer">
+                          {spread.trainer}
+                          {spread.record ? ` (${spread.record})` : ""}
+                        </span>
+                      )}
+                    </div>
+                    <button
+                      type="button"
+                      className="pokemon-set-spread-use"
+                      onClick={() => handleApplySpread(spread)}
+                    >
+                      Use
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+
+          {teraTypeOptions.length > 0 && (
+            <div className="pokemon-set-tera-meta">
+              <span className="pokemon-set-section-title">Meta Tera types</span>
+              <div className="pokemon-set-tera-chips">
+                {metaPreview.teraTypes.slice(0, 5).map((entry) => (
+                  <button
+                    key={entry.name}
+                    type="button"
+                    className={`pokemon-set-tera-chip ${
+                      teraType === entry.name ? "active" : ""
+                    }`}
+                    onClick={() => setTeraType(entry.name)}
+                  >
+                    {entry.name}
+                    {entry.percent != null ? ` ${entry.percent}%` : ""}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {metaPreview?.featuredTeams?.length > 0 && (
+            <details className="pokemon-set-featured">
+              <summary>
+                Featured tournament teams ({metaPreview.featuredTeams.length})
+              </summary>
+              <ul className="pokemon-set-featured-list">
+                {metaPreview.featuredTeams.slice(0, 5).map((entry) => (
+                  <li key={entry.id} className="pokemon-set-featured-item">
+                    <div className="pokemon-set-featured-head">
+                      <strong>{entry.trainer}</strong>
+                      {entry.record && <span>{entry.record}</span>}
+                    </div>
+                    {entry.pokemon.length > 0 && (
+                      <p className="pokemon-set-featured-roster">
+                        {entry.pokemon.join(", ")}
+                      </p>
+                    )}
+                    {entry.speciesSet && (
+                      <p className="pokemon-set-featured-set">
+                        {entry.speciesSet.ability && `${entry.speciesSet.ability} · `}
+                        {entry.speciesSet.item}
+                        {entry.speciesSet.moves?.length
+                          ? ` — ${entry.speciesSet.moves.join(", ")}`
+                          : ""}
+                      </p>
+                    )}
+                    {entry.speciesSet && (
+                      <button
+                        type="button"
+                        className="pokemon-set-featured-use"
+                        onClick={() => handleApplySpread(entry.speciesSet)}
+                      >
+                        Use this set
+                      </button>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            </details>
           )}
 
           <label className="pokemon-set-field">

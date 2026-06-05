@@ -19,6 +19,8 @@ import BringFourPreview from "./BringFourPreview";
 import TeamPreviewSimulator from "./TeamPreviewSimulator";
 import PokemonSetModal from "./PokemonSetModal";
 import ShowdownImportModal from "./ShowdownImportModal";
+import MetaGapPanel from "./MetaGapPanel";
+import SuggestSixthPanel from "./SuggestSixthPanel";
 import TeammateSuggestions from "./TeammateSuggestions";
 import Navbar from "./Navbar";
 import { normalizeSpeciesId, formatSpeciesLabel } from "../utils/regulation";
@@ -432,6 +434,7 @@ const TeamBuilder = () => {
 
         <RegulationSelector />
         <RegulationWarnings team={team} />
+        <MetaGapPanel team={team} />
 
         <div className="team-builder-header">
           <div className="team-builder-title-block">
@@ -605,6 +608,14 @@ const TeamBuilder = () => {
             />
           </>
         )}
+
+        <SuggestSixthPanel
+          team={team}
+          regulationId={regulationId}
+          teamNames={teamNames}
+          canAddToTeam={canAddToTeam()}
+          onAddSuggestion={handleAddTeammate}
+        />
 
         <BringFourPreview
           team={team}

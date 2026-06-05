@@ -189,6 +189,25 @@ const TeamPreviewSimulator = ({
     );
   };
 
+  const loadMetaOpponentPreset = async () => {
+    const topSix = (meta.topPokemon || []).slice(0, 6);
+    if (!topSix.length) return;
+
+    setOpponentLoading(true);
+    try {
+      const loaded = [];
+      for (const speciesId of topSix) {
+        const pokemon = await searchPokemon(speciesId);
+        if (pokemon) loaded.push(pokemon);
+      }
+      setOpponentRoster(loaded);
+      setOpponentBox(emptyBox());
+      setOpponentQuery("");
+    } finally {
+      setOpponentLoading(false);
+    }
+  };
+
   const yourActive = yourBox.filter(Boolean);
   const opponentActive = opponentBox.filter(Boolean);
 
@@ -267,8 +286,18 @@ const TeamPreviewSimulator = ({
             >
               Add
             </button>
+            <button
+              type="button"
+              className="preview-opponent-preset"
+              onClick={loadMetaOpponentPreset}
+              disabled={opponentLoading || !(meta.topPokemon || []).length}
+              title="Load top 6 usage Pokémon as opponent roster"
+            >
+              Load meta roster
+            </button>
           </div>
           <div className="preview-meta-quick">
+            <span className="preview-meta-quick-label">Quick add:</span>
             {(meta.topPokemon || []).slice(0, 6).map((speciesId) => (
               <button
                 key={speciesId}
