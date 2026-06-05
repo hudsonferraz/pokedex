@@ -1,7 +1,12 @@
-import React from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "./ToastProvider";
-import { openDamageCalcWithTeam, SHOWDOWN_DAMAGE_CALC_URL } from "../utils/damageCalcLink";
+import {
+  openDamageCalcWithTeam,
+  getDamageCalcUrl,
+  getDamageCalcLinkLabel,
+} from "../utils/damageCalcLink";
+import { enrichSetsWithMoveTypes } from "../utils/resolveMoveTypes";
 import {
   getTeamWeaknesses,
   getTeamTypeCoverage,
@@ -16,13 +21,46 @@ import TeamAverageRadar from "./TeamAverageRadar";
 import TypeCoverageBars from "./TypeCoverageBars";
 import "./TeamAnalysis.css";
 
-const TeamAnalysis = ({ team, sets, teamName = "Team" }) => {
+const TeamAnalysis = ({
+  team,
+  sets,
+  teamName = "Team",
+  regulationId = "champions-reg-ma",
+}) => {
   const navigate = useNavigate();
   const { showToast } = useToast();
+  const [enrichedSets, setEnrichedSets] = useState(sets || {});
+  const [resolvingMoves, setResolvingMoves] = useState(false);
+
+  useEffect(() => {
+    if (!team?.length) {
+      setEnrichedSets(sets || {});
+      return undefined;
+    }
+
+    let cancelled = false;
+    setResolvingMoves(true);
+
+    enrichSetsWithMoveTypes(team, sets).then((next) => {
+      if (!cancelled) {
+        setEnrichedSets(next);
+        setResolvingMoves(false);
+      }
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [team, sets]);
 
   const handleOpenDamageCalc = async () => {
     try {
-      const result = await openDamageCalcWithTeam(team, sets, teamName);
+      const result = await openDamageCalcWithTeam(
+        team,
+        sets,
+        teamName,
+        regulationId,
+      );
       if (result.copied) {
         showToast("Showdown paste copied — paste into the damage calc", "success");
       } else {
@@ -32,6 +70,22 @@ const TeamAnalysis = ({ team, sets, teamName = "Team" }) => {
       showToast("Could not open damage calc", "error");
     }
   };
+
+  const calcUrl = getDamageCalcUrl(regulationId);
+  const calcLinkLabel = getDamageCalcLinkLabel(regulationId);
+
+  const hasSelectedMoves = team?.some(
+    (pokemon) => enrichedSets?.[pokemon?.name]?.moves?.length > 0,
+  );
+
+  const moveCoverage = useMemo(
+    () => getTeamMoveCoverage(team || [], enrichedSets),
+    [team, enrichedSets],
+  );
+  const typeCoverage = useMemo(
+    () => getTeamTypeCoverage(team || []),
+    [team],
+  );
 
   if (!team || team.length === 0) {
     return (
@@ -50,14 +104,9 @@ const TeamAnalysis = ({ team, sets, teamName = "Team" }) => {
   }
 
   const weaknesses = getTeamWeaknesses(team);
-  const typeCoverage = getTeamTypeCoverage(team);
-  const moveCoverage = getTeamMoveCoverage(team, sets);
   const stats = getTeamStats(team);
   const uniqueTypes = getUniqueTypes(team);
 
-  const hasSelectedMoves = team.some(
-    (pokemon) => sets?.[pokemon?.name]?.moves?.length > 0,
-  );
   const coverage = hasSelectedMoves ? moveCoverage : typeCoverage;
   const coverageSource = hasSelectedMoves ? "selected moves" : "Pokémon types";
 
@@ -84,17 +133,18 @@ const TeamAnalysis = ({ team, sets, teamName = "Team" }) => {
       <header className="team-analysis-header">
         <h2 className="team-analysis-title">Team analysis</h2>
         <p className="team-analysis-subtitle">
-          {team.length}/6 Pokémon · {superEffectiveCoverage.length}/18 at 2× ({coverageSource})
+          {team.length}/6 · {superEffectiveCoverage.length}/18 at 2× ({coverageSource})
+          {uniqueTypes.length > 0 && ` · ${uniqueTypes.length} types`}
         </p>
       </header>
 
-      <div className="team-analysis-dashboard">
+      <div className="team-analysis-dashboard team-analysis-compact">
         <CollapsibleSection
           title="Overview"
-          summary={`${uniqueTypes.length} types on roster`}
-          defaultOpen
+          summary={`Avg BST radar · ${uniqueTypes.length} types`}
+          defaultOpen={false}
         >
-          <div className="analysis-overview-grid">
+          <div className="analysis-overview-grid analysis-overview-compact">
             <div className="analysis-overview-types">
               <p className="analysis-label">Types represented</p>
               <div className="team-types-display">
@@ -110,8 +160,7 @@ const TeamAnalysis = ({ team, sets, teamName = "Team" }) => {
               </div>
             </div>
             <div className="analysis-overview-radar">
-              <p className="analysis-label">Average base stats</p>
-              <TeamAverageRadar averages={stats} color="#6890F0" />
+              <TeamAverageRadar averages={stats} color="#6890F0" compact />
             </div>
           </div>
         </CollapsibleSection>
@@ -123,6 +172,7 @@ const TeamAnalysis = ({ team, sets, teamName = "Team" }) => {
               ? `Weak to ${superEffectiveWeaknesses.slice(0, 3).join(", ")}`
               : "No critical weaknesses"
           }
+          defaultOpen={false}
         >
           <h4 className="analysis-subheading">Critical weaknesses (2×)</h4>
           {superEffectiveWeaknesses.length > 0 ? (
@@ -161,14 +211,17 @@ const TeamAnalysis = ({ team, sets, teamName = "Team" }) => {
         <CollapsibleSection
           title={hasSelectedMoves ? "Move-based coverage" : "Offensive coverage (types)"}
           summary={`${superEffectiveCoverage.length} types at 2×`}
-          defaultOpen={team.length >= 3}
+          defaultOpen
         >
           {!hasSelectedMoves && (
             <p className="analysis-note">
               Select moves on each Pokémon to analyze coverage from your movesets, not just typings.
             </p>
           )}
-          <p className="analysis-note">
+          {hasSelectedMoves && resolvingMoves && (
+            <p className="analysis-note">Resolving move types from Pokédex…</p>
+          )}
+          <p className="analysis-note analysis-note-inline">
             Super-effective against {superEffectiveCoverage.length} of{" "}
             {ALL_POKEMON_TYPES.length} types ({coverageSource}).
             {threatGaps.length > 0 && (
@@ -185,7 +238,7 @@ const TeamAnalysis = ({ team, sets, teamName = "Team" }) => {
               </span>
             )}
           </p>
-          <TypeCoverageBars coverage={coverage} />
+          <TypeCoverageBars coverage={coverage} compact />
         </CollapsibleSection>
 
         <CollapsibleSection title="Tools" defaultOpen={false}>
@@ -202,12 +255,12 @@ const TeamAnalysis = ({ team, sets, teamName = "Team" }) => {
               Open calc + copy team paste
             </button>
             <a
-              href={SHOWDOWN_DAMAGE_CALC_URL}
+              href={calcUrl}
               target="_blank"
               rel="noopener noreferrer"
               className="damage-calc-link"
             >
-              Gen 9 VGC calc only →
+              {calcLinkLabel}
             </a>
           </div>
         </CollapsibleSection>

@@ -7,6 +7,20 @@
   padding-right: 4px;
 }
 
+.type-coverage-bars.compact {
+  max-height: 220px;
+  gap: 4px;
+}
+
+.type-coverage-bars.compact .coverage-bar-row {
+  grid-template-columns: 64px 1fr 28px;
+  gap: 6px;
+}
+
+.type-coverage-bars.compact .coverage-bar-track {
+  height: 8px;
+}
+
 .coverage-bar-row {
   display: grid;
   grid-template-columns: 72px 1fr 32px;

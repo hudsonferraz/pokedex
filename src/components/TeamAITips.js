@@ -120,7 +120,7 @@ const TeamAITips = ({
             {aiLoading ? "Loading…" : "Get tips"}
           </button>
         </div>
-        {aiError && <p className="ai-error">{aiError}</p>}
+        {aiError && <p className="ai-error" role="alert">{aiError}</p>}
         {aiLoading && (
           <div className="ai-response-skeleton" aria-busy="true" aria-label="Loading AI tips">
             <div className="ai-skeleton-line skeleton-shimmer" />

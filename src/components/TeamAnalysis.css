@@ -1,6 +1,28 @@
 .team-analysis {
-  padding: var(--space-5);
-  margin-top: var(--space-5);
+  padding: var(--space-4) var(--space-5);
+  margin-top: var(--space-4);
+}
+
+.team-analysis-compact .team-analysis-title {
+  font-size: 1.2rem;
+  margin-bottom: 0;
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.team-analysis-compact .analysis-overview-compact {
+  grid-template-columns: 1fr auto;
+  gap: var(--space-3);
+}
+
+.analysis-note-inline {
+  margin-bottom: var(--space-2);
+}
+
+.coverage-gap-hint {
+  display: inline;
+  margin-top: 0;
+  margin-left: 4px;
 }
 
 .team-analysis-empty {

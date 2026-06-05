@@ -274,9 +274,9 @@
 
 .team-slots-grid {
   display: grid;
-  grid-template-columns: repeat(6, minmax(120px, 1fr));
+  grid-template-columns: repeat(6, minmax(132px, 1fr));
   gap: 16px;
-  min-width: 720px;
+  min-width: 792px;
 }
 
 .search-loading-skeleton {

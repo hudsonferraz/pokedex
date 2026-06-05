@@ -5,10 +5,11 @@ const STAT_LABELS = ["HP", "Attack", "Defense", "Sp. Atk", "Sp. Def", "Speed"];
 const STAT_KEYS = ["hp", "attack", "defense", "special-attack", "special-defense", "speed"];
 const MAX_STAT = 255;
 
-const TeamAverageRadar = ({ averages, color = "#6890F0" }) => {
-  const centerX = 120;
-  const centerY = 120;
-  const radius = 72;
+const TeamAverageRadar = ({ averages, color = "#6890F0", compact = false }) => {
+  const centerX = compact ? 90 : 120;
+  const centerY = compact ? 90 : 120;
+  const radius = compact ? 54 : 72;
+  const size = compact ? 180 : 240;
 
   const getValue = (index) => averages[STAT_KEYS[index]] || 0;
 
@@ -22,7 +23,7 @@ const TeamAverageRadar = ({ averages, color = "#6890F0" }) => {
 
   const getLabelPoint = (index) => {
     const angle = (index * 2 * Math.PI) / STAT_LABELS.length - Math.PI / 2;
-    const labelRadius = radius + 18;
+    const labelRadius = radius + (compact ? 14 : 18);
     const x = centerX + labelRadius * Math.cos(angle);
     const y = centerY + labelRadius * Math.sin(angle);
     return { x, y };
@@ -35,9 +36,9 @@ const TeamAverageRadar = ({ averages, color = "#6890F0" }) => {
 
   return (
     <svg
-      width="240"
-      height="240"
-      viewBox="0 0 240 240"
+      width={size}
+      height={size}
+      viewBox={`0 0 ${size} ${size}`}
       className="radar-chart-svg team-average-radar"
       role="img"
       aria-label="Team average base stats radar chart"

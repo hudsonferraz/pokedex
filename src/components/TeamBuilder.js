@@ -679,6 +679,7 @@ const TeamBuilder = () => {
           team={team}
           sets={activeTeam?.sets}
           teamName={activeTeam?.name || "Team"}
+          regulationId={regulationId}
         />
         <TeamAITips
           team={team}

@@ -16,9 +16,10 @@ const fetchApi =
 
 const app = express();
 const PORT = process.env.PORT || 3001;
-const HF_ROUTER_URL = "https://router.huggingface.co/v1/responses";
-// Chat model on the new Inference Providers (router). FLAN-T5 may not return output_text.
-const MODEL_ID = "meta-llama/Llama-3.2-3B-Instruct";
+const HF_CHAT_URL = "https://router.huggingface.co/v1/chat/completions";
+const HF_RESPONSES_URL = "https://router.huggingface.co/v1/responses";
+// :fastest picks an available Inference Provider automatically
+const MODEL_ID = "meta-llama/Llama-3.2-3B-Instruct:fastest";
 const { getCached, setCached, getCacheStats } = require("./pikalyticsCache");
 const {
   parsePikalyticsMarkdown,
@@ -133,6 +134,87 @@ function extractOutputText(body) {
   }
   if (typeof body.output === "string") return body.output.trim();
   return null;
+}
+
+function extractChatCompletionText(body) {
+  if (!body || typeof body !== "object") return null;
+  const content = body.choices?.[0]?.message?.content;
+  if (typeof content === "string" && content.trim()) {
+    return content.trim();
+  }
+  return null;
+}
+
+async function requestAiText(prompt, instructions) {
+  const token = getToken();
+  const headers = {
+    "Content-Type": "application/json",
+    Authorization: `Bearer ${token}`,
+  };
+
+  try {
+    const chatRes = await fetchApi(HF_CHAT_URL, {
+      method: "POST",
+      headers,
+      body: JSON.stringify({
+        model: MODEL_ID,
+        messages: [
+          { role: "system", content: instructions },
+          { role: "user", content: prompt },
+        ],
+        max_tokens: 280,
+        temperature: 0.6,
+      }),
+    });
+    const chatRaw = await chatRes.text();
+    if (chatRes.ok) {
+      const data = JSON.parse(chatRaw);
+      const text = extractChatCompletionText(data);
+      if (text) return text;
+    } else {
+      console.warn("HF chat completions:", chatRes.status, chatRaw.slice(0, 300));
+      if (chatRes.status === 401) {
+        throw new Error(
+          "Invalid Hugging Face token. Create one with Inference Providers permission at huggingface.co/settings/tokens.",
+        );
+      }
+      if (chatRes.status === 402 || chatRes.status === 403) {
+        throw new Error(
+          "Hugging Face billing or permissions issue. Enable Inference Providers credits on your HF account.",
+        );
+      }
+    }
+  } catch (error) {
+    if (error instanceof Error && error.message.includes("Hugging Face")) {
+      throw error;
+    }
+    console.warn("HF chat request failed:", error);
+  }
+
+  const responsesRes = await fetchApi(HF_RESPONSES_URL, {
+    method: "POST",
+    headers,
+    body: JSON.stringify({
+      model: MODEL_ID.replace(/:fastest$/, ""),
+      instructions,
+      input: prompt,
+    }),
+  });
+  const responsesRaw = await responsesRes.text();
+  if (!responsesRes.ok) {
+    if (responsesRes.status === 503) {
+      throw new Error("Model is loading. Please try again in 15–20 seconds.");
+    }
+    throw new Error(responsesRaw || `AI service error: ${responsesRes.status}`);
+  }
+
+  const data = JSON.parse(responsesRaw);
+  const text = extractOutputText(data);
+  if (text) return text;
+
+  throw new Error(
+    "AI service returned an empty response. Verify HUGGINGFACE_TOKEN on Render and Inference Providers credits.",
+  );
 }
 
 const PIKALYTICS_FORMATS = {
@@ -274,66 +356,13 @@ app.post("/api/ai-team-tips", async (req, res) => {
     "Fire/Grass cores, and team preview. Use 2-4 sentences.";
 
   try {
-    const hfRes = await fetchApi(HF_ROUTER_URL, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify({
-        model: MODEL_ID,
-        instructions: vgcInstructions,
-        input: prompt,
-      }),
-    });
-
-    const rawBody = await hfRes.text();
-
-    if (!hfRes.ok) {
-      if (hfRes.status === 401) {
-        return res
-          .status(502)
-          .json({
-            error:
-              "Invalid Hugging Face token. Check your token at huggingface.co/settings/tokens.",
-          });
-      }
-      if (hfRes.status === 503) {
-        return res
-          .status(503)
-          .json({
-            error: "Model is loading. Please try again in 15–20 seconds.",
-          });
-      }
-      return res
-        .status(502)
-        .json({ error: rawBody || `Upstream error: ${hfRes.status}` });
-    }
-
-    let data;
-    try {
-      data = JSON.parse(rawBody);
-    } catch {
-      console.error("HF response not JSON:", rawBody.slice(0, 200));
-      return res
-        .status(502)
-        .json({ error: "Invalid response from AI service. Try again." });
-    }
-
-    const text = extractOutputText(data);
-    if (!text && process.env.NODE_ENV !== "production") {
-      console.log(
-        "HF response shape (first 500 chars):",
-        JSON.stringify(data).slice(0, 500),
-      );
-    }
-    return res.json({
-      text: text || "No response generated. Try rephrasing your question.",
-    });
+    const text = await requestAiText(prompt, vgcInstructions);
+    return res.json({ text });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Server error";
     console.error("AI tips error:", message);
-    return res.status(500).json({
+    const status = message.includes("loading") ? 503 : 502;
+    return res.status(status).json({
       error: message || "Server error. Check the server terminal for details.",
     });
   }

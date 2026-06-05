@@ -32,10 +32,23 @@ export async function askAIForTeamTips(teamSummary, userMessage, format) {
   const errorMessage = data.error || (res.ok ? null : `Request failed: ${res.status}`);
 
   if (!res.ok) {
+    if (res.status === 404) {
+      throw new Error(
+        "AI API not found (404). On GitHub Pages, rebuild with REACT_APP_API_URL pointing at your Render server.",
+      );
+    }
     throw new Error(errorMessage || `Request failed: ${res.status}`);
   }
 
-  return (data.text || "").trim() || "No response generated. Try rephrasing your question.";
+  const text = (data.text || "").trim();
+  if (!text) {
+    throw new Error(
+      data.error ||
+        "AI returned an empty response. Check HUGGINGFACE_TOKEN on the server.",
+    );
+  }
+
+  return text;
 }
 
 /**
