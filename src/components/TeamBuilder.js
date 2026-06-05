@@ -1,4 +1,4 @@
-import React, { useState, useContext, useRef, useEffect } from "react";
+import React, { useState, useContext, useRef, useEffect, useMemo } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import TeamContext from "../contexts/TeamContext";
 import { useRegulation } from "../contexts/RegulationContext";
@@ -19,7 +19,9 @@ import BringFourPreview from "./BringFourPreview";
 import TeamPreviewSimulator from "./TeamPreviewSimulator";
 import PokemonSetModal from "./PokemonSetModal";
 import ShowdownImportModal from "./ShowdownImportModal";
+import TeammateSuggestions from "./TeammateSuggestions";
 import Navbar from "./Navbar";
+import { normalizeSpeciesId, formatSpeciesLabel } from "../utils/regulation";
 import { useModalAccessibility } from "../hooks/useModalAccessibility";
 import {
   getTeamExportText,
@@ -76,6 +78,26 @@ const TeamBuilder = () => {
   const [showShowdownImport, setShowShowdownImport] = useState(false);
   const [showdownImporting, setShowdownImporting] = useState(false);
   const [setEditorPokemon, setSetEditorPokemon] = useState(null);
+  const [metaFocusIndex, setMetaFocusIndex] = useState(0);
+
+  const filledSlotIndices = useMemo(
+    () => team.map((entry, index) => (entry ? index : -1)).filter((index) => index >= 0),
+    [team],
+  );
+
+  const teamNames = useMemo(
+    () => new Set(team.filter(Boolean).map((entry) => normalizeSpeciesId(entry.name))),
+    [team],
+  );
+
+  const focusedPokemon = team[metaFocusIndex] || null;
+
+  useEffect(() => {
+    if (filledSlotIndices.length === 0) return;
+    if (!team[metaFocusIndex]) {
+      setMetaFocusIndex(filledSlotIndices[0]);
+    }
+  }, [team, metaFocusIndex, filledSlotIndices]);
   const bringList = getBringList();
   const searchContainerRef = useRef(null);
   const searchInputRef = useRef(null);
@@ -243,6 +265,28 @@ const TeamBuilder = () => {
   const handleRemovePokemon = (pokemonName) => {
     removeFromTeam(pokemonName);
     showToast(`${pokemonName} removed from team`, "info");
+  };
+
+  const handleAddTeammate = async (speciesApiId) => {
+    if (!canAddToTeam()) {
+      showToast("Team is full (6/6)", "info");
+      return;
+    }
+    if (teamNames.has(speciesApiId)) {
+      showToast("Already on your team", "info");
+      return;
+    }
+    try {
+      const pokemon = await searchPokemon(speciesApiId);
+      const added = addToTeam(pokemon);
+      if (added) {
+        showToast(`${formatSpeciesLabel(speciesApiId)} added from meta partners`, "success");
+      } else {
+        showToast("Could not add Pokémon", "info");
+      }
+    } catch {
+      showToast("Could not load Pokémon — try Browse", "error");
+    }
   };
 
   const handleClearTeam = () => {
@@ -531,6 +575,36 @@ const TeamBuilder = () => {
             ))}
           </div>
         </div>
+
+        {filledSlotIndices.length > 0 && (
+          <>
+            <div className="teammate-slot-chips" role="tablist" aria-label="Select Pokémon for partner suggestions">
+              {filledSlotIndices.map((slotIndex) => {
+                const member = team[slotIndex];
+                return (
+                  <button
+                    key={member.name}
+                    type="button"
+                    role="tab"
+                    aria-selected={metaFocusIndex === slotIndex}
+                    className={`teammate-slot-chip ${metaFocusIndex === slotIndex ? "active" : ""}`}
+                    onClick={() => setMetaFocusIndex(slotIndex)}
+                  >
+                    {member.name}
+                  </button>
+                );
+              })}
+            </div>
+            <TeammateSuggestions
+              selectedPokemon={focusedPokemon}
+              regulationId={regulationId}
+              regulationLabel={regulation.label}
+              teamNames={teamNames}
+              canAddToTeam={canAddToTeam()}
+              onAddTeammate={handleAddTeammate}
+            />
+          </>
+        )}
 
         <BringFourPreview
           team={team}

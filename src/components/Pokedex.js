@@ -3,11 +3,11 @@ import Pagination from "./Pagination";
 import Pokemon from "./Pokemon";
 import PokemonCardSkeleton from "./PokemonCardSkeleton";
 import { useMetaData } from "../contexts/MetaDataContext";
-import { getUsagePercentFromMeta, getUsageMetaFromLive } from "../utils/usageStats";
+import { getUsagePercentFromMeta, getUsageMetaFromLive, getWinRateFromSpeciesMeta } from "../utils/usageStats";
 
 const Pokedex = (props) => {
   const { pokemons, loading, page, setPage, totalPages } = props;
-  const { meta } = useMetaData();
+  const { meta, speciesMeta } = useMetaData();
   const usageMeta = useMemo(() => getUsageMetaFromLive(meta), [meta]);
   const onLeftClickHandler = () => {
     if (page > 0) {
@@ -57,11 +57,13 @@ const Pokedex = (props) => {
               const usagePercent = meta
                 ? getUsagePercentFromMeta(meta, pokemon.name)
                 : null;
+              const winRate = getWinRateFromSpeciesMeta(speciesMeta, pokemon.name);
               return (
                 <Pokemon
                   key={pokemon.id || index}
                   pokemon={pokemon}
                   usagePercent={usagePercent}
+                  winRate={winRate}
                   usageLabel={usageMeta?.source}
                 />
               );

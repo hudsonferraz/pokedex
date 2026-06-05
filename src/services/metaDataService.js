@@ -179,3 +179,54 @@ export async function fetchPokemonMeta(regulationId, speciesName) {
     };
   }
 }
+
+const SPECIES_META_SUMMARY_PREFIX = "vgc-species-meta-summary-v1";
+
+function readSpeciesSummaryCache(regulationId) {
+  try {
+    const raw = sessionStorage.getItem(`${SPECIES_META_SUMMARY_PREFIX}:${regulationId}`);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    if (Date.now() - parsed.timestamp > CLIENT_CACHE_TTL_MS) return null;
+    return parsed.data;
+  } catch {
+    return null;
+  }
+}
+
+function writeSpeciesSummaryCache(regulationId, data) {
+  try {
+    sessionStorage.setItem(
+      `${SPECIES_META_SUMMARY_PREFIX}:${regulationId}`,
+      JSON.stringify({ timestamp: Date.now(), data }),
+    );
+  } catch {
+    // ignore quota
+  }
+}
+
+/**
+ * Prefetches usage + win rate for top meta species (Browse badges).
+ */
+export async function prefetchTopSpeciesMeta(regulationId, speciesIds, limit = 15) {
+  const cached = readSpeciesSummaryCache(regulationId);
+  if (cached) return cached;
+
+  const ids = (speciesIds || []).slice(0, limit);
+  const summary = {};
+
+  await Promise.allSettled(
+    ids.map(async (speciesApiId) => {
+      const data = await fetchPokemonMeta(regulationId, speciesApiId);
+      if (data.error || (data.winRate == null && data.usage == null)) return;
+      summary[speciesApiId] = {
+        usage: data.usage ?? null,
+        winRate: data.winRate ?? null,
+        live: Boolean(data.live),
+      };
+    }),
+  );
+
+  writeSpeciesSummaryCache(regulationId, summary);
+  return summary;
+}

@@ -4,7 +4,7 @@ import { getTypeColor } from "../constants/typeColors";
 
 const Pokemon = (props) => {
   const navigate = useNavigate();
-  const { pokemon, usagePercent, usageLabel } = props;
+  const { pokemon, usagePercent, winRate, usageLabel } = props;
   const onCardClick = () => {
     navigate(`/pokemon/${pokemon.name}`);
   };
@@ -33,9 +33,16 @@ const Pokemon = (props) => {
       }}
     >
       {usagePercent != null && (
-        <span className="pokemon-usage-badge" title={usageLabel || "VGC usage"}>
-          {usagePercent.toFixed(1)}%
-        </span>
+        <div className="pokemon-meta-badges">
+          <span className="pokemon-usage-badge" title={usageLabel || "VGC usage"}>
+            {usagePercent.toFixed(1)}%
+          </span>
+          {winRate != null && (
+            <span className="pokemon-winrate-badge" title="VGC win rate">
+              {winRate.toFixed(1)}% WR
+            </span>
+          )}
+        </div>
       )}
       <div className="pokemon-image-container">
         <img

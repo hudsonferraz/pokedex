@@ -9,6 +9,7 @@ import PokemonComparison from "./PokemonComparison";
 import MovePickerModal from "./MovePickerModal";
 import { addToRecentlyViewed } from "../utils/recentlyViewed";
 import { getTypeColor } from "../constants/typeColors";
+import VgcMetaStats from "./VgcMetaStats";
 import "./PokemonDetail.css";
 
 // Simple cache for Pokemon data
@@ -487,6 +488,7 @@ const PokemonDetail = () => {
                 )}
               </div>
               <span className="pokemon-detail-id">#{pokemon.id}</span>
+              <VgcMetaStats speciesName={pokemon.name} />
               <div className="pokemon-detail-actions">
                 <button 
                   className="pokemon-detail-action-btn compare-action-btn" 

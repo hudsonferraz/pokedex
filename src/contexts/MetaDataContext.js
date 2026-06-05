@@ -1,8 +1,10 @@
 import React from "react";
-import { fetchLiveMeta } from "../services/metaDataService";
+import { fetchLiveMeta, prefetchTopSpeciesMeta } from "../services/metaDataService";
 
 const MetaDataContext = React.createContext({
   meta: null,
+  speciesMeta: {},
+  speciesMetaLoading: false,
   loading: false,
   error: null,
   refreshMeta: () => null,
@@ -10,6 +12,8 @@ const MetaDataContext = React.createContext({
 
 export function MetaDataProvider({ regulationId, children }) {
   const [meta, setMeta] = React.useState(null);
+  const [speciesMeta, setSpeciesMeta] = React.useState({});
+  const [speciesMetaLoading, setSpeciesMetaLoading] = React.useState(false);
   const [loading, setLoading] = React.useState(true);
   const [error, setError] = React.useState(null);
 
@@ -31,8 +35,31 @@ export function MetaDataProvider({ regulationId, children }) {
     load();
   }, [load]);
 
+  React.useEffect(() => {
+    if (!meta?.topPokemon?.length) {
+      setSpeciesMeta({});
+      return undefined;
+    }
+
+    let cancelled = false;
+    setSpeciesMetaLoading(true);
+
+    prefetchTopSpeciesMeta(regulationId, meta.topPokemon, 15).then((summary) => {
+      if (!cancelled) {
+        setSpeciesMeta(summary || {});
+        setSpeciesMetaLoading(false);
+      }
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [regulationId, meta?.topPokemon]);
+
   const value = {
     meta,
+    speciesMeta,
+    speciesMetaLoading,
     loading,
     error,
     refreshMeta: load,

@@ -16,6 +16,26 @@ export function getUsagePercentFromMeta(meta, speciesName) {
   return null;
 }
 
+export function getWinRateFromSpeciesMeta(speciesMeta, speciesName) {
+  if (!speciesMeta || typeof speciesMeta !== "object") return null;
+  const id = normalizeSpeciesId(speciesName);
+  const entry = speciesMeta[id];
+  if (entry?.winRate != null) return entry.winRate;
+  const base = id.split("-")[0];
+  if (speciesMeta[base]?.winRate != null) return speciesMeta[base].winRate;
+  return null;
+}
+
+export function getSpeciesMetaStats(speciesMeta, speciesName, formatMeta) {
+  const id = normalizeSpeciesId(speciesName);
+  const entry = speciesMeta?.[id] || speciesMeta?.[id.split("-")[0]];
+  return {
+    usage: entry?.usage ?? getUsagePercentFromMeta(formatMeta, speciesName),
+    winRate: entry?.winRate ?? null,
+    live: entry?.live ?? Boolean(formatMeta?.live),
+  };
+}
+
 export function getTopUsageFromMeta(meta, limit = 12) {
   const usage = meta?.usage;
   if (!usage) return [];
