@@ -39,6 +39,104 @@
   font-size: 1.8rem;
 }
 
+.comparison-subtitle {
+  margin: 4px 0 0;
+  font-size: 0.85rem;
+  opacity: 0.75;
+  color: var(--text-color);
+}
+
+.comparison-meta-table {
+  margin-bottom: 20px;
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.comparison-meta-row {
+  display: grid;
+  grid-template-columns: 100px 1fr 1fr;
+  gap: 12px;
+  align-items: center;
+  font-size: 0.88rem;
+  color: var(--text-color);
+}
+
+.comparison-meta-row.comparison-meta-header {
+  font-weight: 700;
+  padding-bottom: 6px;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.comparison-meta-label {
+  font-weight: 600;
+  opacity: 0.75;
+}
+
+.comparison-unified-stats {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 24px;
+  padding-top: 20px;
+  border-top: 2px solid var(--border-color);
+}
+
+.comparison-unified-stat-row {
+  display: grid;
+  grid-template-columns: 80px 1fr;
+  gap: 12px;
+  align-items: center;
+}
+
+.comparison-dual-bars {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.comparison-dual-bar-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+  min-height: 28px;
+  background: var(--filter-bg);
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.comparison-dual-bar {
+  height: 28px;
+  min-width: 36px;
+  display: flex;
+  align-items: center;
+  padding: 0 10px;
+  border-radius: 6px;
+  transition: width 0.4s ease;
+}
+
+.comparison-dual-bar.left {
+  justify-content: flex-start;
+}
+
+.comparison-dual-bar.right {
+  justify-content: flex-end;
+  margin-left: auto;
+}
+
+.comparison-dual-bar-wrap .comparison-winner {
+  position: absolute;
+  right: -22px;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.comparison-dual-bar-wrap:last-child .comparison-winner {
+  right: auto;
+  left: -22px;
+}
+
 .comparison-close-btn {
   background: none;
   border: none;
@@ -223,6 +321,20 @@
   .comparison-pokemon-image {
     width: 120px;
     height: 120px;
+  }
+
+  .comparison-meta-row {
+    grid-template-columns: 80px 1fr 1fr;
+    font-size: 0.82rem;
+  }
+
+  .comparison-unified-stat-row {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+
+  .comparison-dual-bars {
+    grid-template-columns: 1fr;
   }
 }
 

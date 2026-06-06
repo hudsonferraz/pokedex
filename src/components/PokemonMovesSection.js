@@ -1,24 +1,21 @@
 import React, { useState } from "react";
-import { getTypeColor } from "../constants/typeColors";
 import CollapsibleSection from "./CollapsibleSection";
 import MovePickerModal from "./MovePickerModal";
+import PokemonAbilityCards from "./PokemonAbilityCards";
+import PokemonMovesBrowser from "./PokemonMovesBrowser";
+import "./PokemonMovesSection.css";
 
 const PokemonMovesSection = ({
   pokemon,
   abilities,
   abilityDescriptions,
   allMoves,
-  moves,
   moveDetails,
-  showAllMoves,
-  onToggleShowAllMoves,
   isOnTeam,
   getMoveset,
   setMoveset,
   showToast,
 }) => {
-  const [hoveredAbility, setHoveredAbility] = useState(null);
-  const [hoveredMove, setHoveredMove] = useState(null);
   const [hoveredMovesetMove, setHoveredMovesetMove] = useState(null);
   const [showMovePicker, setShowMovePicker] = useState(false);
 
@@ -39,8 +36,6 @@ const PokemonMovesSection = ({
     return parts.join(" · ");
   };
 
-  const displayedMoves = showAllMoves ? allMoves : moves;
-
   return (
     <div className="pokemon-moves-sections">
       {abilities?.length > 0 && (
@@ -50,40 +45,10 @@ const PokemonMovesSection = ({
           defaultOpen
           className="pokemon-detail-collapsible card-surface"
         >
-          <div className="pokemon-detail-abilities">
-            <div className="abilities-list">
-              {abilities.map((ability) => {
-                const abilityName = ability.ability.name;
-                const description = abilityDescriptions[abilityName];
-                return (
-                  <div
-                    key={abilityName}
-                    className="ability-badge-container"
-                    onMouseEnter={() => setHoveredAbility(abilityName)}
-                    onMouseLeave={() => setHoveredAbility(null)}
-                    onFocus={() => setHoveredAbility(abilityName)}
-                    onBlur={() => setHoveredAbility(null)}
-                    tabIndex={0}
-                  >
-                    <span className="ability-badge">
-                      {abilityName.replace(/-/g, " ")}
-                      {ability.is_hidden && (
-                        <span className="hidden-indicator"> (Hidden)</span>
-                      )}
-                    </span>
-                    {hoveredAbility === abilityName && description && (
-                      <div className="ability-tooltip">
-                        <h4 className="ability-tooltip-title">
-                          {abilityName.replace(/-/g, " ")}
-                        </h4>
-                        <p className="ability-tooltip-description">{description}</p>
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-          </div>
+          <PokemonAbilityCards
+            abilities={abilities}
+            abilityDescriptions={abilityDescriptions}
+          />
         </CollapsibleSection>
       )}
 
@@ -158,85 +123,11 @@ const PokemonMovesSection = ({
       {allMoves.length > 0 && (
         <CollapsibleSection
           title={`Moves (${allMoves.length})`}
-          summary={showAllMoves ? "Full learnset" : "Top 20 shown"}
+          summary="Search, filter, and browse learnset"
           defaultOpen={false}
           className="pokemon-detail-collapsible card-surface"
         >
-          <div className="pokemon-detail-moves">
-            {allMoves.length > 20 && (
-              <div className="moves-header">
-                <button
-                  type="button"
-                  onClick={onToggleShowAllMoves}
-                  className="show-all-moves-btn"
-                >
-                  {showAllMoves ? "Show less" : `Show all (${allMoves.length})`}
-                </button>
-              </div>
-            )}
-            <div className="moves-list">
-              {displayedMoves.map((move) => {
-                const details = moveDetails[move.name] || move;
-                return (
-                  <div
-                    key={move.name}
-                    className="move-badge-container"
-                    onMouseEnter={() => setHoveredMove(move.name)}
-                    onMouseLeave={() => setHoveredMove(null)}
-                    onFocus={() => setHoveredMove(move.name)}
-                    onBlur={() => setHoveredMove(null)}
-                    tabIndex={0}
-                  >
-                    <span
-                      className="move-badge"
-                      style={{ backgroundColor: getTypeColor(move.type) }}
-                    >
-                      {move.name.replace(/-/g, " ")}
-                      {move.level > 0 && (
-                        <span className="move-level"> (Lv. {move.level})</span>
-                      )}
-                    </span>
-                    {hoveredMove === move.name && details && (
-                      <div className="move-tooltip">
-                        <h4 className="move-tooltip-title">
-                          {details.name?.replace(/-/g, " ") || move.name}
-                        </h4>
-                        <div className="move-tooltip-details">
-                          <span
-                            className="move-tooltip-type"
-                            style={{ backgroundColor: getTypeColor(details.type) }}
-                          >
-                            {details.type}
-                          </span>
-                          {details.power !== null && (
-                            <span className="move-tooltip-stat">
-                              Power: {details.power}
-                            </span>
-                          )}
-                          {details.accuracy !== null && (
-                            <span className="move-tooltip-stat">
-                              Accuracy: {details.accuracy}%
-                            </span>
-                          )}
-                          {details.pp !== null && (
-                            <span className="move-tooltip-stat">PP: {details.pp}</span>
-                          )}
-                          {details.damageClass && (
-                            <span className="move-tooltip-stat">
-                              Class: {details.damageClass}
-                            </span>
-                          )}
-                        </div>
-                        {details.effect && (
-                          <p className="move-tooltip-effect">{details.effect}</p>
-                        )}
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-          </div>
+          <PokemonMovesBrowser allMoves={allMoves} moveDetails={moveDetails} />
         </CollapsibleSection>
       )}
     </div>

@@ -1,0 +1,88 @@
+.pokemon-ability-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.pokemon-ability-card {
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+  background: var(--filter-bg);
+  overflow: hidden;
+}
+
+.pokemon-ability-card.expanded {
+  border-color: rgba(14, 111, 159, 0.45);
+}
+
+.pokemon-ability-card-trigger {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 14px;
+  border: none;
+  background: none;
+  cursor: pointer;
+  text-align: left;
+  color: var(--text-color);
+}
+
+.pokemon-ability-card-trigger:hover {
+  background: rgba(0, 0, 0, 0.03);
+}
+
+.dark-mode .pokemon-ability-card-trigger:hover {
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.pokemon-ability-card-heading {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.pokemon-ability-card-name {
+  font-size: 0.95rem;
+  font-weight: 700;
+}
+
+.pokemon-ability-hidden-tag,
+.pokemon-ability-meta-tag {
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 2px 8px;
+  border-radius: 999px;
+}
+
+.pokemon-ability-hidden-tag {
+  background: rgba(100, 100, 100, 0.15);
+  color: var(--text-color);
+  opacity: 0.85;
+}
+
+.pokemon-ability-meta-tag {
+  background: rgba(14, 111, 159, 0.15);
+  color: #0e6f9f;
+}
+
+.pokemon-ability-card-chevron {
+  font-size: 0.9rem;
+  opacity: 0.7;
+}
+
+.pokemon-ability-card-panel {
+  padding: 0 14px 14px;
+}
+
+.pokemon-ability-card-description {
+  margin: 0;
+  font-size: 0.88rem;
+  line-height: 1.55;
+  color: var(--text-color);
+  opacity: 0.92;
+}

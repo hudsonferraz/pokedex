@@ -1,0 +1,5 @@
+.pokemon-moves-sections {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}

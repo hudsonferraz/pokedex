@@ -265,12 +265,14 @@
 }
 
 .evolution-item.current-evolution {
-  background-color: rgba(0, 0, 0, 0.1);
+  background-color: rgba(14, 111, 159, 0.12);
+  box-shadow: inset 0 0 0 2px rgba(14, 111, 159, 0.55);
   font-weight: 600;
 }
 
 .dark-mode .evolution-item.current-evolution {
-  background-color: rgba(255, 255, 255, 0.15);
+  background-color: rgba(14, 111, 159, 0.22);
+  box-shadow: inset 0 0 0 2px rgba(96, 165, 250, 0.55);
 }
 
 .evolution-sprite {
@@ -1130,6 +1132,12 @@
   justify-content: flex-start;
   padding-bottom: 8px;
   max-width: 100%;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+}
+
+.evolution-chain-scroll .evolution-item {
+  flex: 0 0 auto;
 }
 
 button.evolution-item {
@@ -1166,5 +1174,22 @@ button.evolution-item:disabled {
   margin-top: 0;
   padding-top: 0;
   border-top: none;
+}
+
+@media (max-width: 1024px) {
+  .pokemon-detail-container {
+    padding: 12px;
+  }
+}
+
+@media (max-width: 768px) {
+  .pokemon-detail-navigation {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .pokemon-nav-buttons {
+    flex-wrap: wrap;
+  }
 }
 

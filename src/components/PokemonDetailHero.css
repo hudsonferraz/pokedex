@@ -118,3 +118,14 @@
     margin: 0;
   }
 }
+
+@media (min-width: 769px) and (max-width: 1024px) {
+  .pokemon-detail-hero-grid {
+    grid-template-columns: minmax(180px, 220px) 1fr;
+    gap: 20px;
+  }
+
+  .pokemon-detail-hero-art {
+    max-width: 200px;
+  }
+}

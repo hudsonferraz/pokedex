@@ -157,6 +157,26 @@ nav {
   margin-bottom: 24px;
 }
 
+@media (min-width: 640px) {
+  .pokedex-grid {
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: 18px;
+  }
+}
+
+@media (min-width: 900px) {
+  .pokedex-grid {
+    grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+    gap: 20px;
+  }
+}
+
+@media (min-width: 1200px) {
+  .pokedex-grid {
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  }
+}
+
 .pokemon-card {
   position: relative;
   display: flex;
@@ -471,6 +491,11 @@ select:focus-visible {
 @media (max-width: 768px) {
   .results-count {
     font-size: 0.8rem;
+  }
+
+  .pokedex-grid {
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 12px;
   }
 
   nav {

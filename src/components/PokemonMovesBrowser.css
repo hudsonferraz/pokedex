@@ -1,0 +1,158 @@
+.pokemon-moves-browser {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.pokemon-moves-browser-controls {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  gap: 10px;
+}
+
+.pokemon-moves-browser-input,
+.pokemon-moves-browser-select {
+  padding: 9px 12px;
+  border-radius: 8px;
+  border: 1px solid var(--border-color);
+  background: var(--input-bg);
+  color: var(--text-color);
+  font-size: 0.9rem;
+}
+
+.pokemon-moves-browser-summary {
+  margin: 0;
+  font-size: 0.85rem;
+  opacity: 0.8;
+  color: var(--text-color);
+}
+
+.pokemon-moves-browser-empty {
+  margin: 0;
+  padding: 16px;
+  text-align: center;
+  color: var(--text-color);
+  opacity: 0.75;
+}
+
+.pokemon-moves-browser-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 12px;
+}
+
+.pokemon-move-card {
+  padding: 12px;
+  border-left: 3px solid var(--move-accent, #0e6f9f);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.pokemon-move-card-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.pokemon-move-card-name {
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--text-color);
+  line-height: 1.25;
+}
+
+.pokemon-move-card-type {
+  flex-shrink: 0;
+  padding: 3px 8px;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #fff;
+  text-transform: capitalize;
+}
+
+.pokemon-move-card-stats {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px 12px;
+  margin: 0;
+}
+
+.pokemon-move-card-stats div {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.pokemon-move-card-stats dt {
+  font-size: 0.68rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  opacity: 0.65;
+  color: var(--text-color);
+}
+
+.pokemon-move-card-stats dd {
+  margin: 0;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-color);
+  text-transform: capitalize;
+}
+
+.pokemon-move-card-effect {
+  margin: 0;
+  font-size: 0.8rem;
+  line-height: 1.45;
+  color: var(--text-color);
+  opacity: 0.88;
+}
+
+.pokemon-moves-browser-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding-top: 4px;
+}
+
+.pokemon-moves-browser-page-btn {
+  padding: 8px 14px;
+  border-radius: 8px;
+  border: 1px solid var(--border-color);
+  background: var(--input-bg);
+  color: var(--text-color);
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.pokemon-moves-browser-page-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.pokemon-moves-browser-page-label {
+  font-size: 0.85rem;
+  color: var(--text-color);
+  opacity: 0.85;
+}
+
+@media (max-width: 768px) {
+  .pokemon-moves-browser-controls {
+    grid-template-columns: 1fr;
+  }
+
+  .pokemon-moves-browser-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (min-width: 769px) and (max-width: 1024px) {
+  .pokemon-moves-browser-grid {
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  }
+}

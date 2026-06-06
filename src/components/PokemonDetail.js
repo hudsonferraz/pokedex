@@ -24,7 +24,14 @@ import PokemonEvolutionSection from "./PokemonEvolutionSection";
 import PokemonMovesSection from "./PokemonMovesSection";
 import PokemonSetModal from "./PokemonSetModal";
 import { applyMetaSetToPokemon, spreadToSetPatch } from "../utils/applyMetaSet";
-import { getSpeciesRegulationStatus, formatSpeciesLabel } from "../utils/regulation";
+import {
+  getSpeciesRegulationStatus,
+  formatSpeciesLabel,
+} from "../utils/regulation";
+import {
+  buildPokemonShareUrl,
+  readRegulationFromSearchParams,
+} from "../utils/pokemonShareLink";
 import "./PokemonDetail.css";
 
 const pokemonCache = new Map();
@@ -33,7 +40,7 @@ const CACHE_DURATION = 5 * 60 * 1000;
 const PokemonDetail = () => {
   const { name } = useParams();
   const navigate = useNavigate();
-  const { regulation } = useRegulation();
+  const { regulation, setRegulationId } = useRegulation();
   const {
     addToTeam,
     isInTeam,
@@ -51,9 +58,7 @@ const PokemonDetail = () => {
   const [evolutionChain, setEvolutionChain] = useState([]);
   const [abilityDescriptions, setAbilityDescriptions] = useState({});
   const [pokemonDescription, setPokemonDescription] = useState("");
-  const [moves, setMoves] = useState([]);
   const [allMoves, setAllMoves] = useState([]);
-  const [showAllMoves, setShowAllMoves] = useState(false);
   const [moveDetails, setMoveDetails] = useState({});
   const [prevPokemon, setPrevPokemon] = useState(null);
   const [nextPokemon, setNextPokemon] = useState(null);
@@ -61,6 +66,14 @@ const PokemonDetail = () => {
   const [currentFormIndex, setCurrentFormIndex] = useState(0);
   const [showSetModal, setShowSetModal] = useState(false);
   const [applyingMeta, setApplyingMeta] = useState(false);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const regulationParam = readRegulationFromSearchParams(params);
+    if (regulationParam) {
+      setRegulationId(regulationParam);
+    }
+  }, [name, setRegulationId]);
 
   const parseEvolutionChain = (chain) => {
     const evolutions = [];
@@ -101,7 +114,6 @@ const PokemonDetail = () => {
         setLoading(true);
         setPokemonForms([]);
         setCurrentFormIndex(0);
-        setShowAllMoves(false);
 
         const cacheKey = name.toLowerCase();
         const cached = pokemonCache.get(cacheKey);
@@ -173,10 +185,8 @@ const PokemonDetail = () => {
             const allMovesList = await Promise.all(movesPromises);
             allMovesList.sort((first, second) => first.level - second.level);
             setAllMoves(allMovesList);
-            setMoves(allMovesList.slice(0, 20));
           } else {
             setAllMoves([]);
-            setMoves([]);
           }
 
           let speciesData;
@@ -330,8 +340,9 @@ const PokemonDetail = () => {
 
   const handleShare = async () => {
     try {
-      await navigator.clipboard.writeText(window.location.href);
-      showToast("Link copied to clipboard!", "success");
+      const shareUrl = buildPokemonShareUrl(regulation.id);
+      await navigator.clipboard.writeText(shareUrl);
+      showToast("Link copied with regulation context!", "success");
     } catch {
       showToast("Failed to copy link", "error");
     }
@@ -576,10 +587,7 @@ const PokemonDetail = () => {
               abilities={pokemon.abilities}
               abilityDescriptions={abilityDescriptions}
               allMoves={allMoves}
-              moves={moves}
               moveDetails={moveDetails}
-              showAllMoves={showAllMoves}
-              onToggleShowAllMoves={() => setShowAllMoves((open) => !open)}
               isOnTeam={isInTeam(pokemon.name)}
               getMoveset={getMoveset}
               setMoveset={setMoveset}
