@@ -21,6 +21,12 @@
   background: linear-gradient(135deg, var(--accent-muted) 0%, var(--card-bg) 55%);
 }
 
+.team-builder-hero > .api-status-chip-row {
+  flex: 1 1 100%;
+  width: 100%;
+  margin-bottom: 0;
+}
+
 .team-builder-hero-eyebrow {
   font-size: 0.75rem;
   font-weight: 700;

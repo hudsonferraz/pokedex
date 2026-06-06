@@ -23,6 +23,7 @@ import MetaGapPanel from "./MetaGapPanel";
 import SuggestSixthPanel from "./SuggestSixthPanel";
 import TeammateSuggestions from "./TeammateSuggestions";
 import Navbar from "./Navbar";
+import ApiStatusChip from "./ApiStatusChip";
 import { normalizeSpeciesId, formatSpeciesLabel } from "../utils/regulation";
 import { useModalAccessibility } from "../hooks/useModalAccessibility";
 import {
@@ -417,6 +418,7 @@ const TeamBuilder = () => {
       <Navbar />
       <div className="team-builder-content">
         <section className="team-builder-hero card-surface">
+          <ApiStatusChip />
           <div className="team-builder-hero-text">
             <p className="team-builder-hero-eyebrow">VGC team lab</p>
             <h1>Build your {regulation.label} squad</h1>

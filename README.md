@@ -15,7 +15,7 @@
 | Frontend (GitHub Pages) | [https://hudsonferraz.github.io/pokedex/](https://hudsonferraz.github.io/pokedex/) |
 | Backend API (Render) | [https://pokedex-5p5t.onrender.com](https://pokedex-5p5t.onrender.com) |
 
-Build the frontend with the API URL:
+Build with the API URL set:
 
 ```bash
 set REACT_APP_API_URL=https://pokedex-5p5t.onrender.com
@@ -24,132 +24,64 @@ npm run build
 
 ## Architecture
 
+**Static React on GitHub Pages + Express on Render.** The frontend stays free, fast, and token-free; the server proxies Pikalytics (markdown → JSON), holds the Hugging Face key, and caches responses for 6 hours. Teams live in `localStorage`; share links use base64 in `?team=` — no database.
+
 ```mermaid
 flowchart LR
-  subgraph browser [Browser]
-    React[React SPA]
-    LS[localStorage teams]
-  end
-  subgraph apis [APIs]
-    PokeAPI[PokeAPI]
-    HF[Hugging Face via proxy]
-    Pikalytics[Pikalytics]
-  end
-  React --> PokeAPI
-  React --> LS
-  React -->|REACT_APP_API_URL| Render[Node server on Render]
-  Render --> HF
-  Render --> Pikalytics
+  React[React SPA] --> PokeAPI[PokeAPI]
+  React --> LS[(localStorage)]
+  React --> API[Express proxy]
+  API --> PK[Pikalytics]
+  API --> HF[Hugging Face]
 ```
 
-### Live vs bundled data
+**Key flows:** *Apply meta set* — set modal → meta service (session cache) → `/api/meta/pokemon` → parser → slot set. *AI tips* — team summary POST → `/api/ai-team-tips` → Llama 3.2 (token never in browser).
 
-| Data | Source | Updates |
-|------|--------|---------|
-| Pokémon species, moves, stats | [PokeAPI](https://pokeapi.co/) | Automatic |
-| VGC usage %, top meta, cores | Pikalytics `GET /api/meta/usage/:format` | Live; server cache 6h |
-| Per-Pokémon sets, WR, teammates | Pikalytics `GET /api/meta/pokemon/:format/:species` | Live; server cache 6h |
-| Ban / restricted lists | `src/data/regulations.json` | Manual — [official VGC rules](https://play.pokemon.com/en-us/resources/rules/?category=vgc) |
-| Speed benchmarks | `src/data/speedBenchmarks.json` | Game mechanics |
+| Data | Source | Notes |
+|------|--------|-------|
+| Species, moves, stats | [PokeAPI](https://pokeapi.co/) | Live |
+| Usage, sets, teammates, WR | Pikalytics via proxy | 6h cache; bundled fallback if offline |
+| Ban / restricted | `src/data/regulations.json` | Manual — [VGC rules](https://play.pokemon.com/en-us/resources/rules/?category=vgc) |
+| Speed benchmarks | `src/data/speedBenchmarks.json` | Static |
 
-If Pikalytics or the API is down, the app falls back to bundled `vgcUsage.json` / `vgcMeta.json` and shows **Offline fallback**.
+Team Builder shows a **health chip** (`GET /health`) for API and AI status. Render cold starts (~30s) fall back to bundled meta data.
 
-- **Browse / detail**: PokeAPI for species; Pikalytics for usage + win rate (top meta prefetched on Browse).
-- **Team builder**: Teams, sets, roles in `localStorage`; **Apply meta set** and **partner suggestions** from Pikalytics.
-- **AI tips**: Node proxy holds `HUGGINGFACE_TOKEN` (never exposed to the client).
+## Share team links
+
+Export → **Copy share link** encodes the team as `?team=<base64 JSON>` (name, up to 6 species, optional sets and bring-4). Opening the URL auto-imports on Team Builder. Keep payloads small (~2k URL limit); use Showdown paste for heavy sets.
 
 ## Features
 
-### VGC team lab
-- **Champions Reg M-A** default format (+ Scarlet/Violet Reg I/J/H)
-- Six slots, multiple saved teams, role tags, bring-4 preview
-- **Showdown** paste import/export, damage calc deep link
-- **Apply meta set** — one-click ability, item, nature, EVs, top 4 moves from Pikalytics
-- **Partner suggestions** — common teammates per slot with quick **Add**
-- Regulation validation (ban/restricted warnings)
-
-### Analysis & coaching
-- Collapsible analysis dashboard (radar, type coverage, move-based coverage)
-- Speed tier table with Tailwind column
-- Meta threat / core hints (live + bundled fallback)
-- Team preview simulator (4v4 drag, type matrix)
-- AI tips with VGC-doubles prompt and full team context
-
-### Browse
-- Search, type/generation filters, skeleton grid
-- **Live usage %** and **win rate** badges on meta Pokémon
-- Detail page **VGC meta panel** (usage, WR, partners, Pikalytics link)
-- Dark mode, compare, favorites, recently viewed, share teams
+- **Team lab** — 6 slots, roles, bring-4, Showdown import/export, regulation checks, share URLs
+- **Live meta** — Apply meta set, partner suggestions, suggest 6th, meta gap panel, usage/WR badges
+- **Analysis** — Type coverage, radar, speed tiers, preview simulator, meta opponent preset
+- **AI coaching** — VGC-doubles prompt with sets, bring-4, and meta context
+- **Browse** — Search, filters, detail meta panel, dark mode, favorites, compare
 
 ## Tech stack
 
-- React 18, React Router 6
-- PokeAPI (Pokémon data)
-- Node + Express proxy (AI tips, Pikalytics markdown parsers, 6h cache)
-- CSS design tokens (`src/styles/designTokens.css`, `src/constants/typeColors.js`)
+React 18 · React Router 6 · PokeAPI · Node/Express · CSS design tokens
 
-## Installation
+## Development
 
 ```bash
 git clone https://github.com/hudsonferraz/pokedex.git
 cd pokedex
 npm install
+npm start                  # frontend
+npm run start:server       # optional — AI + Pikalytics proxy on :3001
 ```
 
-### Development
+For local meta/AI, set `REACT_APP_API_URL=http://localhost:3001`. Deploy: `npm run build` then `npm run deploy`.
 
-```bash
-npm start
-```
-
-Optional API proxy (AI + Pikalytics meta locally):
-
-```bash
-npm run start:server
-```
-
-Set `REACT_APP_API_URL=http://localhost:3001` when running the React app against the local server.
-
-### Deploy
-
-```bash
-npm run build
-npm run deploy
-```
-
-See [DEPLOYMENT.md](DEPLOYMENT.md) for Render + GitHub Pages details.
-
-## Project structure
-
-```
-pokedex/
-├── public/
-├── server/              # Express proxy (AI, Pikalytics parsers, cache)
-├── src/
-│   ├── components/      # TeamBuilder, VgcMetaStats, TeammateSuggestions, …
-│   ├── constants/       # typeColors, pikalyticsFormats, vgcOptions
-│   ├── contexts/        # Team, Regulation, MetaData, Theme
-│   ├── services/        # metaDataService (live + prefetch)
-│   ├── styles/          # design tokens
-│   └── utils/           # team analysis, Showdown parser, regulation
-└── package.json
-```
-
-## API (custom server)
+## API
 
 | Route | Purpose |
 |-------|---------|
-| `GET /health` | Health check |
-| `GET /api/meta/formats` | Supported Pikalytics formats |
-| `GET /api/meta/usage/:formatCode` | Format usage + cores |
-| `GET /api/meta/pokemon/:formatCode/:species` | Per-species meta set |
-| `POST /api/ai-team-tips` | VGC AI tips (Hugging Face proxy) |
-
-External: [PokeAPI](https://pokeapi.co/) for species data.
-
-## Roadmap
-
-See [PORTFOLIO_ROADMAP.md](PORTFOLIO_ROADMAP.md) for completed work and next sprints (meta gap panel, featured teams, tests/CI).
+| `GET /health` | API + AI readiness |
+| `GET /api/meta/usage/:format` | Format usage and cores |
+| `GET /api/meta/pokemon/:format/:species` | Per-species meta set |
+| `POST /api/ai-team-tips` | AI tips (HF proxy) |
 
 ## License
 
