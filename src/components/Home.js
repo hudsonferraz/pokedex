@@ -1,6 +1,11 @@
-import React, { useEffect, useState, useMemo } from "react";
-import { getPokemonData, getPokemons, searchPokemon } from "../api";
+import React, { useEffect, useState } from "react";
 import { useRegulation } from "../contexts/RegulationContext";
+import { useMetaData } from "../contexts/MetaDataContext";
+import { loadSpeciesIndex } from "../utils/pokemonSpeciesIndex";
+import {
+  searchPokemonByTerm,
+  useBrowseGrid,
+} from "../hooks/useBrowseGrid";
 import Navbar from "./Navbar";
 import Pokedex from "./Pokedex";
 import Searchbar from "./Searchbar";
@@ -9,164 +14,92 @@ import RecentlyViewed from "./RecentlyViewed";
 import UsageStatsBar from "./UsageStatsBar";
 import BrowseHero from "./BrowseHero";
 import BrowseEmptyState from "./BrowseEmptyState";
+import BrowseControls from "./BrowseControls";
+import BrowseResultsHeader from "./BrowseResultsHeader";
 import RegulationSelector from "./RegulationSelector";
+
+const EMPTY_VGC_FILTERS = {
+  top30Meta: false,
+  hasUsageData: false,
+  legalInRegulation: false,
+};
+
 const Home = () => {
   const { regulation } = useRegulation();
+  const { meta, speciesMeta } = useMetaData();
+
+  const [speciesIndex, setSpeciesIndex] = useState([]);
+  const [indexLoading, setIndexLoading] = useState(true);
   const [page, setPage] = useState(0);
-  const [totalPages, setTotalPages] = useState(0);
   const [loading, setLoading] = useState(false);
   const [notFound, setNotFound] = useState(false);
   const [pokemons, setPokemons] = useState([]);
-  const [allPokemons, setAllPokemons] = useState([]);
-  const [filteredAllPokemons, setFilteredAllPokemons] = useState([]);
-  const [selectedTypes, setSelectedTypes] = useState([]);
+  const [totalPages, setTotalPages] = useState(0);
+  const [totalCount, setTotalCount] = useState(0);
   const [isSearching, setIsSearching] = useState(false);
-  const [totalPokemonCount, setTotalPokemonCount] = useState(0);
+  const [selectedTypes, setSelectedTypes] = useState([]);
   const [selectedGeneration, setSelectedGeneration] = useState(null);
+  const [sortBy, setSortBy] = useState("dex");
+  const [vgcFilters, setVgcFilters] = useState(EMPTY_VGC_FILTERS);
 
-  const itensPerPage = 50;
-  const fetchPokemons = async () => {
-    try {
-      setLoading(true);
-      setNotFound(false);
-      setIsSearching(false);
-      const data = await getPokemons(itensPerPage, itensPerPage * page);
-      if (data && data.results) {
-        const promises = data.results.map(async (pokemon) => {
-          return await getPokemonData(pokemon.url);
-        });
+  useEffect(() => {
+    let cancelled = false;
+    loadSpeciesIndex()
+      .then((index) => {
+        if (!cancelled) {
+          setSpeciesIndex(index);
+        }
+      })
+      .finally(() => {
+        if (!cancelled) {
+          setIndexLoading(false);
+        }
+      });
 
-        const results = await Promise.all(promises);
-        setAllPokemons(results);
-        setPokemons(results);
-        setTotalPages(Math.ceil(data.count / itensPerPage));
-        setTotalPokemonCount(data.count);
-      }
-    } catch (error) {
-      console.error("fetchPokemons error:", error);
-      setNotFound(true);
-    } finally {
-      setLoading(false);
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const browseGrid = useBrowseGrid({
+    speciesIndex,
+    enabled: !isSearching && !indexLoading,
+    page,
+    selectedTypes,
+    selectedGeneration,
+    sortBy,
+    vgcFilters,
+    meta,
+    speciesMeta,
+    regulationId: regulation.id,
+  });
+
+  useEffect(() => {
+    if (isSearching) {
+      return;
     }
+    setPokemons(browseGrid.pokemons);
+    setLoading(browseGrid.loading || indexLoading);
+    setTotalCount(browseGrid.totalCount);
+    setTotalPages(browseGrid.totalPages);
+  }, [browseGrid, isSearching, indexLoading]);
+
+  useEffect(() => {
+    if (page >= browseGrid.totalPages && browseGrid.totalPages > 0) {
+      setPage(Math.max(0, browseGrid.totalPages - 1));
+    }
+  }, [page, browseGrid.totalPages]);
+
+  const resetBrowseState = () => {
+    setPage(0);
+    setNotFound(false);
+    setIsSearching(false);
   };
 
-  const fetchAllPokemonsForFilter = async () => {
-    try {
-      setLoading(true);
-      setNotFound(false);
-      const limit = 1000;
-      const data = await getPokemons(limit, 0);
-      if (data && data.results) {
-        const promises = data.results.map(async (pokemon) => {
-          return await getPokemonData(pokemon.url);
-        });
-
-        const results = await Promise.all(promises);
-        setFilteredAllPokemons(results);
-        setTotalPokemonCount(data.count);
-      }
-    } catch (error) {
-      console.error("fetchAllPokemonsForFilter error:", error);
-      setNotFound(true);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    if (!isSearching && selectedTypes.length === 0 && !selectedGeneration) {
-      fetchPokemons();
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [page]);
-
-  useEffect(() => {
-    if (!isSearching && selectedTypes.length === 0 && !selectedGeneration && page === 0) {
-      fetchPokemons();
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedTypes.length, selectedGeneration]);
-
-  useEffect(() => {
-    if (!isSearching && (selectedTypes.length > 0 || selectedGeneration) && filteredAllPokemons.length === 0) {
-      fetchAllPokemonsForFilter();
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedTypes.length, selectedGeneration]);
-
-  const filteredPokemons = useMemo(() => {
-    let pokemons = [];
-    
-    // If no filters, use current page's Pokemon
-    if (selectedTypes.length === 0 && !selectedGeneration) {
-      return allPokemons;
-    }
-    
-    // If filters are active, use filteredAllPokemons
-    if (filteredAllPokemons.length === 0) {
-      return [];
-    }
-    
-    pokemons = filteredAllPokemons.filter((pokemon) => {
-      // Type filter
-      if (selectedTypes.length > 0) {
-        const pokemonTypes = pokemon.types.map((type) => type.type.name);
-        const matchesType = selectedTypes.some((selectedType) => pokemonTypes.includes(selectedType));
-        if (!matchesType) return false;
-      }
-      
-      // Generation filter
-      if (selectedGeneration) {
-        const genRanges = {
-          1: { min: 1, max: 151 },
-          2: { min: 152, max: 251 },
-          3: { min: 252, max: 386 },
-          4: { min: 387, max: 493 },
-          5: { min: 494, max: 649 },
-          6: { min: 650, max: 721 },
-          7: { min: 722, max: 809 },
-          8: { min: 810, max: 905 },
-          9: { min: 906, max: 1025 }
-        };
-        const range = genRanges[selectedGeneration];
-        if (range && (pokemon.id < range.min || pokemon.id > range.max)) {
-          return false;
-        }
-      }
-      
-      return true;
-    });
-
-    // Always sort by number
-    return [...pokemons].sort((a, b) => a.id - b.id);
-  }, [allPokemons, filteredAllPokemons, selectedTypes, selectedGeneration]);
-
-  useEffect(() => {
-    if (!isSearching) {
-      if (selectedTypes.length > 0 || selectedGeneration) {
-        if (filteredPokemons.length > 0) {
-          const startIndex = page * itensPerPage;
-          const endIndex = startIndex + itensPerPage;
-          const paginatedFiltered = filteredPokemons.slice(startIndex, endIndex);
-          setPokemons(paginatedFiltered);
-          const filteredPages = Math.ceil(filteredPokemons.length / itensPerPage);
-          setTotalPages(Math.max(1, filteredPages));
-        }
-        setLoading(false);
-      } else if (selectedTypes.length === 0 && !selectedGeneration && allPokemons.length > 0) {
-        setPokemons(allPokemons);
-      }
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [filteredPokemons, isSearching, selectedTypes, selectedGeneration, page]);
-
-  const onSearchHandler = async (pokemon) => {
-    if (!pokemon) {
-      setIsSearching(false);
-      setSelectedTypes([]);
-      setSelectedGeneration(null);
-      setFilteredAllPokemons([]);
-      return fetchPokemons();
+  const onSearchHandler = async (searchTerm) => {
+    if (!searchTerm) {
+      resetBrowseState();
+      return;
     }
 
     setLoading(true);
@@ -174,41 +107,72 @@ const Home = () => {
     setIsSearching(true);
     setSelectedTypes([]);
     setSelectedGeneration(null);
-    setFilteredAllPokemons([]);
+    setVgcFilters(EMPTY_VGC_FILTERS);
+    setSortBy("dex");
+
     try {
-      const result = await searchPokemon(pokemon);
+      const result = await searchPokemonByTerm(searchTerm);
       if (!result) {
         setNotFound(true);
         setPokemons([]);
+        setTotalCount(0);
+        setTotalPages(0);
       } else {
         setPokemons([result]);
         setPage(0);
         setTotalPages(1);
+        setTotalCount(1);
       }
-    } catch (error) {
+    } catch {
       setNotFound(true);
       setPokemons([]);
+      setTotalCount(0);
+      setTotalPages(0);
     } finally {
       setLoading(false);
     }
   };
 
   const handleTypeToggle = (type) => {
-    setSelectedTypes((prev) => {
-      const newTypes = prev.includes(type) 
-        ? prev.filter((t) => t !== type)
-        : [...prev, type];
-      return newTypes;
-    });
+    setSelectedTypes((previous) =>
+      previous.includes(type)
+        ? previous.filter((entry) => entry !== type)
+        : [...previous, type],
+    );
     setPage(0);
+    setIsSearching(false);
   };
 
   const handleClearFilters = () => {
     setSelectedTypes([]);
     setSelectedGeneration(null);
+    setVgcFilters(EMPTY_VGC_FILTERS);
     setPage(0);
-    setFilteredAllPokemons([]);
+    setIsSearching(false);
   };
+
+  const handleSortChange = (nextSort) => {
+    setSortBy(nextSort);
+    setPage(0);
+    setIsSearching(false);
+  };
+
+  const handleVgcFilterChange = (nextFilters) => {
+    setVgcFilters(nextFilters);
+    setPage(0);
+    setIsSearching(false);
+  };
+
+  const handleMetaFirstView = () => {
+    setSortBy("usage");
+    setVgcFilters({ ...EMPTY_VGC_FILTERS, top30Meta: true });
+    setSelectedTypes([]);
+    setSelectedGeneration(null);
+    setPage(0);
+    setIsSearching(false);
+  };
+
+  const metaAvailable = Boolean(meta?.usage);
 
   return (
     <div className="browse-page">
@@ -216,28 +180,54 @@ const Home = () => {
       <div className="browse-content">
         <BrowseHero regulationLabel={regulation.label} />
         <RegulationSelector compact />
-        <Searchbar onSearch={onSearchHandler} />
+        <Searchbar
+          onSearch={onSearchHandler}
+          speciesIndex={speciesIndex}
+        />
         {!isSearching && (
           <>
             <RecentlyViewed />
             <UsageStatsBar regulationLabel={regulation.label} />
-            <div className="browse-results-row">
-              {pokemons.length > 0 && (
-                <div className="results-count">
-                  Showing {pokemons.length} Pokémon
-                  {totalPokemonCount > 0 && !selectedTypes.length && !selectedGeneration
-                    ? ` · page ${page + 1} of ${totalPages}`
-                    : ""}
-                </div>
-              )}
-            </div>
+            <BrowseControls
+              sortBy={sortBy}
+              onSortChange={handleSortChange}
+              vgcFilters={vgcFilters}
+              onVgcFilterChange={handleVgcFilterChange}
+              onMetaFirstView={handleMetaFirstView}
+              regulationId={regulation.id}
+              metaAvailable={metaAvailable}
+            />
             <TypeFilter
               selectedTypes={selectedTypes}
               onTypeToggle={handleTypeToggle}
               onClearAll={handleClearFilters}
               selectedGeneration={selectedGeneration}
-              onGenerationChange={setSelectedGeneration}
+              onGenerationChange={(generation) => {
+                setSelectedGeneration(generation);
+                setPage(0);
+                setIsSearching(false);
+              }}
             />
+            {!loading && totalCount > 0 && (
+              <BrowseResultsHeader
+                visibleCount={pokemons.length}
+                totalCount={totalCount}
+                page={page}
+                totalPages={totalPages}
+                sortBy={sortBy}
+                selectedTypes={selectedTypes}
+                selectedGeneration={selectedGeneration}
+                vgcFilters={vgcFilters}
+                typesLoading={browseGrid.typesLoading}
+                onRemoveType={handleTypeToggle}
+                onClearGeneration={() => {
+                  setSelectedGeneration(null);
+                  setPage(0);
+                }}
+                onVgcFilterChange={handleVgcFilterChange}
+                onClearAll={handleClearFilters}
+              />
+            )}
           </>
         )}
         {notFound ? (
@@ -247,6 +237,13 @@ const Home = () => {
             primaryLabel="Clear search"
             onPrimaryAction={() => onSearchHandler(undefined)}
           />
+        ) : !loading && !isSearching && totalCount === 0 && speciesIndex.length > 0 ? (
+          <BrowseEmptyState
+            title="No Pokémon match these filters"
+            message="Try removing a filter, changing sort, or browsing the full dex."
+            primaryLabel="Clear filters"
+            onPrimaryAction={handleClearFilters}
+          />
         ) : (
           <Pokedex
             pokemons={pokemons}
@@ -254,7 +251,6 @@ const Home = () => {
             page={page}
             setPage={setPage}
             totalPages={totalPages}
-
           />
         )}
       </div>
@@ -263,4 +259,3 @@ const Home = () => {
 };
 
 export default Home;
-

@@ -1,40 +1,29 @@
-import React, { useState, useEffect } from "react";
-import { getPokemons } from "../api";
+import React, { useState, useEffect, useMemo } from "react";
+import { filterSpeciesByName } from "../utils/pokemonSpeciesIndex";
 import "./SearchSuggestions.css";
 
-const SearchSuggestions = ({ searchTerm, onSelect, onClose }) => {
-  const [suggestions, setSuggestions] = useState([]);
+const SearchSuggestions = ({ searchTerm, onSelect, onClose, speciesIndex = [] }) => {
   const [loading, setLoading] = useState(false);
 
+  const suggestions = useMemo(() => {
+    if (searchTerm.length < 2) {
+      return [];
+    }
+
+    if (speciesIndex.length > 0) {
+      return filterSpeciesByName(speciesIndex, searchTerm, 8).map(
+        (entry) => entry.name,
+      );
+    }
+
+    return [];
+  }, [searchTerm, speciesIndex]);
+
   useEffect(() => {
-    const fetchSuggestions = async () => {
-      if (searchTerm.length < 2) {
-        setSuggestions([]);
-        return;
-      }
-
-      setLoading(true);
-      try {
-        const data = await getPokemons(1000, 0);
-        if (data && data.results) {
-          const filtered = data.results
-            .filter((pokemon) =>
-              pokemon.name.toLowerCase().includes(searchTerm.toLowerCase())
-            )
-            .slice(0, 8)
-            .map((pokemon) => pokemon.name);
-          setSuggestions(filtered);
-        }
-      } catch (error) {
-        console.error("Error fetching suggestions:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    const debounceTimer = setTimeout(fetchSuggestions, 300);
-    return () => clearTimeout(debounceTimer);
-  }, [searchTerm]);
+    if (speciesIndex.length > 0 || searchTerm.length < 2) {
+      setLoading(false);
+    }
+  }, [searchTerm, speciesIndex.length]);
 
   if (suggestions.length === 0 && !loading) {
     return null;
@@ -45,9 +34,9 @@ const SearchSuggestions = ({ searchTerm, onSelect, onClose }) => {
       {loading ? (
         <div className="suggestion-item">Loading...</div>
       ) : (
-        suggestions.map((suggestion, index) => (
+        suggestions.map((suggestion) => (
           <div
-            key={index}
+            key={suggestion}
             className="suggestion-item"
             onClick={() => {
               onSelect(suggestion);
@@ -63,4 +52,3 @@ const SearchSuggestions = ({ searchTerm, onSelect, onClose }) => {
 };
 
 export default SearchSuggestions;
-
