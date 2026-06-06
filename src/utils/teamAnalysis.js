@@ -201,6 +201,34 @@ export function getMoveCoverageGaps(coverage, threatTypes = ["water", "ground", 
   });
 }
 
+export function getDefensiveTypeProfile(pokemonOrTypes) {
+  const defendingTypes = Array.isArray(pokemonOrTypes)
+    ? pokemonOrTypes
+    : pokemonOrTypes?.types?.map((typeEntry) => typeEntry.type.name) || [];
+
+  const profile = {};
+  ALL_DEFENDING_TYPES.forEach((attackingType) => {
+    const effectiveness = calculateTypeEffectiveness(attackingType, defendingTypes);
+    profile[attackingType] = effectivenessToCoverageLabel(effectiveness);
+  });
+
+  return profile;
+}
+
+export function getDefensiveWeaknesses(pokemonOrTypes) {
+  const profile = getDefensiveTypeProfile(pokemonOrTypes);
+  return Object.entries(profile)
+    .filter(([, value]) => value === "super-effective")
+    .map(([type]) => type);
+}
+
+export function getDefensiveResistances(pokemonOrTypes) {
+  const profile = getDefensiveTypeProfile(pokemonOrTypes);
+  return Object.entries(profile)
+    .filter(([, value]) => value === "not-very-effective" || value === "no-effect")
+    .map(([type]) => type);
+}
+
 export const getUniqueTypes = (team) => {
   const types = new Set();
   team.forEach(pokemon => {

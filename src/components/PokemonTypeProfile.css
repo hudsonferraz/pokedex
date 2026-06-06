@@ -1,0 +1,35 @@
+.pokemon-type-profile {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.pokemon-type-profile-summary {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.pokemon-type-profile-line {
+  font-size: 0.9rem;
+  color: var(--text-color);
+  margin: 0;
+}
+
+.pokemon-type-profile-weak {
+  text-transform: capitalize;
+  color: #c62828;
+}
+
+.dark-mode .pokemon-type-profile-weak {
+  color: #ef5350;
+}
+
+.pokemon-type-profile-resist {
+  text-transform: capitalize;
+  color: #2e7d32;
+}
+
+.dark-mode .pokemon-type-profile-resist {
+  color: #66bb6a;
+}

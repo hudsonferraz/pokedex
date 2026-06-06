@@ -1,28 +1,36 @@
 import React, { useEffect, useState, useContext } from "react";
-import { useParams, useNavigate } from "react-router-dom";
-import { searchPokemon, getPokemonSpecies, getEvolutionChain, getAbilityDetails, getPokemons, getMoveDetails, getPokemonForms } from "../api";
+import { useParams, useNavigate, Link } from "react-router-dom";
+import {
+  searchPokemon,
+  getPokemonSpecies,
+  getEvolutionChain,
+  getAbilityDetails,
+  getMoveDetails,
+  getPokemonForms,
+} from "../api";
 import TeamContext from "../contexts/TeamContext";
 import { useToast } from "./ToastProvider";
 import { useComparison } from "../contexts/ComparisonContext";
-import StatsRadarChart from "./StatsRadarChart";
 import PokemonComparison from "./PokemonComparison";
-import MovePickerModal from "./MovePickerModal";
 import { addToRecentlyViewed } from "../utils/recentlyViewed";
 import { getTypeColor } from "../constants/typeColors";
-import VgcMetaStats from "./VgcMetaStats";
 import Navbar from "./Navbar";
 import BrowseEmptyState from "./BrowseEmptyState";
-import { Link } from "react-router-dom";
+import PokemonDetailSkeleton from "./PokemonDetailSkeleton";
+import PokemonDetailHero from "./PokemonDetailHero";
+import PokemonStatsSection from "./PokemonStatsSection";
+import PokemonEvolutionSection from "./PokemonEvolutionSection";
+import PokemonMovesSection from "./PokemonMovesSection";
 import "./PokemonDetail.css";
 
-// Simple cache for Pokemon data
 const pokemonCache = new Map();
-const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
+const CACHE_DURATION = 5 * 60 * 1000;
 
 const PokemonDetail = () => {
   const { name } = useParams();
   const navigate = useNavigate();
-  const { team, addToTeam, isInTeam, canAddToTeam, getMoveset, setMoveset } = useContext(TeamContext);
+  const { addToTeam, isInTeam, canAddToTeam, getMoveset, setMoveset } =
+    useContext(TeamContext);
   const { showToast } = useToast();
   const { comparisonPokemon, addToComparison, clearComparison } = useComparison();
   const [pokemon, setPokemon] = useState(null);
@@ -30,30 +38,26 @@ const PokemonDetail = () => {
   const [loading, setLoading] = useState(true);
   const [evolutionChain, setEvolutionChain] = useState([]);
   const [abilityDescriptions, setAbilityDescriptions] = useState({});
-  const [hoveredAbility, setHoveredAbility] = useState(null);
   const [pokemonDescription, setPokemonDescription] = useState("");
   const [moves, setMoves] = useState([]);
   const [allMoves, setAllMoves] = useState([]);
   const [showAllMoves, setShowAllMoves] = useState(false);
-  const [hoveredMove, setHoveredMove] = useState(null);
   const [moveDetails, setMoveDetails] = useState({});
   const [prevPokemon, setPrevPokemon] = useState(null);
   const [nextPokemon, setNextPokemon] = useState(null);
   const [pokemonForms, setPokemonForms] = useState([]);
   const [currentFormIndex, setCurrentFormIndex] = useState(0);
-  const [showMovePicker, setShowMovePicker] = useState(false);
-  const [hoveredMovesetMove, setHoveredMovesetMove] = useState(null);
 
   const parseEvolutionChain = (chain) => {
     const evolutions = [];
     let current = chain;
-    
+
     while (current) {
       const pokemonName = current.species.name;
-      const pokemonId = current.species.url.split('/').slice(-2, -1)[0];
+      const pokemonId = current.species.url.split("/").slice(-2, -1)[0];
       const evolutionDetails = current.evolution_details?.[0];
       let condition = "";
-      
+
       if (evolutionDetails) {
         if (evolutionDetails.min_level) {
           condition = `Level ${evolutionDetails.min_level}`;
@@ -65,15 +69,15 @@ const PokemonDetail = () => {
           condition = "Use Item";
         }
       }
-      
-      evolutions.push({ 
-        name: pokemonName, 
+
+      evolutions.push({
+        name: pokemonName,
         id: pokemonId,
-        condition: condition
+        condition,
       });
       current = current.evolves_to?.[0];
     }
-    
+
     return evolutions;
   };
 
@@ -83,37 +87,37 @@ const PokemonDetail = () => {
         setLoading(true);
         setPokemonForms([]);
         setCurrentFormIndex(0);
-        
-        // Check cache first
+        setShowAllMoves(false);
+
         const cacheKey = name.toLowerCase();
         const cached = pokemonCache.get(cacheKey);
         if (cached && Date.now() - cached.timestamp < CACHE_DURATION) {
           setPokemon(cached.data);
-          setLoading(false);
-          // Still fetch fresh data in background
         }
-        
+
         const data = await searchPokemon(name);
         setPokemon(data);
-        
-        // Cache the data
+
         if (data) {
           pokemonCache.set(cacheKey, {
-            data: data,
-            timestamp: Date.now()
+            data,
+            timestamp: Date.now(),
           });
-          // Add to recently viewed
           addToRecentlyViewed(data);
         }
-        
+
         if (data) {
-          if (data.moves && data.moves.length > 0) {
+          if (data.moves?.length > 0) {
             const movesPromises = data.moves.map(async (move) => {
               try {
                 const moveData = await getMoveDetails(move.move.url);
-                const enEffect = moveData?.effect_entries?.find((e) => e.language?.name === "en");
-                let effect = enEffect?.short_effect || enEffect?.effect || null;
-                const effectChance = moveData?.effect_chance != null ? moveData.effect_chance : null;
+                const englishEffect = moveData?.effect_entries?.find(
+                  (entry) => entry.language?.name === "en",
+                );
+                let effect =
+                  englishEffect?.short_effect || englishEffect?.effect || null;
+                const effectChance =
+                  moveData?.effect_chance != null ? moveData.effect_chance : null;
                 if (effect && effectChance != null) {
                   effect = effect.replace(/\$effect_chance/g, String(effectChance));
                 }
@@ -121,16 +125,19 @@ const PokemonDetail = () => {
                   name: move.move.name,
                   level: move.version_group_details[0]?.level_learned_at || 0,
                   type: moveData?.type?.name || "normal",
-                  power: moveData?.power || null,
-                  accuracy: moveData?.accuracy || null,
-                  pp: moveData?.pp || null,
+                  power: moveData?.power ?? null,
+                  accuracy: moveData?.accuracy ?? null,
+                  pp: moveData?.pp ?? null,
                   damageClass: moveData?.damage_class?.name || null,
                   effect,
                   effectChance,
                 };
-                setMoveDetails(prev => ({ ...prev, [move.move.name]: moveInfo }));
+                setMoveDetails((previous) => ({
+                  ...previous,
+                  [move.move.name]: moveInfo,
+                }));
                 return moveInfo;
-              } catch (error) {
+              } catch {
                 const moveInfo = {
                   name: move.move.name,
                   level: move.version_group_details[0]?.level_learned_at || 0,
@@ -142,14 +149,20 @@ const PokemonDetail = () => {
                   effect: null,
                   effectChance: null,
                 };
-                setMoveDetails(prev => ({ ...prev, [move.move.name]: moveInfo }));
+                setMoveDetails((previous) => ({
+                  ...previous,
+                  [move.move.name]: moveInfo,
+                }));
                 return moveInfo;
               }
             });
             const allMovesList = await Promise.all(movesPromises);
-            allMovesList.sort((a, b) => a.level - b.level);
+            allMovesList.sort((first, second) => first.level - second.level);
             setAllMoves(allMovesList);
             setMoves(allMovesList.slice(0, 20));
+          } else {
+            setAllMoves([]);
+            setMoves([]);
           }
 
           let speciesData;
@@ -159,58 +172,67 @@ const PokemonDetail = () => {
           } else {
             speciesData = await getPokemonSpecies(data.id);
           }
-          
+
           if (speciesData) {
             const englishFlavorText = speciesData?.flavor_text_entries?.find(
-              (entry) => entry.language.name === "en"
+              (entry) => entry.language.name === "en",
             )?.flavor_text;
             if (englishFlavorText) {
-              const cleanDescription = englishFlavorText.replace(/\f/g, " ").replace(/\n/g, " ");
-              setPokemonDescription(cleanDescription);
+              setPokemonDescription(
+                englishFlavorText.replace(/\f/g, " ").replace(/\n/g, " "),
+              );
+            } else {
+              setPokemonDescription("");
             }
 
             const forms = await getPokemonForms(speciesData);
-            if (forms && forms.length > 1) {
-              forms.sort((a, b) => {
-                if (a.is_default && !b.is_default) return -1;
-                if (!a.is_default && b.is_default) return 1;
-                return a.id - b.id;
+            if (forms?.length > 1) {
+              forms.sort((first, second) => {
+                if (first.is_default && !second.is_default) return -1;
+                if (!first.is_default && second.is_default) return 1;
+                return first.id - second.id;
               });
               setPokemonForms(forms);
-              const currentIndex = forms.findIndex(form => form.name.toLowerCase() === data.name.toLowerCase());
-              if (currentIndex >= 0) {
-                setCurrentFormIndex(currentIndex);
-              } else {
-                setCurrentFormIndex(0);
-              }
+              const currentIndex = forms.findIndex(
+                (form) => form.name.toLowerCase() === data.name.toLowerCase(),
+              );
+              setCurrentFormIndex(currentIndex >= 0 ? currentIndex : 0);
             } else {
               setPokemonForms([]);
               setCurrentFormIndex(0);
             }
           }
-          
+
           if (speciesData?.evolution_chain?.url) {
-            const evolutionData = await getEvolutionChain(speciesData.evolution_chain.url);
+            const evolutionData = await getEvolutionChain(
+              speciesData.evolution_chain.url,
+            );
             if (evolutionData?.chain) {
-              const chain = parseEvolutionChain(evolutionData.chain);
-              setEvolutionChain(chain);
+              setEvolutionChain(parseEvolutionChain(evolutionData.chain));
+            } else {
+              setEvolutionChain([]);
             }
+          } else {
+            setEvolutionChain([]);
           }
 
-          if (data.abilities && data.abilities.length > 0) {
+          if (data.abilities?.length > 0) {
             const abilityPromises = data.abilities.map(async (ability) => {
               try {
                 const abilityData = await getAbilityDetails(ability.ability.url);
-                const englishDescription = abilityData?.effect_entries?.find(
-                  (entry) => entry.language.name === "en"
-                )?.effect || abilityData?.flavor_text_entries?.find(
-                  (entry) => entry.language.name === "en"
-                )?.flavor_text || "No description available.";
+                const englishDescription =
+                  abilityData?.effect_entries?.find(
+                    (entry) => entry.language.name === "en",
+                  )?.effect ||
+                  abilityData?.flavor_text_entries?.find(
+                    (entry) => entry.language.name === "en",
+                  )?.flavor_text ||
+                  "No description available.";
                 return {
                   name: ability.ability.name,
                   description: englishDescription,
                 };
-              } catch (error) {
+              } catch {
                 return {
                   name: ability.ability.name,
                   description: "No description available.",
@@ -223,6 +245,8 @@ const PokemonDetail = () => {
               descriptionsMap[ability.name] = ability.description;
             });
             setAbilityDescriptions(descriptionsMap);
+          } else {
+            setAbilityDescriptions({});
           }
 
           const prevId = data.id > 1 ? data.id - 1 : null;
@@ -230,9 +254,8 @@ const PokemonDetail = () => {
 
           if (prevId) {
             try {
-              const prevData = await searchPokemon(prevId);
-              setPrevPokemon(prevData);
-            } catch (error) {
+              setPrevPokemon(await searchPokemon(prevId));
+            } catch {
               setPrevPokemon(null);
             }
           } else {
@@ -241,59 +264,32 @@ const PokemonDetail = () => {
 
           if (nextId) {
             try {
-              const nextData = await searchPokemon(nextId);
-              setNextPokemon(nextData);
-            } catch (error) {
+              setNextPokemon(await searchPokemon(nextId));
+            } catch {
               setNextPokemon(null);
             }
           } else {
             setNextPokemon(null);
           }
         }
-        
+
         setLoading(false);
       } catch (error) {
         console.error("Error fetching pokemon:", error);
         setLoading(false);
       }
     };
+
     fetchPokemon();
   }, [name]);
 
-  const handleFormChange = (direction) => {
-    if (pokemonForms.length <= 1) return;
-    
-    let newIndex;
-    if (direction === 'next') {
-      newIndex = (currentFormIndex + 1) % pokemonForms.length;
-    } else {
-      newIndex = (currentFormIndex - 1 + pokemonForms.length) % pokemonForms.length;
-    }
-    
-    const newForm = pokemonForms[newIndex];
-    if (newForm) {
-      navigate(`/pokemon/${newForm.name}`);
-    }
-  };
-
-  const handleShare = async () => {
-    const url = window.location.href;
-    try {
-      await navigator.clipboard.writeText(url);
-      showToast("Link copied to clipboard!", "success");
-    } catch (error) {
-      showToast("Failed to copy link", "error");
-    }
-  };
-
-  // Keyboard navigation - must be before any early returns
   useEffect(() => {
-    const handleKeyPress = (e) => {
-      if (e.key === "ArrowLeft" && prevPokemon) {
+    const handleKeyPress = (event) => {
+      if (event.key === "ArrowLeft" && prevPokemon) {
         navigate(`/pokemon/${prevPokemon.name}`);
-      } else if (e.key === "ArrowRight" && nextPokemon) {
+      } else if (event.key === "ArrowRight" && nextPokemon) {
         navigate(`/pokemon/${nextPokemon.name}`);
-      } else if (e.key === "Escape") {
+      } else if (event.key === "Escape") {
         navigate("/browse");
       }
     };
@@ -302,16 +298,71 @@ const PokemonDetail = () => {
     return () => window.removeEventListener("keydown", handleKeyPress);
   }, [prevPokemon, nextPokemon, navigate]);
 
+  const handleFormChange = (direction) => {
+    if (pokemonForms.length <= 1) {
+      return;
+    }
+
+    const newIndex =
+      direction === "next"
+        ? (currentFormIndex + 1) % pokemonForms.length
+        : (currentFormIndex - 1 + pokemonForms.length) % pokemonForms.length;
+
+    const newForm = pokemonForms[newIndex];
+    if (newForm) {
+      navigate(`/pokemon/${newForm.name}`);
+    }
+  };
+
+  const handleShare = async () => {
+    try {
+      await navigator.clipboard.writeText(window.location.href);
+      showToast("Link copied to clipboard!", "success");
+    } catch {
+      showToast("Failed to copy link", "error");
+    }
+  };
+
+  const handleAddToTeam = () => {
+    if (!pokemon) {
+      return;
+    }
+    if (!canAddToTeam()) {
+      showToast("Team is full! Remove a Pokémon from your team first.", "error");
+      return;
+    }
+    if (isInTeam(pokemon.name)) {
+      showToast(`${pokemon.name} is already in your team!`, "info");
+      return;
+    }
+    if (addToTeam(pokemon)) {
+      showToast(`${pokemon.name} added to team!`, "success");
+    }
+  };
+
+  const handleCompare = () => {
+    if (!pokemon) {
+      return;
+    }
+    addToComparison(pokemon.name);
+    if (comparisonPokemon.length === 1) {
+      setShowComparison(true);
+    } else {
+      showToast("Select another Pokémon to compare", "info");
+    }
+  };
+
+  const handleApplyMetaSet = () => {
+    showToast("Apply meta set — coming in the next sprint (Phase D)", "info");
+  };
+
   if (loading) {
     return (
       <>
         <Navbar />
         <div className="pokemon-detail-page">
           <div className="pokemon-detail-container">
-            <div className="pokemon-detail-loading">
-              <div className="loading-skeleton-header" />
-              <div className="loading-skeleton-content" />
-            </div>
+            <PokemonDetailSkeleton />
           </div>
         </div>
       </>
@@ -339,20 +390,14 @@ const PokemonDetail = () => {
   const primaryType = pokemon.types[0]?.type.name || "normal";
   const cardColor = getTypeColor(primaryType);
 
-  const formatStatName = (statName) => {
-    return statName
+  const formatStatName = (statName) =>
+    statName
       .split("-")
       .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
       .join(" ");
-  };
 
-  const formatHeight = (height) => {
-    return `${(height / 10).toFixed(1)} m`;
-  };
-
-  const formatWeight = (weight) => {
-    return `${(weight / 10).toFixed(1)} kg`;
-  };
+  const formatHeight = (height) => `${(height / 10).toFixed(1)} m`;
+  const formatWeight = (weight) => `${(weight / 10).toFixed(1)} kg`;
 
   return (
     <>
@@ -374,427 +419,87 @@ const PokemonDetail = () => {
               </Link>
             </div>
             <div className="pokemon-nav-buttons">
-          {prevPokemon && (
-            <button 
-              onClick={() => navigate(`/pokemon/${prevPokemon.name}`)}
-              className="nav-pokemon-btn prev-btn"
-              aria-label={`Previous Pokemon: ${prevPokemon.name}`}
-            >
-              ← #{prevPokemon.id} {prevPokemon.name}
-            </button>
-          )}
-          {nextPokemon && (
-            <button 
-              onClick={() => navigate(`/pokemon/${nextPokemon.name}`)}
-              className="nav-pokemon-btn next-btn"
-              aria-label={`Next Pokemon: ${nextPokemon.name}`}
-            >
-              #{nextPokemon.id} {nextPokemon.name} →
-            </button>
-          )}
-        </div>
-      </div>
-      <div className="pokemon-detail-card" style={{ borderColor: cardColor }}>
-        <div className="pokemon-detail-header">
-          <div className="pokemon-detail-image-section">
-            <img
-              src={pokemon.sprites.other?.["official-artwork"]?.front_default || pokemon.sprites.front_default}
-              alt={pokemon.name}
-              className="pokemon-detail-image"
-              loading="eager"
+              {prevPokemon && (
+                <button
+                  type="button"
+                  onClick={() => navigate(`/pokemon/${prevPokemon.name}`)}
+                  className="nav-pokemon-btn prev-btn"
+                  aria-label={`Previous Pokémon: ${prevPokemon.name}`}
+                >
+                  ← #{prevPokemon.id} {prevPokemon.name}
+                </button>
+              )}
+              {nextPokemon && (
+                <button
+                  type="button"
+                  onClick={() => navigate(`/pokemon/${nextPokemon.name}`)}
+                  className="nav-pokemon-btn next-btn"
+                  aria-label={`Next Pokémon: ${nextPokemon.name}`}
+                >
+                  #{nextPokemon.id} {nextPokemon.name} →
+                </button>
+              )}
+            </div>
+          </div>
+
+          <PokemonDetailHero
+            pokemon={pokemon}
+            cardColor={cardColor}
+            pokemonForms={pokemonForms}
+            currentFormIndex={currentFormIndex}
+            onFormChange={handleFormChange}
+            pokemonDescription={pokemonDescription}
+            formatHeight={formatHeight}
+            formatWeight={formatWeight}
+            isInTeam={isInTeam}
+            canAddToTeam={canAddToTeam}
+            comparisonPokemon={comparisonPokemon}
+            onAddToTeam={handleAddToTeam}
+            onCompare={handleCompare}
+            onShare={handleShare}
+            onApplyMetaSet={handleApplyMetaSet}
+          />
+
+          <div className="pokemon-detail-sections">
+            <PokemonStatsSection
+              pokemon={pokemon}
+              cardColor={cardColor}
+              formatStatName={formatStatName}
             />
-            <div className="pokemon-sprites-evolution-container">
-              <div className="pokemon-sprites-comparison">
-                <div className="sprite-group">
-                  <h3 className="sprite-label">Original</h3>
-                  <div className="sprite-pair">
-                  {pokemon.sprites.front_default && (
-                    <div className="sprite-item">
-                      <img src={pokemon.sprites.front_default} alt="Front Original" className="pokemon-sprite" loading="lazy" />
-                      <span className="sprite-caption">Front</span>
-                    </div>
-                  )}
-                  {pokemon.sprites.back_default && (
-                    <div className="sprite-item">
-                      <img src={pokemon.sprites.back_default} alt="Back Original" className="pokemon-sprite" loading="lazy" />
-                      <span className="sprite-caption">Back</span>
-                    </div>
-                  )}
-                  </div>
-                </div>
-                <div className="sprite-group">
-                  <h3 className="sprite-label">Shiny</h3>
-                  <div className="sprite-pair">
-                  {pokemon.sprites.front_shiny && (
-                    <div className="sprite-item">
-                      <img src={pokemon.sprites.front_shiny} alt="Front Shiny" className="pokemon-sprite" loading="lazy" />
-                      <span className="sprite-caption">Front</span>
-                    </div>
-                  )}
-                  {pokemon.sprites.back_shiny && (
-                    <div className="sprite-item">
-                      <img src={pokemon.sprites.back_shiny} alt="Back Shiny" className="pokemon-sprite" loading="lazy" />
-                      <span className="sprite-caption">Back</span>
-                    </div>
-                  )}
-                  </div>
-                </div>
-              </div>
-              {evolutionChain.length > 1 && (
-                <div className="evolution-chain-group">
-                  <h3 className="sprite-label">Evolution</h3>
-                  <div className="evolution-chain">
-                    {evolutionChain.map((evolution, index) => (
-                      <React.Fragment key={evolution.id}>
-                        <div 
-                          className={`evolution-item ${evolution.name === pokemon.name ? 'current-evolution' : ''}`}
-                          onClick={() => navigate(`/pokemon/${evolution.name}`)}
-                          style={{ cursor: evolution.name === pokemon.name ? 'default' : 'pointer' }}
-                        >
-                          <img 
-                            src={`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${evolution.id}.png`}
-                            alt={evolution.name}
-                            className="evolution-sprite"
-                            loading="lazy"
-                          />
-                          <span className="evolution-name">{evolution.name}</span>
-                          {evolution.condition && index > 0 && (
-                            <span className="evolution-condition">{evolution.condition}</span>
-                          )}
-                        </div>
-                        {index < evolutionChain.length - 1 && (
-                          <div className="evolution-arrow-container">
-                            <span className="evolution-arrow">→</span>
-                            {evolutionChain[index + 1]?.condition && (
-                              <span className="evolution-arrow-condition">{evolutionChain[index + 1].condition}</span>
-                            )}
-                          </div>
-                        )}
-                      </React.Fragment>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-          <div className="pokemon-detail-info">
-            <div className="pokemon-detail-title">
-              <div className="pokemon-detail-name-container">
-                {pokemonForms.length > 1 && (
-                  <button
-                    className="form-nav-btn form-nav-prev"
-                    onClick={() => handleFormChange('prev')}
-                    aria-label="Previous form"
-                    title="Previous form"
-                  >
-                    ‹
-                  </button>
-                )}
-                <div className="pokemon-name-wrapper">
-                  <h1 className="pokemon-detail-name">{pokemon.name}</h1>
-                  {pokemonForms.length > 1 && (
-                    <span className="form-indicator">
-                      {currentFormIndex + 1}/{pokemonForms.length}
-                    </span>
-                  )}
-                </div>
-                {pokemonForms.length > 1 && (
-                  <button
-                    className="form-nav-btn form-nav-next"
-                    onClick={() => handleFormChange('next')}
-                    aria-label="Next form"
-                    title="Next form"
-                  >
-                    ›
-                  </button>
-                )}
-              </div>
-              <span className="pokemon-detail-id">#{pokemon.id}</span>
-              <VgcMetaStats speciesName={pokemon.name} />
-              <div className="pokemon-detail-actions">
-                <button 
-                  className="pokemon-detail-action-btn compare-action-btn" 
-                  onClick={() => {
-                    addToComparison(pokemon.name);
-                    if (comparisonPokemon.length === 1) {
-                      setShowComparison(true);
-                    } else {
-                      showToast("Select another Pokemon to compare", "info");
-                    }
-                  }}
-                  style={{
-                    backgroundColor: comparisonPokemon.includes(pokemon.name) ? "#4caf50" : "var(--input-bg)",
-                    color: comparisonPokemon.includes(pokemon.name) ? "white" : "var(--text-color)"
-                  }}
-                >
-                  Compare with
-                </button>
-                <button 
-                  className="pokemon-detail-action-btn share-action-btn" 
-                  onClick={handleShare}
-                >
-                  Share Pokemon
-                </button>
-                <button 
-                  className="pokemon-detail-action-btn team-action-btn" 
-                  onClick={() => {
-                    if (!canAddToTeam()) {
-                      showToast("Team is full! Remove a Pokemon from your team first.", "error");
-                      return;
-                    }
-                    if (isInTeam(pokemon.name)) {
-                      showToast(`${pokemon.name} is already in your team!`, "info");
-                      return;
-                    }
-                    if (addToTeam(pokemon)) {
-                      showToast(`${pokemon.name} added to team!`, "success");
-                    }
-                  }}
-                  disabled={isInTeam(pokemon.name) || !canAddToTeam()}
-                  style={{
-                    backgroundColor: isInTeam(pokemon.name) ? "#4caf50" : "var(--input-bg)",
-                    color: isInTeam(pokemon.name) ? "white" : "var(--text-color)",
-                    opacity: (!canAddToTeam() && !isInTeam(pokemon.name)) ? 0.5 : 1
-                  }}
-                >
-                  {isInTeam(pokemon.name) ? "In Team" : "Add to Team"}
-                </button>
-              </div>
-            </div>
-            <div className="pokemon-detail-types">
-              {pokemon.types.map((type, index) => (
-                <span
-                  key={index}
-                  className="pokemon-detail-type-badge"
-                  style={{ backgroundColor: getTypeColor(type.type.name) }}
-                >
-                  {type.type.name}
-                </span>
-              ))}
-            </div>
-            <div className="pokemon-detail-stats-grid">
-              <div className="pokemon-detail-stat">
-                <span className="stat-label">Height</span>
-                <span className="stat-value">{formatHeight(pokemon.height)}</span>
-              </div>
-              <div className="pokemon-detail-stat">
-                <span className="stat-label">Weight</span>
-                <span className="stat-value">{formatWeight(pokemon.weight)}</span>
-              </div>
-              <div className="pokemon-detail-stat">
-                <span className="stat-label">Base Experience</span>
-                <span className="stat-value">{pokemon.base_experience}</span>
-              </div>
-            </div>
-            {pokemonDescription && (
-              <div className="pokemon-description-box" style={{ borderLeftColor: cardColor }}>
-                <h3 className="description-title">Description</h3>
-                <p className="description-text">{pokemonDescription}</p>
-              </div>
-            )}
+            <PokemonMovesSection
+              pokemon={pokemon}
+              abilities={pokemon.abilities}
+              abilityDescriptions={abilityDescriptions}
+              allMoves={allMoves}
+              moves={moves}
+              moveDetails={moveDetails}
+              showAllMoves={showAllMoves}
+              onToggleShowAllMoves={() => setShowAllMoves((open) => !open)}
+              isOnTeam={isInTeam(pokemon.name)}
+              getMoveset={getMoveset}
+              setMoveset={setMoveset}
+              showToast={showToast}
+            />
+            <PokemonEvolutionSection
+              pokemon={pokemon}
+              evolutionChain={evolutionChain}
+            />
           </div>
         </div>
-        <div className="pokemon-detail-stats-section">
-          <h2>Base Stats</h2>
-          <div className="stats-content">
-            <div className="stats-radar-chart-container">
-              <StatsRadarChart stats={pokemon.stats} color={cardColor} />
-            </div>
-            <div className="pokemon-stats-list">
-              {pokemon.stats.map((stat, index) => (
-                <div key={index} className="pokemon-stat-row">
-                  <span className="stat-name">{formatStatName(stat.stat.name)}</span>
-                  <div className="stat-bar-container">
-                    <div
-                      className="stat-bar"
-                      style={{
-                        width: `${(stat.base_stat / 255) * 100}%`,
-                        backgroundColor: cardColor,
-                      }}
-                    >
-                      <span className="stat-value-number">{stat.base_stat}</span>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-        {pokemon.abilities && pokemon.abilities.length > 0 && (
-          <div className="pokemon-detail-abilities">
-            <h2>Abilities</h2>
-            <div className="abilities-list">
-              {pokemon.abilities.map((ability, index) => {
-                const abilityName = ability.ability.name;
-                const description = abilityDescriptions[abilityName];
-                return (
-                  <div
-                    key={index}
-                    className="ability-badge-container"
-                    onMouseEnter={() => setHoveredAbility(abilityName)}
-                    onMouseLeave={() => setHoveredAbility(null)}
-                  >
-                    <span className="ability-badge">
-                      {abilityName}
-                      {ability.is_hidden && <span className="hidden-indicator"> (Hidden)</span>}
-                    </span>
-                    {hoveredAbility === abilityName && description && (
-                      <div className="ability-tooltip">
-                        <h4 className="ability-tooltip-title">{abilityName}</h4>
-                        <p className="ability-tooltip-description">{description}</p>
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-          </div>
+
+        {showComparison && comparisonPokemon.length === 2 && (
+          <PokemonComparison
+            pokemon1Name={comparisonPokemon[0]}
+            pokemon2Name={comparisonPokemon[1]}
+            onClose={() => {
+              setShowComparison(false);
+              clearComparison();
+            }}
+          />
         )}
-        {pokemon && isInTeam(pokemon.name) && pokemon.moves && pokemon.moves.length > 0 && (
-          <div className="pokemon-detail-moveset-section">
-            <h2 className="moveset-section-title">Your Pokémon moveset</h2>
-            <p className="moveset-section-desc">Choose 4 moves for this Pokémon.</p>
-            <div className="moveset-slots-display">
-              {(() => {
-                const current = getMoveset(pokemon.name);
-                const padded = [...current, ...Array(4).fill("—")].slice(0, 4);
-                const formatStats = (d) => {
-                  if (!d) return null;
-                  const parts = [];
-                  if (d.power != null) parts.push(`${d.power} Pwr`);
-                  else parts.push("—");
-                  if (d.accuracy != null) parts.push(`${d.accuracy}%`);
-                  else parts.push("—");
-                  parts.push(d.pp != null ? `${d.pp} PP` : "— PP");
-                  const cls = d.damageClass ? d.damageClass.replace(/-/g, " ") : "";
-                  if (cls) parts.push(cls.charAt(0).toUpperCase() + cls.slice(1));
-                  return parts.join(" · ");
-                };
-                return padded.map((moveName, i) => {
-                  const details = typeof moveName === "string" && moveName !== "—" ? moveDetails[moveName] : null;
-                  const statsLine = formatStats(details);
-                  const isEmpty = typeof moveName !== "string" || moveName === "—";
-                  return (
-                    <span
-                      key={i}
-                      className="moveset-slot"
-                      onMouseEnter={() => !isEmpty && setHoveredMovesetMove(moveName)}
-                      onMouseLeave={() => setHoveredMovesetMove(null)}
-                    >
-                      <span className="moveset-slot-num">{i + 1}</span>
-                      <span className="moveset-slot-move">
-                        {!isEmpty ? moveName.replace(/-/g, " ") : moveName}
-                      </span>
-                      {statsLine && <span className="moveset-slot-stats">{statsLine}</span>}
-                      {hoveredMovesetMove === moveName && details?.effect && (
-                        <div className="moveset-slot-tooltip">
-                          <p className="moveset-slot-tooltip-effect">{details.effect}</p>
-                        </div>
-                      )}
-                    </span>
-                  );
-                });
-              })()}
-            </div>
-            <button
-              type="button"
-              className="moveset-edit-btn"
-              onClick={() => setShowMovePicker(true)}
-            >
-              Edit moves
-            </button>
-            {showMovePicker && (
-              <MovePickerModal
-                pokemon={pokemon}
-                currentMoves={getMoveset(pokemon.name)}
-                moveDetails={moveDetails}
-                onSave={(moves) => {
-                  setMoveset(pokemon.name, moves);
-                  showToast("Moves saved");
-                  setShowMovePicker(false);
-                }}
-                onClose={() => setShowMovePicker(false)}
-              />
-            )}
-          </div>
-        )}
-        {allMoves.length > 0 && (
-          <div className="pokemon-detail-moves">
-            <div className="moves-header">
-              <h2>Moves ({allMoves.length})</h2>
-              {allMoves.length > 20 && (
-                <button 
-                  onClick={() => setShowAllMoves(!showAllMoves)}
-                  className="show-all-moves-btn"
-                >
-                  {showAllMoves ? "Show Less" : `Show All (${allMoves.length})`}
-                </button>
-              )}
-            </div>
-            <div className="moves-list">
-              {(showAllMoves ? allMoves : moves).map((move, index) => {
-                const details = moveDetails[move.name] || move;
-                return (
-                  <div
-                    key={index}
-                    className="move-badge-container"
-                    onMouseEnter={() => setHoveredMove(move.name)}
-                    onMouseLeave={() => setHoveredMove(null)}
-                  >
-                    <span 
-                      className="move-badge"
-                      style={{ backgroundColor: getTypeColor(move.type) }}
-                    >
-                      {move.name}
-                      {move.level > 0 && <span className="move-level"> (Lv. {move.level})</span>}
-                    </span>
-                    {hoveredMove === move.name && details && (
-                      <div className="move-tooltip">
-                        <h4 className="move-tooltip-title">{details.name}</h4>
-                        <div className="move-tooltip-details">
-                          <span className="move-tooltip-type" style={{ backgroundColor: getTypeColor(details.type) }}>
-                            {details.type}
-                          </span>
-                          {details.power !== null && (
-                            <span className="move-tooltip-stat">Power: {details.power}</span>
-                          )}
-                          {details.accuracy !== null && (
-                            <span className="move-tooltip-stat">Accuracy: {details.accuracy}%</span>
-                          )}
-                          {details.pp !== null && (
-                            <span className="move-tooltip-stat">PP: {details.pp}</span>
-                          )}
-                          {details.damageClass && (
-                            <span className="move-tooltip-stat">Class: {details.damageClass}</span>
-                          )}
-                        </div>
-                        {details.effect && (
-                          <p className="move-tooltip-effect">{details.effect}</p>
-                        )}
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        )}
-      </div>
-      {showComparison && comparisonPokemon.length === 2 && (
-        <PokemonComparison
-          pokemon1Name={comparisonPokemon[0]}
-          pokemon2Name={comparisonPokemon[1]}
-          onClose={() => {
-            setShowComparison(false);
-            clearComparison();
-          }}
-        />
-      )}
-        </div>
       </div>
     </>
   );
 };
 
 export default PokemonDetail;
-

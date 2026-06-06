@@ -13,11 +13,11 @@ const coverageLevel = (value) => {
   return 0.5;
 };
 
-const TypeCoverageBars = ({ coverage, compact = false }) => (
+const TypeCoverageBars = ({ coverage, compact = false, accessibilityLabel }) => (
   <div
     className={`type-coverage-bars ${compact ? "compact" : ""}`}
     role="img"
-    aria-label="Team offensive type coverage by defending type"
+    aria-label={accessibilityLabel || "Type coverage by defending type"}
   >
     {ALL_POKEMON_TYPES.map((type) => {
       const value = coverage[type] || "not-very-effective";

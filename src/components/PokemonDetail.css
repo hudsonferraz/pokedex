@@ -534,9 +534,9 @@
 }
 
 .pokemon-detail-stats-section {
-  margin-top: 20px;
-  padding-top: 20px;
-  border-top: 2px solid var(--border-color);
+  margin-top: 0;
+  padding-top: 0;
+  border-top: none;
 }
 
 .pokemon-detail-stats-section h2 {
@@ -1082,5 +1082,89 @@
   .description-text {
     font-size: 0.85rem;
   }
+}
+
+.pokemon-detail-sections {
+  width: 100%;
+  max-width: 1000px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.pokemon-detail-collapsible {
+  padding: 0 16px 4px;
+}
+
+.pokemon-detail-collapsible .collapsible-section {
+  margin: 0;
+}
+
+.pokemon-detail-collapsible .collapsible-section-trigger {
+  padding-left: 0;
+  padding-right: 0;
+}
+
+.pokemon-detail-type-profile-wrap {
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border-color);
+}
+
+.pokemon-detail-subheading {
+  font-size: 1rem;
+  margin: 0 0 10px;
+  color: var(--text-color);
+  font-weight: 600;
+}
+
+.pokemon-evolution-section {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.evolution-chain-scroll {
+  overflow-x: auto;
+  flex-wrap: nowrap;
+  justify-content: flex-start;
+  padding-bottom: 8px;
+  max-width: 100%;
+}
+
+button.evolution-item {
+  border: none;
+  background: none;
+  cursor: pointer;
+  font: inherit;
+  color: inherit;
+}
+
+button.evolution-item:disabled {
+  cursor: default;
+}
+
+.pokemon-moves-sections {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.pokemon-detail-moves {
+  margin-top: 0;
+  padding-top: 0;
+  border-top: none;
+}
+
+.pokemon-detail-abilities {
+  margin-top: 0;
+  padding-top: 0;
+  border-top: none;
+}
+
+.pokemon-detail-moveset-section {
+  margin-top: 0;
+  padding-top: 0;
+  border-top: none;
 }
 

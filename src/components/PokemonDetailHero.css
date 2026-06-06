@@ -1,0 +1,118 @@
+.pokemon-detail-hero {
+  width: 100%;
+  max-width: 1000px;
+  padding: 20px;
+  border-left: 4px solid var(--pokemon-accent, #0e6f9f);
+  margin-bottom: 12px;
+}
+
+.pokemon-detail-hero-grid {
+  display: grid;
+  grid-template-columns: minmax(200px, 260px) 1fr;
+  gap: 28px;
+  align-items: start;
+}
+
+.pokemon-detail-hero-visual {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+}
+
+.pokemon-detail-hero-art {
+  width: 100%;
+  max-width: 220px;
+  aspect-ratio: 1;
+  object-fit: contain;
+}
+
+.pokemon-detail-hero-types {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: center;
+}
+
+.pokemon-detail-hero-content {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-width: 0;
+}
+
+.pokemon-detail-hero-heading {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 12px 16px;
+}
+
+.pokemon-detail-sticky-actions {
+  position: sticky;
+  top: 80px;
+  z-index: 10;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 10px;
+  margin: -4px -10px 0;
+  border-radius: 10px;
+  background-color: var(--card-bg);
+  border: 1px solid var(--border-color);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
+}
+
+.dark-mode .pokemon-detail-sticky-actions {
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
+}
+
+.pokemon-detail-action-btn {
+  border: 1px solid var(--border-color);
+  background-color: var(--input-bg);
+  padding: 9px 14px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 0.88rem;
+  font-weight: 600;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, background-color 0.15s ease;
+  color: var(--text-color);
+  white-space: nowrap;
+}
+
+.pokemon-detail-action-btn:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.12);
+}
+
+.pokemon-detail-action-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.pokemon-detail-action-btn.active {
+  background-color: #2e7d32;
+  border-color: #2e7d32;
+  color: #fff;
+}
+
+.pokemon-detail-action-btn.meta-action-btn {
+  background: linear-gradient(135deg, #0e6f9f 0%, #0a5578 100%);
+  border-color: #0a5578;
+  color: #fff;
+}
+
+.pokemon-detail-action-btn.meta-action-btn:hover {
+  filter: brightness(1.05);
+}
+
+@media (max-width: 768px) {
+  .pokemon-detail-hero-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .pokemon-detail-sticky-actions {
+    position: static;
+    margin: 0;
+  }
+}
