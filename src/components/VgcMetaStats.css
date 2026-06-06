@@ -82,3 +82,173 @@
   font-size: 0.85rem;
   opacity: 0.8;
 }
+
+.vgc-meta-panel {
+  margin-bottom: var(--space-4);
+  padding: var(--space-4);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.vgc-meta-set-hints {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: rgba(99, 102, 241, 0.08);
+  border: 1px solid rgba(99, 102, 241, 0.2);
+}
+
+.vgc-meta-hint-line {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--text-color);
+}
+
+.vgc-meta-stats-moves {
+  margin: 0;
+  font-size: 0.85rem;
+  line-height: 1.45;
+  color: var(--text-color);
+}
+
+.vgc-meta-spreads-title {
+  margin: 0 0 8px;
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: var(--text-color);
+}
+
+.vgc-meta-spread-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.vgc-meta-spread-item {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px;
+  border-radius: 8px;
+  background: var(--filter-bg);
+  border: 1px solid var(--border-color);
+}
+
+.vgc-meta-spread-info {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+
+.vgc-meta-spread-label {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--text-color);
+}
+
+.vgc-meta-spread-detail {
+  font-size: 0.78rem;
+  opacity: 0.85;
+  color: var(--text-color);
+}
+
+.vgc-meta-spread-use {
+  flex-shrink: 0;
+  padding: 6px 12px;
+  border-radius: 6px;
+  border: 1px solid var(--border-color);
+  background: var(--card-bg);
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+  color: var(--text-color);
+}
+
+.vgc-meta-spread-use:hover:not(:disabled) {
+  background: var(--filter-bg);
+}
+
+.vgc-meta-spread-use:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.vgc-meta-teammates-label {
+  display: block;
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  opacity: 0.75;
+  margin-bottom: 8px;
+  color: var(--text-color);
+}
+
+.vgc-meta-teammate-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.vgc-meta-teammate-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  border: 1px solid var(--border-color);
+  background: var(--input-bg);
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  color: var(--text-color);
+  transition: transform 0.15s ease, background-color 0.15s ease;
+}
+
+.vgc-meta-teammate-chip:hover {
+  transform: translateY(-1px);
+  background: var(--filter-bg);
+}
+
+.vgc-meta-teammate-percent {
+  font-size: 0.72rem;
+  opacity: 0.7;
+  font-weight: 500;
+}
+
+.vgc-meta-panel-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px 16px;
+  padding-top: 4px;
+  border-top: 1px solid var(--border-color);
+}
+
+.vgc-meta-calc-btn {
+  padding: 8px 14px;
+  border-radius: 8px;
+  border: 1px solid var(--border-color);
+  background: var(--input-bg);
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  color: var(--text-color);
+}
+
+.vgc-meta-calc-btn:hover:not(:disabled) {
+  background: var(--filter-bg);
+}
+
+.vgc-meta-calc-btn:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}

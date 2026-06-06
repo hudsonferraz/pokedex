@@ -1,0 +1,30 @@
+.pokemon-regulation-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+.pokemon-regulation-chip.banned {
+  background: rgba(198, 40, 40, 0.15);
+  color: #c62828;
+  border: 1px solid rgba(198, 40, 40, 0.35);
+}
+
+.pokemon-regulation-chip.restricted {
+  background: rgba(234, 179, 8, 0.15);
+  color: #b45309;
+  border: 1px solid rgba(234, 179, 8, 0.35);
+}
+
+.dark-mode .pokemon-regulation-chip.banned {
+  color: #ef5350;
+}
+
+.dark-mode .pokemon-regulation-chip.restricted {
+  color: #fbbf24;
+}

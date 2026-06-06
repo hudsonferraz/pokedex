@@ -1,4 +1,6 @@
 import { getTeamShowdownExport } from "./teamExport";
+import { normalizeSetEntry } from "./pokemonSets";
+import { formatSpeciesLabel } from "./regulation";
 
 /** Official Showdown calc — pick format inside the UI (no per-regulation path). */
 export const SHOWDOWN_DAMAGE_CALC_URL = "https://calc.pokemonshowdown.com/";
@@ -48,4 +50,24 @@ export async function openDamageCalcWithTeam(
     copied: Boolean(navigator.clipboard?.writeText),
     paste,
   };
+}
+
+export async function openDamageCalcWithPokemon(
+  pokemon,
+  set,
+  regulationId = "champions-reg-ma",
+) {
+  if (!pokemon) {
+    throw new Error("No Pokémon provided");
+  }
+
+  const normalizedSet = normalizeSetEntry(set);
+  const sets = { [pokemon.name]: normalizedSet };
+
+  return openDamageCalcWithTeam(
+    [pokemon],
+    sets,
+    formatSpeciesLabel(pokemon.name),
+    regulationId,
+  );
 }

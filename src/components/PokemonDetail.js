@@ -9,6 +9,7 @@ import {
   getPokemonForms,
 } from "../api";
 import TeamContext from "../contexts/TeamContext";
+import { useRegulation } from "../contexts/RegulationContext";
 import { useToast } from "./ToastProvider";
 import { useComparison } from "../contexts/ComparisonContext";
 import PokemonComparison from "./PokemonComparison";
@@ -21,6 +22,9 @@ import PokemonDetailHero from "./PokemonDetailHero";
 import PokemonStatsSection from "./PokemonStatsSection";
 import PokemonEvolutionSection from "./PokemonEvolutionSection";
 import PokemonMovesSection from "./PokemonMovesSection";
+import PokemonSetModal from "./PokemonSetModal";
+import { applyMetaSetToPokemon, spreadToSetPatch } from "../utils/applyMetaSet";
+import { getSpeciesRegulationStatus, formatSpeciesLabel } from "../utils/regulation";
 import "./PokemonDetail.css";
 
 const pokemonCache = new Map();
@@ -29,8 +33,16 @@ const CACHE_DURATION = 5 * 60 * 1000;
 const PokemonDetail = () => {
   const { name } = useParams();
   const navigate = useNavigate();
-  const { addToTeam, isInTeam, canAddToTeam, getMoveset, setMoveset } =
-    useContext(TeamContext);
+  const { regulation } = useRegulation();
+  const {
+    addToTeam,
+    isInTeam,
+    canAddToTeam,
+    getMoveset,
+    setMoveset,
+    getPokemonSet,
+    updatePokemonSet,
+  } = useContext(TeamContext);
   const { showToast } = useToast();
   const { comparisonPokemon, addToComparison, clearComparison } = useComparison();
   const [pokemon, setPokemon] = useState(null);
@@ -47,6 +59,8 @@ const PokemonDetail = () => {
   const [nextPokemon, setNextPokemon] = useState(null);
   const [pokemonForms, setPokemonForms] = useState([]);
   const [currentFormIndex, setCurrentFormIndex] = useState(0);
+  const [showSetModal, setShowSetModal] = useState(false);
+  const [applyingMeta, setApplyingMeta] = useState(false);
 
   const parseEvolutionChain = (chain) => {
     const evolutions = [];
@@ -327,16 +341,106 @@ const PokemonDetail = () => {
     if (!pokemon) {
       return;
     }
+
+    const { status } = getSpeciesRegulationStatus(pokemon.name, regulation.id);
+    if (status === "banned") {
+      showToast("This species is banned in the selected regulation.", "error");
+      return;
+    }
+
     if (!canAddToTeam()) {
       showToast("Team is full! Remove a Pokémon from your team first.", "error");
       return;
     }
+
     if (isInTeam(pokemon.name)) {
-      showToast(`${pokemon.name} is already in your team!`, "info");
+      setShowSetModal(true);
       return;
     }
-    if (addToTeam(pokemon)) {
-      showToast(`${pokemon.name} added to team!`, "success");
+
+    setShowSetModal(true);
+  };
+
+  const handleEditSet = () => {
+    setShowSetModal(true);
+  };
+
+  const handleSetSave = (patch) => {
+    if (!pokemon) {
+      return;
+    }
+
+    if (!isInTeam(pokemon.name)) {
+      if (!addToTeam(pokemon)) {
+        showToast("Could not add Pokémon to team.", "error");
+        return;
+      }
+    }
+
+    updatePokemonSet(pokemon.name, patch);
+    setShowSetModal(false);
+    showToast(`${formatSpeciesLabel(pokemon.name)} set saved`, "success");
+  };
+
+  const handleApplySpread = (spread) => {
+    if (!pokemon) {
+      return;
+    }
+
+    if (!isInTeam(pokemon.name)) {
+      showToast("Add this Pokémon to your team first.", "info");
+      return;
+    }
+
+    updatePokemonSet(pokemon.name, spreadToSetPatch(spread));
+    showToast("Spread applied to team set", "success");
+  };
+
+  const handleApplyMetaSet = async () => {
+    if (!pokemon) {
+      return;
+    }
+
+    const { status } = getSpeciesRegulationStatus(pokemon.name, regulation.id);
+    if (status === "banned") {
+      showToast("This species is banned in the selected regulation.", "error");
+      return;
+    }
+
+    setApplyingMeta(true);
+    try {
+      const result = await applyMetaSetToPokemon({
+        regulationId: regulation.id,
+        pokemon,
+        isInTeam,
+        canAddToTeam,
+        addToTeam,
+        updatePokemonSet,
+      });
+
+      if (!result.success) {
+        showToast(result.error, "error");
+        return;
+      }
+
+      showToast(
+        `${formatSpeciesLabel(pokemon.name)} meta set applied — view in Team Builder`,
+        "success",
+      );
+    } finally {
+      setApplyingMeta(false);
+    }
+  };
+
+  const handleDamageCalcCopied = (copied, failed) => {
+    if (failed) {
+      showToast("Could not open damage calc", "error");
+      return;
+    }
+    if (copied) {
+      showToast("Showdown paste copied — paste into the damage calc", "success");
+    } else {
+      showToast("Opened damage calc", "info");
     }
   };
 
@@ -350,10 +454,6 @@ const PokemonDetail = () => {
     } else {
       showToast("Select another Pokémon to compare", "info");
     }
-  };
-
-  const handleApplyMetaSet = () => {
-    showToast("Apply meta set — coming in the next sprint (Phase D)", "info");
   };
 
   if (loading) {
@@ -454,10 +554,15 @@ const PokemonDetail = () => {
             isInTeam={isInTeam}
             canAddToTeam={canAddToTeam}
             comparisonPokemon={comparisonPokemon}
+            currentSet={getPokemonSet(pokemon.name)}
+            applyingMeta={applyingMeta}
             onAddToTeam={handleAddToTeam}
+            onEditSet={handleEditSet}
             onCompare={handleCompare}
             onShare={handleShare}
             onApplyMetaSet={handleApplyMetaSet}
+            onApplySpread={handleApplySpread}
+            onDamageCalcCopied={handleDamageCalcCopied}
           />
 
           <div className="pokemon-detail-sections">
@@ -495,6 +600,15 @@ const PokemonDetail = () => {
               setShowComparison(false);
               clearComparison();
             }}
+          />
+        )}
+
+        {showSetModal && (
+          <PokemonSetModal
+            pokemon={pokemon}
+            currentSet={getPokemonSet(pokemon.name)}
+            onSave={handleSetSave}
+            onClose={() => setShowSetModal(false)}
           />
         )}
       </div>

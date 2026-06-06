@@ -27,6 +27,21 @@ function speciesMatchesList(speciesId, list) {
   return normalizedList.has(baseForm);
 }
 
+export function getSpeciesRegulationStatus(speciesName, regulationId) {
+  const regulation = getRegulationById(regulationId);
+  const speciesId = normalizeSpeciesId(speciesName);
+
+  if (speciesMatchesList(speciesId, regulation.banned)) {
+    return { status: "banned", regulation, speciesId };
+  }
+
+  if (speciesMatchesList(speciesId, regulation.restricted)) {
+    return { status: "restricted", regulation, speciesId };
+  }
+
+  return { status: "legal", regulation, speciesId };
+}
+
 export function validateTeamForRegulation(team, regulationId) {
   const regulation = getRegulationById(regulationId);
   const issues = [];

@@ -1,7 +1,9 @@
 import React from "react";
+import { useRegulation } from "../contexts/RegulationContext";
 import { getTypeColor } from "../constants/typeColors";
 import { formatSpeciesLabel } from "../utils/regulation";
 import VgcMetaStats from "./VgcMetaStats";
+import PokemonRegulationChip from "./PokemonRegulationChip";
 import "./PokemonDetailHero.css";
 
 const PokemonDetailHero = ({
@@ -16,11 +18,17 @@ const PokemonDetailHero = ({
   isInTeam,
   canAddToTeam,
   comparisonPokemon,
+  currentSet,
+  applyingMeta,
   onAddToTeam,
+  onEditSet,
   onCompare,
   onShare,
   onApplyMetaSet,
+  onApplySpread,
+  onDamageCalcCopied,
 }) => {
+  const { regulation } = useRegulation();
   const artwork =
     pokemon.sprites?.other?.["official-artwork"]?.front_default ||
     pokemon.sprites?.front_default;
@@ -91,26 +99,47 @@ const PokemonDetailHero = ({
               )}
             </div>
             <span className="pokemon-detail-id">#{pokemon.id}</span>
+            <PokemonRegulationChip
+              speciesName={pokemon.name}
+              regulationId={regulation.id}
+            />
           </div>
 
-          <VgcMetaStats speciesName={pokemon.name} />
+          <VgcMetaStats
+            speciesName={pokemon.name}
+            pokemon={pokemon}
+            currentSet={currentSet}
+            isInTeam={onTeam}
+            onApplySpread={onApplySpread}
+            onDamageCalcCopied={onDamageCalcCopied}
+          />
 
           <div className="pokemon-detail-sticky-actions" role="toolbar" aria-label="Pokémon actions">
-            <button
-              type="button"
-              className={`pokemon-detail-action-btn team-action-btn${onTeam ? " active" : ""}`}
-              onClick={onAddToTeam}
-              disabled={onTeam || teamFull}
-            >
-              {onTeam ? "In team" : "Add to team"}
-            </button>
+            {onTeam ? (
+              <button
+                type="button"
+                className="pokemon-detail-action-btn team-action-btn active"
+                onClick={onEditSet}
+              >
+                Edit set
+              </button>
+            ) : (
+              <button
+                type="button"
+                className="pokemon-detail-action-btn team-action-btn"
+                onClick={onAddToTeam}
+                disabled={teamFull}
+              >
+                Add to team
+              </button>
+            )}
             <button
               type="button"
               className="pokemon-detail-action-btn meta-action-btn"
               onClick={onApplyMetaSet}
-              title="Apply a meta set from Pikalytics (Phase D)"
+              disabled={applyingMeta}
             >
-              Apply meta set
+              {applyingMeta ? "Applying…" : "Apply meta set"}
             </button>
             <button
               type="button"
