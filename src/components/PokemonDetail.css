@@ -15,25 +15,31 @@
 .pokemon-detail-breadcrumb {
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: 10px;
   flex-wrap: wrap;
 }
 
-.pokemon-detail-team-link {
+.pokemon-detail-nav-action {
+  display: inline-flex;
+  align-items: center;
   font-size: 0.9rem;
-  font-weight: 500;
-  color: var(--accent-color, #3b82f6);
+  font-weight: 600;
+  color: var(--text-color);
   text-decoration: none;
-  padding: 6px 12px;
-  border-radius: 6px;
+  padding: 8px 14px;
+  border-radius: 8px;
   border: 1px solid var(--border-color);
   background-color: var(--card-bg);
-  transition: background-color 0.2s ease, transform 0.2s ease;
+  cursor: pointer;
+  transition: background-color 0.2s ease, transform 0.2s ease, border-color 0.2s ease;
+  font-family: inherit;
+  line-height: 1.2;
 }
 
-.pokemon-detail-team-link:hover {
+.pokemon-detail-nav-action:hover {
   background-color: var(--filter-bg);
   transform: translateY(-1px);
+  border-color: rgba(14, 111, 159, 0.35);
 }
 
 .pokemon-detail-navigation {
@@ -117,24 +123,6 @@
 .pokemon-detail-error {
   text-align: center;
   padding: 40px;
-}
-
-.back-button {
-  align-self: flex-start;
-  margin-bottom: 20px;
-  padding: 10px 20px;
-  background-color: white;
-  border: 2px solid #333;
-  border-radius: 8px;
-  cursor: pointer;
-  font-size: 1rem;
-  font-weight: 500;
-  transition: all 0.2s ease;
-}
-
-.back-button:hover {
-  background-color: #f0f0f0;
-  transform: translateX(-4px);
 }
 
 .pokemon-detail-card {

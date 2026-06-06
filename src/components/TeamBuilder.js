@@ -631,6 +631,7 @@ const TeamBuilder = () => {
               showToast(
                 patch.moves?.length ? "Meta set applied (moves + EVs)" : "Set saved",
               );
+              setSetEditorPokemon(null);
             }}
             onClose={() => setSetEditorPokemon(null)}
           />

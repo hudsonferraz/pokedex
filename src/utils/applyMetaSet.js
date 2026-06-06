@@ -50,7 +50,7 @@ export async function applyMetaSetToPokemon({
   pokemon,
   isInTeam,
   canAddToTeam,
-  addToTeam,
+  addPokemonToTeamWithSet,
   updatePokemonSet,
 }) {
   const { patch, meta, error } = await resolveMetaSetPatch(regulationId, pokemon);
@@ -67,15 +67,16 @@ export async function applyMetaSetToPokemon({
         meta,
       };
     }
-    if (!addToTeam(pokemon)) {
+    if (!addPokemonToTeamWithSet(pokemon, patch)) {
       return {
         success: false,
         error: "Could not add Pokémon to team.",
         meta,
       };
     }
+  } else {
+    updatePokemonSet(pokemon.name, patch);
   }
 
-  updatePokemonSet(pokemon.name, patch);
   return { success: true, patch, meta };
 }

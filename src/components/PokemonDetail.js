@@ -42,13 +42,13 @@ const PokemonDetail = () => {
   const navigate = useNavigate();
   const { regulation, setRegulationId } = useRegulation();
   const {
-    addToTeam,
     isInTeam,
     canAddToTeam,
     getMoveset,
     setMoveset,
     getPokemonSet,
     updatePokemonSet,
+    addPokemonToTeamWithSet,
   } = useContext(TeamContext);
   const { showToast } = useToast();
   const { comparisonPokemon, addToComparison, clearComparison } = useComparison();
@@ -382,13 +382,14 @@ const PokemonDetail = () => {
     }
 
     if (!isInTeam(pokemon.name)) {
-      if (!addToTeam(pokemon)) {
+      if (!addPokemonToTeamWithSet(pokemon, patch)) {
         showToast("Could not add Pokémon to team.", "error");
         return;
       }
+    } else {
+      updatePokemonSet(pokemon.name, patch);
     }
 
-    updatePokemonSet(pokemon.name, patch);
     setShowSetModal(false);
     showToast(`${formatSpeciesLabel(pokemon.name)} set saved`, "success");
   };
@@ -425,7 +426,7 @@ const PokemonDetail = () => {
         pokemon,
         isInTeam,
         canAddToTeam,
-        addToTeam,
+        addPokemonToTeamWithSet,
         updatePokemonSet,
       });
 
@@ -520,12 +521,12 @@ const PokemonDetail = () => {
               <button
                 type="button"
                 onClick={() => navigate("/browse")}
-                className="back-button"
+                className="pokemon-detail-nav-action"
                 aria-label="Back to Browse"
               >
                 ← Back to Browse
               </button>
-              <Link to="/" className="pokemon-detail-team-link">
+              <Link to="/" className="pokemon-detail-nav-action">
                 Team Builder
               </Link>
             </div>

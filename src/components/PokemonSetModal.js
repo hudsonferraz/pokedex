@@ -72,7 +72,6 @@ const PokemonSetModal = ({ pokemon, currentSet, onSave, onClose }) => {
       teraType: teraType || defaultTera,
       evs,
     });
-    onClose();
   };
 
   const handleApplySpread = (spread) => {
@@ -114,7 +113,6 @@ const PokemonSetModal = ({ pokemon, currentSet, onSave, onClose }) => {
         ...patch,
         teraType: patch.teraType || teraType || defaultTera,
       });
-      onClose();
     }, 450);
   };
 

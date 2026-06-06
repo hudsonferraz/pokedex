@@ -29,6 +29,7 @@ const TeamContext = React.createContext({
   toggleBringPokemon: () => null,
   setBringList: () => null,
   addToTeam: () => null,
+  addPokemonToTeamWithSet: () => null,
   removeFromTeam: () => null,
   clearTeam: () => null,
   isInTeam: () => false,
@@ -137,6 +138,61 @@ function TeamProviderWithState({ children }) {
     },
     [activeTeam, replaceTeamPokemon],
   );
+
+  const addPokemonToTeamWithSet = React.useCallback((pokemon, patch) => {
+    if (!pokemon?.name) {
+      return false;
+    }
+
+    let added = false;
+
+    setState((previousState) => {
+      const activeTeamId = previousState.activeTeamId;
+      const currentTeam =
+        previousState.teams.find((team) => team.id === activeTeamId) ||
+        previousState.teams[0];
+
+      if (!currentTeam) {
+        return previousState;
+      }
+
+      if (currentTeam.pokemon.length >= 6) {
+        return previousState;
+      }
+
+      if (currentTeam.pokemon.some((entry) => entry?.name === pokemon.name)) {
+        return previousState;
+      }
+
+      const nextPokemon = [...currentTeam.pokemon, pokemon];
+      const names = new Set(
+        nextPokemon.map((entry) => entry?.name).filter(Boolean),
+      );
+      const { keptSets, keptRoles, bringList } = pruneSetsAndRoles(
+        currentTeam,
+        names,
+      );
+      const sets = {
+        ...keptSets,
+        [pokemon.name]: mergeSetUpdate(
+          normalizeSetEntry(keptSets[pokemon.name]),
+          patch || {},
+        ),
+      };
+
+      const teams = previousState.teams.map((team) =>
+        team.id === currentTeam.id
+          ? { ...team, pokemon: nextPokemon, sets, roles: keptRoles, bringList }
+          : team,
+      );
+
+      saveToStorage(teams, activeTeamId);
+      added = true;
+      return { teams, activeTeamId };
+    });
+
+    return added;
+  }, []);
 
   const removeFromTeam = React.useCallback(
     (pokemonName) => {
@@ -338,6 +394,7 @@ function TeamProviderWithState({ children }) {
     toggleBringPokemon,
     setBringList,
     addToTeam,
+    addPokemonToTeamWithSet,
     removeFromTeam,
     clearTeam,
     isInTeam,
