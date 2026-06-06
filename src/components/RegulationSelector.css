@@ -37,3 +37,20 @@
 .regulation-selector-hint a {
   color: var(--accent);
 }
+
+.regulation-selector-compact {
+  margin-bottom: var(--space-3);
+}
+
+.regulation-selector-compact-hint {
+  flex: 1;
+  min-width: 180px;
+  margin: 0;
+  font-size: 0.78rem;
+  color: var(--text-color);
+  opacity: 0.85;
+}
+
+.regulation-selector-compact-hint strong {
+  color: var(--accent);
+}

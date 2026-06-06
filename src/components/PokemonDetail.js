@@ -10,6 +10,9 @@ import MovePickerModal from "./MovePickerModal";
 import { addToRecentlyViewed } from "../utils/recentlyViewed";
 import { getTypeColor } from "../constants/typeColors";
 import VgcMetaStats from "./VgcMetaStats";
+import Navbar from "./Navbar";
+import BrowseEmptyState from "./BrowseEmptyState";
+import { Link } from "react-router-dom";
 import "./PokemonDetail.css";
 
 // Simple cache for Pokemon data
@@ -301,25 +304,35 @@ const PokemonDetail = () => {
 
   if (loading) {
     return (
-      <div className="pokemon-detail-container">
-        <div className="pokemon-detail-loading">
-          <div className="loading-skeleton-header"></div>
-          <div className="loading-skeleton-content"></div>
+      <>
+        <Navbar />
+        <div className="pokemon-detail-page">
+          <div className="pokemon-detail-container">
+            <div className="pokemon-detail-loading">
+              <div className="loading-skeleton-header" />
+              <div className="loading-skeleton-content" />
+            </div>
+          </div>
         </div>
-      </div>
+      </>
     );
   }
 
   if (!pokemon) {
     return (
-      <div className="pokemon-detail-container">
-        <div className="pokemon-detail-error">
-          <h2>Pokemon not found!</h2>
-          <button onClick={() => navigate("/")} className="back-button">
-            Go Back
-          </button>
+      <>
+        <Navbar />
+        <div className="pokemon-detail-page">
+          <div className="pokemon-detail-container">
+            <BrowseEmptyState
+              title="Pokémon not found"
+              message="This species could not be loaded. It may not exist or the name may be misspelled."
+              primaryLabel="Back to Browse"
+              onPrimaryAction={() => navigate("/browse")}
+            />
+          </div>
         </div>
-      </div>
+      </>
     );
   }
 
@@ -342,16 +355,25 @@ const PokemonDetail = () => {
   };
 
   return (
-    <div className="pokemon-detail-container" style={{ backgroundColor: `${cardColor}20` }}>
-      <div className="pokemon-detail-navigation">
-        <button 
-          onClick={() => navigate("/")} 
-          className="back-button"
-          aria-label="Back to Browse"
-        >
-          ← Back to Browse
-        </button>
-        <div className="pokemon-nav-buttons">
+    <>
+      <Navbar />
+      <div className="pokemon-detail-page">
+        <div className="pokemon-detail-container">
+          <div className="pokemon-detail-navigation">
+            <div className="pokemon-detail-breadcrumb">
+              <button
+                type="button"
+                onClick={() => navigate("/browse")}
+                className="back-button"
+                aria-label="Back to Browse"
+              >
+                ← Back to Browse
+              </button>
+              <Link to="/" className="pokemon-detail-team-link">
+                Team Builder
+              </Link>
+            </div>
+            <div className="pokemon-nav-buttons">
           {prevPokemon && (
             <button 
               onClick={() => navigate(`/pokemon/${prevPokemon.name}`)}
@@ -768,7 +790,9 @@ const PokemonDetail = () => {
           }}
         />
       )}
-    </div>
+        </div>
+      </div>
+    </>
   );
 };
 

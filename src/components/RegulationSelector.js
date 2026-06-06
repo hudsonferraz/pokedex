@@ -2,11 +2,11 @@ import React from "react";
 import { useRegulation } from "../contexts/RegulationContext";
 import "./RegulationSelector.css";
 
-const RegulationSelector = () => {
+const RegulationSelector = ({ compact = false }) => {
   const { regulationId, regulations, setRegulationId, regulation } = useRegulation();
 
   return (
-    <div className="regulation-selector card-surface">
+    <div className={`regulation-selector card-surface${compact ? " regulation-selector-compact" : ""}`}>
       <label htmlFor="regulation-select" className="regulation-selector-label">
         Regulation / format
       </label>
@@ -23,18 +23,25 @@ const RegulationSelector = () => {
           </option>
         ))}
       </select>
-      <p className="regulation-selector-hint">
-        {regulation.notes} · Max {regulation.maxRestricted ?? 2} Restricted.
-        Ban/restricted lists are bundled — verify against the{" "}
-        <a
-          href="https://play.pokemon.com/en-us/resources/rules/?category=vgc"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          official VGC handbook
-        </a>
-        . Usage % is loaded live from Pikalytics.
-      </p>
+      {!compact && (
+        <p className="regulation-selector-hint">
+          {regulation.notes} · Max {regulation.maxRestricted ?? 2} Restricted.
+          Ban/restricted lists are bundled — verify against the{" "}
+          <a
+            href="https://play.pokemon.com/en-us/resources/rules/?category=vgc"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            official VGC handbook
+          </a>
+          . Usage % is loaded live from Pikalytics.
+        </p>
+      )}
+      {compact && (
+        <p className="regulation-selector-compact-hint">
+          Usage badges reflect <strong>{regulation.label}</strong> meta.
+        </p>
+      )}
     </div>
   );
 };

@@ -1,77 +1,77 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
 import { getTypeColor } from "../constants/typeColors";
+import { formatSpeciesLabel } from "../utils/regulation";
+import "./Pokemon.css";
 
-const Pokemon = (props) => {
+const Pokemon = ({ pokemon, usagePercent, winRate, usageLabel }) => {
   const navigate = useNavigate();
-  const { pokemon, usagePercent, winRate, usageLabel } = props;
+  const primaryType = pokemon.types[0]?.type.name || "normal";
+  const accentColor = getTypeColor(primaryType);
+
   const onCardClick = () => {
     navigate(`/pokemon/${pokemon.name}`);
   };
-  const primaryType = pokemon.types[0]?.type.name || "normal";
-  const cardColor = getTypeColor(primaryType);
+
+  const artwork =
+    pokemon.sprites?.other?.["official-artwork"]?.front_default ||
+    pokemon.sprites?.front_default;
 
   return (
-    <div
-      className="pokemon-card"
-      style={{ backgroundColor: cardColor }}
+    <article
+      className="pokemon-card-v2 card-surface"
+      style={{ "--pokemon-accent": accentColor }}
       onClick={onCardClick}
-      onMouseEnter={(e) => {
-        e.currentTarget.style.transform = "translateY(-4px) scale(1.02)";
-      }}
-      onMouseLeave={(e) => {
-        e.currentTarget.style.transform = "translateY(0) scale(1)";
-      }}
-      role="button"
-      tabIndex={0}
-      aria-label={`View details for ${pokemon.name}, Pokemon number ${pokemon.id}`}
-      onKeyPress={(e) => {
-        if (e.key === "Enter" || e.key === " ") {
-          e.preventDefault();
+      onKeyDown={(event) => {
+        if (event.key === "Enter" || event.key === " ") {
+          event.preventDefault();
           onCardClick();
         }
       }}
+      role="button"
+      tabIndex={0}
+      aria-label={`View ${formatSpeciesLabel(pokemon.name)}, #${pokemon.id}`}
     >
       {usagePercent != null && (
-        <div className="pokemon-meta-badges">
-          <span className="pokemon-usage-badge" title={usageLabel || "VGC usage"}>
+        <div className="pokemon-card-v2-meta">
+          <span className="pokemon-card-v2-usage" title={usageLabel || "VGC usage"}>
             {usagePercent.toFixed(1)}%
           </span>
           {winRate != null && (
-            <span className="pokemon-winrate-badge" title="VGC win rate">
+            <span className="pokemon-card-v2-wr" title="VGC win rate">
               {winRate.toFixed(1)}% WR
             </span>
           )}
         </div>
       )}
-      <div className="pokemon-image-container">
+
+      <div className="pokemon-card-v2-art">
         <img
-          alt={pokemon.name}
-          src={pokemon.sprites.front_default}
-          className="pokemon-image"
+          src={artwork}
+          alt=""
+          className="pokemon-card-v2-image"
           loading="lazy"
-          onLoad={(e) => {
-            e.target.style.opacity = "1";
-          }}
-          style={{ opacity: 0, transition: "opacity 0.3s ease" }}
         />
       </div>
-      <div className="card-body">
-        <div className="card-top">
-          <h3> {pokemon.name}</h3>
-          <div>#{pokemon.id}</div>
+
+      <div className="pokemon-card-v2-body">
+        <div className="pokemon-card-v2-header">
+          <h3 className="pokemon-card-v2-name">{formatSpeciesLabel(pokemon.name)}</h3>
+          <span className="pokemon-card-v2-id">#{pokemon.id}</span>
         </div>
-        <div className="card-bottom">
-          <div className="pokemon-type">
-            {pokemon.types.map((type, index) => (
-              <div key={index} className="pokemon-type-text">
-                {type.type.name}
-              </div>
-            ))}
-          </div>
+        <div className="pokemon-card-v2-types">
+          {pokemon.types.map((typeEntry) => (
+            <span
+              key={typeEntry.type.name}
+              className="pokemon-card-v2-type"
+              style={{ backgroundColor: getTypeColor(typeEntry.type.name) }}
+            >
+              {typeEntry.type.name}
+            </span>
+          ))}
         </div>
       </div>
-    </div>
+    </article>
   );
 };
 

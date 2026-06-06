@@ -1,16 +1,39 @@
-.pokemon-detail-container {
+.pokemon-detail-page {
   min-height: 100vh;
+  background-color: var(--bg-color);
+}
+
+.pokemon-detail-container {
   padding: 15px;
   display: flex;
   flex-direction: column;
   align-items: center;
-  background-color: var(--bg-color);
-  transition: background-color 0.3s ease;
+  max-width: 1040px;
+  margin: 0 auto;
 }
 
-.pokemon-detail-loading {
-  width: 100%;
-  max-width: 1000px;
+.pokemon-detail-breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.pokemon-detail-team-link {
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--accent-color, #3b82f6);
+  text-decoration: none;
+  padding: 6px 12px;
+  border-radius: 6px;
+  border: 1px solid var(--border-color);
+  background-color: var(--card-bg);
+  transition: background-color 0.2s ease, transform 0.2s ease;
+}
+
+.pokemon-detail-team-link:hover {
+  background-color: var(--filter-bg);
+  transform: translateY(-1px);
 }
 
 .pokemon-detail-navigation {

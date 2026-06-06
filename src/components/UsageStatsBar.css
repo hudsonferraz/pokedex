@@ -87,4 +87,17 @@
   border: 1px solid var(--border-color);
   color: var(--text-color);
   text-transform: capitalize;
+  cursor: pointer;
+  transition: border-color 0.15s ease, background 0.15s ease, transform 0.15s ease;
+}
+
+.usage-stats-chip:hover {
+  border-color: var(--accent);
+  background: var(--accent-muted);
+  transform: translateY(-1px);
+}
+
+.usage-stats-chip:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
 }

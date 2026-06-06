@@ -1,9 +1,11 @@
 import React from "react";
+import { useNavigate } from "react-router-dom";
 import { useMetaData } from "../contexts/MetaDataContext";
 import { getTopUsageFromMeta, getUsageMetaFromLive } from "../utils/usageStats";
 import "./UsageStatsBar.css";
 
 const UsageStatsBar = ({ regulationLabel }) => {
+  const navigate = useNavigate();
   const { meta, loading, error, refreshMeta } = useMetaData();
   const usageMeta = getUsageMetaFromLive(meta);
   const topEntries = meta ? getTopUsageFromMeta(meta, 8) : [];
@@ -54,9 +56,15 @@ const UsageStatsBar = ({ regulationLabel }) => {
       </p>
       <div className="usage-stats-chips">
         {topEntries.map(({ speciesId, percent }) => (
-          <span key={speciesId} className="usage-stats-chip">
+          <button
+            key={speciesId}
+            type="button"
+            className="usage-stats-chip"
+            onClick={() => navigate(`/pokemon/${speciesId}`)}
+            title={`View ${speciesId.replace(/-/g, " ")}`}
+          >
             {speciesId.replace(/-/g, " ")} {percent.toFixed(1)}%
-          </span>
+          </button>
         ))}
       </div>
     </div>

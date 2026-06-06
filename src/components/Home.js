@@ -7,6 +7,9 @@ import Searchbar from "./Searchbar";
 import TypeFilter from "./TypeFilter";
 import RecentlyViewed from "./RecentlyViewed";
 import UsageStatsBar from "./UsageStatsBar";
+import BrowseHero from "./BrowseHero";
+import BrowseEmptyState from "./BrowseEmptyState";
+import RegulationSelector from "./RegulationSelector";
 const Home = () => {
   const { regulation } = useRegulation();
   const [page, setPage] = useState(0);
@@ -211,6 +214,8 @@ const Home = () => {
     <div className="browse-page">
       <Navbar />
       <div className="browse-content">
+        <BrowseHero regulationLabel={regulation.label} />
+        <RegulationSelector compact />
         <Searchbar onSearch={onSearchHandler} />
         {!isSearching && (
           <>
@@ -219,7 +224,10 @@ const Home = () => {
             <div className="browse-results-row">
               {pokemons.length > 0 && (
                 <div className="results-count">
-                  Showing {pokemons.length} Pokemon
+                  Showing {pokemons.length} Pokémon
+                  {totalPokemonCount > 0 && !selectedTypes.length && !selectedGeneration
+                    ? ` · page ${page + 1} of ${totalPages}`
+                    : ""}
                 </div>
               )}
             </div>
@@ -233,15 +241,12 @@ const Home = () => {
           </>
         )}
         {notFound ? (
-          <div className="not-found-container">
-            <div className="not-found-text">
-              <h2>Pokemon not found!</h2>
-              <p>Try searching for a different Pokemon name.</p>
-              <button onClick={() => onSearchHandler(undefined)} className="back-to-list-btn">
-                Back to Browse
-              </button>
-            </div>
-          </div>
+          <BrowseEmptyState
+            title="Pokémon not found"
+            message="We couldn't find a species matching that search. Try another name or browse the grid below."
+            primaryLabel="Clear search"
+            onPrimaryAction={() => onSearchHandler(undefined)}
+          />
         ) : (
           <Pokedex
             pokemons={pokemons}
