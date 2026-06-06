@@ -115,6 +115,50 @@ function getVgcCompositionTips(team, setsByName, rolesByName) {
 }
 
 /**
+ * Short gap list for AI explainability prompts.
+ */
+export function buildExplainabilityGaps(team, context = {}) {
+  const { sets, roles } = context;
+  const setsByName = sets || {};
+  const rolesByName = roles || {};
+  const gaps = [];
+
+  if (!team?.length) return gaps;
+
+  const hasTailwind = teamHasMove(team, setsByName, VGC_MOVES.tailwind);
+  const hasTrickRoom = teamHasMove(team, setsByName, VGC_MOVES.trickRoom);
+  const intimidateCount = countTeamsWithAbility(team, setsByName, "intimidate");
+
+  if (!hasTailwind && !hasTrickRoom && team.length >= 4) {
+    gaps.push("Missing speed control (no Tailwind or Trick Room)");
+  }
+
+  if (intimidateCount === 0 && team.length >= 4) {
+    gaps.push("No Intimidate for physical pressure");
+  }
+
+  if (intimidateCount > 1) {
+    gaps.push(`${intimidateCount} Intimidate sources (diminishing returns)`);
+  }
+
+  const roleCounts = getRoleCounts(rolesByName);
+  if ((roleCounts.lead || 0) === 0 && team.length >= 4) {
+    gaps.push("No Lead role tagged");
+  }
+
+  const weaknesses = getTeamWeaknesses(team);
+  const superEffectiveWeaknesses = Object.entries(weaknesses)
+    .filter(([, value]) => value === "super-effective")
+    .map(([type]) => type);
+
+  if (superEffectiveWeaknesses.length > 0) {
+    gaps.push(`Shared weaknesses: ${superEffectiveWeaknesses.slice(0, 4).join(", ")}`);
+  }
+
+  return gaps;
+}
+
+/**
  * Rule-based tips (no API). VGC-aware when sets/roles/regulation are provided.
  */
 export function getRuleBasedTips(team, context = {}) {

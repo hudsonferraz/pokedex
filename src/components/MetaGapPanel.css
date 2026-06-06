@@ -89,3 +89,126 @@
   border: 1px solid rgba(99, 102, 241, 0.3);
   color: var(--accent);
 }
+
+.meta-threat-heatmap-block {
+  margin-top: var(--space-4);
+  padding-top: var(--space-4);
+  border-top: 1px solid var(--border-color);
+}
+
+.meta-threat-heatmap-header {
+  margin-bottom: var(--space-3);
+}
+
+.meta-threat-heatmap-note {
+  margin: 4px 0 0;
+  font-size: 0.78rem;
+  line-height: 1.4;
+  opacity: 0.8;
+}
+
+.meta-threat-worst {
+  margin: 0 0 var(--space-3);
+  font-size: 0.85rem;
+}
+
+.meta-threat-worst strong {
+  text-transform: capitalize;
+}
+
+.meta-threat-heatmap-scroll {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.meta-threat-heatmap {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 4px;
+  font-size: 0.72rem;
+}
+
+.meta-threat-corner,
+.meta-threat-col-head,
+.meta-threat-row-head {
+  font-weight: 700;
+  text-align: center;
+  padding: 6px 4px;
+  color: var(--text-color);
+}
+
+.meta-threat-row-head {
+  text-align: left;
+  text-transform: capitalize;
+  white-space: nowrap;
+  min-width: 88px;
+}
+
+.meta-threat-col-head {
+  text-transform: capitalize;
+  max-width: 72px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.meta-threat-row-hot .meta-threat-row-head {
+  color: #dc2626;
+}
+
+.meta-threat-cell {
+  display: block;
+  width: 100%;
+  min-width: 40px;
+  padding: 8px 4px;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm, 6px);
+  font-size: 0.7rem;
+  font-weight: 700;
+  cursor: help;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.meta-threat-cell:hover,
+.meta-threat-cell:focus-visible {
+  transform: scale(1.08);
+  box-shadow: var(--shadow-sm, 0 2px 6px rgba(0, 0, 0, 0.12));
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
+.meta-threat-cell.threat-4x {
+  background: rgba(220, 38, 38, 0.85);
+  color: #fff;
+}
+
+.meta-threat-cell.threat-2x {
+  background: rgba(249, 115, 22, 0.75);
+  color: #fff;
+}
+
+.meta-threat-cell.threat-neutral {
+  background: rgba(148, 163, 184, 0.2);
+  color: var(--text-color);
+}
+
+.meta-threat-cell.threat-resist {
+  background: rgba(34, 197, 94, 0.35);
+  color: #14532d;
+}
+
+.meta-threat-cell.threat-quarter {
+  background: rgba(34, 197, 94, 0.55);
+  color: #14532d;
+}
+
+.meta-threat-cell.threat-0x {
+  background: rgba(100, 116, 139, 0.25);
+  color: var(--text-color);
+  opacity: 0.7;
+}
+
+[data-theme="dark"] .meta-threat-cell.threat-resist,
+[data-theme="dark"] .meta-threat-cell.threat-quarter {
+  color: #bbf7d0;
+}

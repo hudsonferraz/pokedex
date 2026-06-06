@@ -347,13 +347,18 @@ app.post("/api/ai-team-tips", async (req, res) => {
     typeof format === "string" && format.trim()
       ? ` Format: ${format.trim()}.`
       : " Format: Pokémon VGC doubles (6 registered, bring 4).";
-  const prompt = `Team context: ${summary}.${formatHint} User question: ${message}. Answer with VGC doubles advice (speed control, Tera, restricteds, common cores). Keep it to 2-4 sentences.`;
+  const prompt =
+    `Team context: ${summary}.${formatHint} User question: ${message}. ` +
+    `Respond with 2-3 tips using EXACTLY this format for each tip (repeat the block):\n` +
+    `TIP: [one actionable recommendation]\n` +
+    `BECAUSE: [one sentence explaining why, citing team gaps like speed control, typings, or meta staples]\n` +
+    `META: [optional one sentence tying to current VGC meta]`;
 
   const vgcInstructions =
     "You are a Pokémon VGC (Video Game Championships) doubles coach. " +
     "Teams register 6 Pokémon and bring 4 each round. " +
-    "Give practical advice on Tailwind, Trick Room, Tera types, Intimidate, regulation restricteds, " +
-    "Fire/Grass cores, and team preview. Use 2-4 sentences.";
+    "Always explain your reasoning in BECAUSE lines (speed control, Tera, Intimidate, restricteds, common cores). " +
+    "Use the TIP/BECAUSE/META format exactly — no bullet lists.";
 
   try {
     const text = await requestAiText(prompt, vgcInstructions);

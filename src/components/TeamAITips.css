@@ -157,6 +157,81 @@
   border-left: 4px solid #6890F0;
 }
 
+.ai-response-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 14px;
+}
+
+.ai-tip-card {
+  padding: 14px 16px;
+  border-radius: var(--radius-md, 10px);
+  background: var(--filter-bg);
+  border: 1px solid var(--border-color);
+  animation: ai-tip-fade-in 0.35s ease-out;
+}
+
+.ai-tip-card-text {
+  margin: 0;
+  font-size: 0.95rem;
+  line-height: 1.5;
+  color: var(--text-color);
+}
+
+.ai-tip-card-number {
+  font-weight: 700;
+  color: var(--accent);
+}
+
+.ai-tip-why-toggle {
+  margin-top: 10px;
+  padding: 4px 10px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  border: 1px solid var(--accent);
+  border-radius: var(--radius-pill, 999px);
+  background: transparent;
+  color: var(--accent);
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.ai-tip-why-toggle:hover {
+  background: var(--accent-muted);
+}
+
+.ai-tip-card-details {
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px dashed var(--border-color);
+  font-size: 0.88rem;
+  line-height: 1.45;
+  color: var(--text-color);
+  animation: ai-tip-fade-in 0.25s ease-out;
+}
+
+.ai-tip-card-details p {
+  margin: 0 0 8px;
+}
+
+.ai-tip-card-details p:last-child {
+  margin-bottom: 0;
+}
+
+@keyframes ai-tip-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 .ai-no-token {
   font-size: 0.9rem;
   color: var(--text-color);

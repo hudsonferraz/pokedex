@@ -48,14 +48,14 @@ Team Builder shows a **health chip** (`GET /health`) for API and AI status. Rend
 
 ## Share team links
 
-Export → **Copy share link** encodes the team as `?team=<base64 JSON>` (name, up to 6 species, optional sets and bring-4). Opening the URL auto-imports on Team Builder. Keep payloads small (~2k URL limit); use Showdown paste for heavy sets.
+Export → **Copy share link** encodes the team as `?team=<base64 JSON>` (name, species, sets, bring-4, regulation, roles). Opening the URL auto-imports on Team Builder. Links over ~1800 characters are blocked — use Showdown paste for heavy sets.
 
 ## Features
 
 - **Team lab** — 6 slots, roles, bring-4, Showdown import/export, regulation checks, share URLs
-- **Live meta** — Apply meta set, partner suggestions, suggest 6th, meta gap panel, usage/WR badges
+- **Live meta** — Apply meta set, partner suggestions, suggest 6th, meta gap + **threat heatmap**, usage/WR badges
 - **Analysis** — Type coverage, radar, speed tiers, preview simulator, meta opponent preset
-- **AI coaching** — VGC-doubles prompt with sets, bring-4, and meta context
+- **AI coaching** — Structured tips with expandable **Why?** (team gaps + Pikalytics context)
 - **Browse** — Search, filters, detail meta panel, dark mode, favorites, compare
 
 ## Tech stack

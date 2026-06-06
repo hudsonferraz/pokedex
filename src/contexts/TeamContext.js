@@ -169,7 +169,7 @@ function TeamProviderWithState({ children }) {
   );
 
   const setCurrentTeamPokemon = React.useCallback(
-    (pokemon, setsToApply) => {
+    (pokemon, setsToApply, rolesToApply) => {
       if (!activeTeam) return;
       const nextPokemon = Array.isArray(pokemon) ? pokemon : [];
       const names = new Set(nextPokemon.map((entry) => entry && entry.name).filter(Boolean));
@@ -182,10 +182,19 @@ function TeamProviderWithState({ children }) {
         });
       }
 
+      const appliedRoles = { ...keptRoles };
+      if (rolesToApply && typeof rolesToApply === "object") {
+        Object.entries(rolesToApply).forEach(([name, role]) => {
+          if (names.has(name) && typeof role === "string" && role.trim()) {
+            appliedRoles[name] = role.trim();
+          }
+        });
+      }
+
       const sets = { ...keptSets, ...applied };
       const teams = state.teams.map((team) =>
         team.id === activeTeam.id
-          ? { ...team, pokemon: nextPokemon, sets, roles: keptRoles, bringList }
+          ? { ...team, pokemon: nextPokemon, sets, roles: appliedRoles, bringList }
           : team,
       );
       persist(teams, state.activeTeamId);

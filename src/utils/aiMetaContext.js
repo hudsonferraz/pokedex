@@ -1,14 +1,20 @@
 import { fetchPokemonMeta } from "../services/metaDataService";
 import { analyzeMetaGap } from "./metaGapAnalysis";
+import { buildExplainabilityGaps } from "./teamTips";
 import { normalizeSpeciesId } from "./regulation";
 import { getUsagePercentFromMeta } from "./usageStats";
 
 /**
  * Builds Pikalytics meta appendix for AI team summary.
  */
-export async function buildMetaContextForAI(regulationId, team, liveMeta) {
+export async function buildMetaContextForAI(regulationId, team, liveMeta, tipContext = {}) {
   const gap = analyzeMetaGap(team, liveMeta);
   const lines = [];
+
+  const explainGaps = buildExplainabilityGaps(team, tipContext);
+  if (explainGaps.length) {
+    lines.push(`Team gaps to address: ${explainGaps.join("; ")}.`);
+  }
 
   if (gap.totalStaples > 0) {
     lines.push(

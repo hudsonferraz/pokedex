@@ -1,5 +1,6 @@
 import { normalizeSetEntry } from "./pokemonSets";
 import { exportShowdownPaste } from "./showdownTeam";
+import { SHARE_URL_SAFE_LENGTH } from "./metaThreatHeatmap";
 
 /**
  * Export team as plain text (names + types + moves if sets provided).
@@ -22,21 +23,70 @@ export function getTeamExportText(team, teamName = "Team", sets = null) {
   return `${teamName}\n${lines.join("\n")}`;
 }
 
+function buildSharePayload(team, teamName, sets, bringList, regulationId, roles) {
+  const payload = {
+    name: teamName,
+    pokemon: (team || []).map((pokemon) => pokemon.name),
+  };
+
+  if (sets && typeof sets === "object" && Object.keys(sets).length > 0) {
+    payload.sets = sets;
+  }
+
+  if (Array.isArray(bringList) && bringList.length > 0) {
+    payload.bringList = bringList;
+  }
+
+  if (regulationId) {
+    payload.regulationId = regulationId;
+  }
+
+  if (roles && typeof roles === "object" && Object.keys(roles).length > 0) {
+    payload.roles = roles;
+  }
+
+  return payload;
+}
+
 /**
- * Encode team for share URL (names + optional sets).
+ * Encode team for share URL (names + optional sets, regulation, roles).
  */
-export function encodeTeamForShare(team, teamName = "Team", sets = null, bringList = null) {
+export function encodeTeamForShare(
+  team,
+  teamName = "Team",
+  sets = null,
+  bringList = null,
+  regulationId = null,
+  roles = null,
+) {
   try {
-    const payload = {
-      name: teamName,
-      pokemon: (team || []).map((pokemon) => pokemon.name),
-      sets: sets && typeof sets === "object" ? sets : undefined,
-      bringList: Array.isArray(bringList) && bringList.length > 0 ? bringList : undefined,
-    };
+    const payload = buildSharePayload(team, teamName, sets, bringList, regulationId, roles);
     return btoa(unescape(encodeURIComponent(JSON.stringify(payload))));
   } catch {
     return "";
   }
+}
+
+/**
+ * Build full share URL and validate length.
+ * @returns {{ url: string, tooLong: boolean, length: number }}
+ */
+export function buildTeamShareUrl(baseOrigin, basePath, team, teamName, sets, bringList, regulationId, roles) {
+  const encoded = encodeTeamForShare(
+    team,
+    teamName,
+    sets,
+    bringList,
+    regulationId,
+    roles,
+  );
+  const path = basePath || "/";
+  const url = `${baseOrigin}${path}?team=${encoded}`;
+  return {
+    url,
+    tooLong: url.length > SHARE_URL_SAFE_LENGTH,
+    length: url.length,
+  };
 }
 
 /**
@@ -57,7 +107,12 @@ export function decodeTeamFromShare(encoded) {
     }
 
     const bringList = Array.isArray(data.bringList) ? data.bringList : null;
-    return { name, pokemon, sets, bringList };
+    const regulationId =
+      typeof data.regulationId === "string" ? data.regulationId : null;
+    const roles =
+      data.roles && typeof data.roles === "object" ? data.roles : null;
+
+    return { name, pokemon, sets, bringList, regulationId, roles };
   } catch {
     return null;
   }

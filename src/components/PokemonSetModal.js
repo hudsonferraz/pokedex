@@ -21,6 +21,7 @@ const PokemonSetModal = ({ pokemon, currentSet, onSave, onClose }) => {
   const [metaLoading, setMetaLoading] = useState(false);
   const [metaError, setMetaError] = useState("");
   const [applyingMeta, setApplyingMeta] = useState(false);
+  const [metaAppliedFlash, setMetaAppliedFlash] = useState(false);
 
   const speciesId = pokemon?.name || "";
   const learnsetMoveIds = (pokemon?.moves || [])
@@ -106,12 +107,15 @@ const PokemonSetModal = ({ pokemon, currentSet, onSave, onClose }) => {
     setTeraType(patch.teraType || teraType || defaultTera);
     setEvs(patch.evs || evs);
     setMetaPreview(result);
+    setMetaAppliedFlash(true);
 
-    onSave({
-      ...patch,
-      teraType: patch.teraType || teraType || defaultTera,
-    });
-    onClose();
+    window.setTimeout(() => {
+      onSave({
+        ...patch,
+        teraType: patch.teraType || teraType || defaultTera,
+      });
+      onClose();
+    }, 450);
   };
 
   const suggested = metaPreview?.suggestedSet;
@@ -128,7 +132,7 @@ const PokemonSetModal = ({ pokemon, currentSet, onSave, onClose }) => {
   return (
     <div className="pokemon-set-overlay" onClick={onClose} role="presentation">
       <div
-        className="pokemon-set-modal"
+        className={`pokemon-set-modal${metaAppliedFlash ? " meta-applied-flash" : ""}`}
         ref={modalRef}
         role="dialog"
         aria-modal="true"
@@ -353,11 +357,11 @@ const PokemonSetModal = ({ pokemon, currentSet, onSave, onClose }) => {
         <footer className="pokemon-set-footer">
           <button
             type="button"
-            className="pokemon-set-btn meta"
+            className={`pokemon-set-btn meta${metaAppliedFlash ? " meta-applied-success" : ""}`}
             onClick={handleApplyMetaSet}
-            disabled={metaLoading || applyingMeta}
+            disabled={metaLoading || applyingMeta || metaAppliedFlash}
           >
-            {applyingMeta ? "Applying…" : "Apply meta set"}
+            {metaAppliedFlash ? "Applied ✓" : applyingMeta ? "Applying…" : "Apply meta set"}
           </button>
           <button type="button" className="pokemon-set-btn cancel" onClick={onClose}>
             Cancel

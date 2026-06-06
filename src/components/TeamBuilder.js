@@ -29,8 +29,8 @@ import { useModalAccessibility } from "../hooks/useModalAccessibility";
 import {
   getTeamExportText,
   getTeamShowdownExport,
-  encodeTeamForShare,
   decodeTeamFromShare,
+  buildTeamShareUrl,
 } from "../utils/teamExport";
 import { parseShowdownPaste } from "../utils/showdownTeam";
 import "./TeamBuilder.css";
@@ -61,7 +61,7 @@ const TeamBuilder = () => {
     canAddToTeam,
   } = useContext(TeamContext);
   const { showToast } = useToast();
-  const { regulation, regulationId } = useRegulation();
+  const { regulation, regulationId, setRegulationId } = useRegulation();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const [showAddModal, setShowAddModal] = useState(false);
@@ -145,9 +145,12 @@ const TeamBuilder = () => {
           if (p) fullTeam.push(p);
         }
         if (!cancelled && fullTeam.length > 0) {
+          if (decoded.regulationId) {
+            setRegulationId(decoded.regulationId);
+          }
           addTeam(decoded.name);
           setTimeout(() => {
-            setCurrentTeamPokemon(fullTeam, decoded.sets || null);
+            setCurrentTeamPokemon(fullTeam, decoded.sets || null, decoded.roles || null);
             if (decoded.bringList?.length) {
               setBringList(decoded.bringList);
             }
@@ -399,15 +402,27 @@ const TeamBuilder = () => {
   };
 
   const handleCopyShareLink = () => {
-    const encoded = encodeTeamForShare(
+    const { url, tooLong, length } = buildTeamShareUrl(
+      window.location.origin,
+      window.location.pathname,
       team,
       activeTeam?.name || "Team",
       activeTeam?.sets,
       bringList,
+      regulationId,
+      activeTeam?.roles,
     );
-    const url = `${window.location.origin}${window.location.pathname}?team=${encoded}`;
+
+    if (tooLong) {
+      showToast(
+        `Share link too long (${length} chars). Trim sets or use Showdown paste export.`,
+        "error",
+      );
+      return;
+    }
+
     navigator.clipboard.writeText(url).then(() => {
-      showToast("Share link copied", "success");
+      showToast("Share link copied (includes regulation & roles)", "success");
       setShareLinkCopied(true);
       setTimeout(() => setShareLinkCopied(false), 2000);
     });

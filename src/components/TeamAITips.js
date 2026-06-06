@@ -1,10 +1,50 @@
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 import { getRuleBasedTips, getTeamSummaryForAI } from "../utils/teamTips";
 import { askAIForTeamTips } from "../services/aiTeamHelper";
 import { buildMetaContextForAI } from "../utils/aiMetaContext";
+import { parseStructuredAiTips } from "../utils/parseAiTips";
 import { FORMAT_OPTIONS, getStoredFormat, setStoredFormat } from "../utils/formatOptions";
 import { useMetaData } from "../contexts/MetaDataContext";
 import "./TeamAITips.css";
+
+function AiTipCard({ tip, because, meta, index }) {
+  const [expanded, setExpanded] = useState(false);
+  const hasDetails = Boolean(because || meta);
+
+  return (
+    <article className="ai-tip-card">
+      <p className="ai-tip-card-text">
+        <span className="ai-tip-card-number">{index + 1}.</span> {tip}
+      </p>
+      {hasDetails && (
+        <>
+          <button
+            type="button"
+            className="ai-tip-why-toggle"
+            onClick={() => setExpanded((value) => !value)}
+            aria-expanded={expanded}
+          >
+            {expanded ? "Hide why" : "Why?"}
+          </button>
+          {expanded && (
+            <div className="ai-tip-card-details">
+              {because && (
+                <p>
+                  <strong>Because:</strong> {because}
+                </p>
+              )}
+              {meta && (
+                <p>
+                  <strong>Meta:</strong> {meta}
+                </p>
+              )}
+            </div>
+          )}
+        </>
+      )}
+    </article>
+  );
+}
 
 const TeamAITips = ({
   team,
@@ -33,6 +73,11 @@ const TeamAITips = ({
 
   const ruleBasedTips = getRuleBasedTips(team, tipContext);
 
+  const parsedAiTips = useMemo(
+    () => (aiResponse ? parseStructuredAiTips(aiResponse) : []),
+    [aiResponse],
+  );
+
   const handleAskAI = async () => {
     const question = (aiQuestion || "Give me VGC tips for this team.").trim();
     setAiError("");
@@ -40,7 +85,12 @@ const TeamAITips = ({
     setAiLoading(true);
 
     try {
-      const metaAppendix = await buildMetaContextForAI(regulationId, team, liveMeta);
+      const metaAppendix = await buildMetaContextForAI(
+        regulationId,
+        team,
+        liveMeta,
+        tipContext,
+      );
       const teamSummary = getTeamSummaryForAI(team, {
         ...tipContext,
         metaAppendix,
@@ -76,8 +126,8 @@ const TeamAITips = ({
       <div className="tips-section ai-section">
         <h3>Ask AI (VGC-tuned)</h3>
         <p className="ai-hint">
-          Sends regulation, roles, items, Tera, bring-4, moves, and live Pikalytics meta (usage, WR,
-          partners, staples) to our server — tuned for doubles.
+          Sends regulation, roles, items, Tera, bring-4, moves, team gaps, and Pikalytics meta.
+          Each tip includes an expandable &quot;Why?&quot; when the model follows the structured format.
         </p>
         <div className="ai-format-row">
           <label htmlFor="ai-format" className="ai-format-label">
@@ -128,7 +178,19 @@ const TeamAITips = ({
             <div className="ai-skeleton-line skeleton-shimmer short" />
           </div>
         )}
-        {!aiLoading && aiResponse && <div className="ai-response">{aiResponse}</div>}
+        {!aiLoading && parsedAiTips.length > 0 && (
+          <div className="ai-response-cards">
+            {parsedAiTips.map((entry, index) => (
+              <AiTipCard
+                key={`${index}-${entry.tip.slice(0, 24)}`}
+                index={index}
+                tip={entry.tip}
+                because={entry.because}
+                meta={entry.meta}
+              />
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );
