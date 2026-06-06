@@ -3,9 +3,17 @@ import { useEffect, useRef } from "react";
 const FOCUSABLE =
   'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
 
-export function useModalAccessibility(isOpen, onClose) {
+/**
+ * @param {boolean} isOpen
+ * @param {() => void} onClose
+ * @param {{ initialFocusRef?: React.RefObject<HTMLElement> }} [options]
+ */
+export function useModalAccessibility(isOpen, onClose, options = {}) {
+  const { initialFocusRef } = options;
   const containerRef = useRef(null);
   const previousFocusRef = useRef(null);
+  const onCloseRef = useRef(onClose);
+  onCloseRef.current = onClose;
 
   useEffect(() => {
     if (!isOpen) return undefined;
@@ -13,18 +21,19 @@ export function useModalAccessibility(isOpen, onClose) {
     previousFocusRef.current = document.activeElement;
 
     const container = containerRef.current;
-    if (container) {
-      const focusable = container.querySelectorAll(FOCUSABLE);
-      const first = focusable[0];
-      if (first && typeof first.focus === "function") {
-        first.focus();
-      }
+    const initialFocus = initialFocusRef?.current;
+    const markedFocus = container?.querySelector("[data-modal-initial-focus]");
+    const firstFocusable = container?.querySelector(FOCUSABLE);
+    const focusTarget = initialFocus || markedFocus || firstFocusable;
+
+    if (focusTarget && typeof focusTarget.focus === "function") {
+      focusTarget.focus();
     }
 
     const handleKeyDown = (event) => {
       if (event.key === "Escape") {
         event.preventDefault();
-        onClose();
+        onCloseRef.current();
         return;
       }
 
@@ -59,7 +68,7 @@ export function useModalAccessibility(isOpen, onClose) {
         previous.focus();
       }
     };
-  }, [isOpen, onClose]);
+  }, [isOpen, initialFocusRef]);
 
   return containerRef;
 }

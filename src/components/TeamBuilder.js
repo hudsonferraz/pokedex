@@ -1,11 +1,10 @@
-import React, { useState, useContext, useRef, useEffect, useMemo } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import React, { useState, useContext, useRef, useEffect, useMemo, useCallback } from "react";
+import { useSearchParams } from "react-router-dom";
 import TeamContext from "../contexts/TeamContext";
 import { useRegulation } from "../contexts/RegulationContext";
 import { useToast } from "./ToastProvider";
 import { searchPokemon, getMoveDetails } from "../api";
 import { buildMoveInfoFromApi } from "../utils/moveDetails";
-import SearchSuggestions from "./SearchSuggestions";
 import TeamSlot from "./TeamSlot";
 import TeamAnalysis from "./TeamAnalysis";
 import TeamAITips from "./TeamAITips";
@@ -24,6 +23,7 @@ import SuggestSixthPanel from "./SuggestSixthPanel";
 import TeammateSuggestions from "./TeammateSuggestions";
 import Navbar from "./Navbar";
 import ApiStatusChip from "./ApiStatusChip";
+import AddPokemonModal from "./AddPokemonModal";
 import { normalizeSpeciesId, formatSpeciesLabel } from "../utils/regulation";
 import { useModalAccessibility } from "../hooks/useModalAccessibility";
 import {
@@ -62,14 +62,9 @@ const TeamBuilder = () => {
   } = useContext(TeamContext);
   const { showToast } = useToast();
   const { regulation, regulationId, setRegulationId } = useRegulation();
-  const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const [showAddModal, setShowAddModal] = useState(false);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [searchResults, setSearchResults] = useState([]);
-  const [isSearching, setIsSearching] = useState(false);
   const [selectedSlot, setSelectedSlot] = useState(null);
-  const [showSuggestions, setShowSuggestions] = useState(false);
   const [showExportMenu, setShowExportMenu] = useState(false);
   const [showRenameModal, setShowRenameModal] = useState(false);
   const [renameValue, setRenameValue] = useState("");
@@ -102,29 +97,18 @@ const TeamBuilder = () => {
     }
   }, [team, metaFocusIndex, filledSlotIndices]);
   const bringList = getBringList();
-  const searchContainerRef = useRef(null);
-  const searchInputRef = useRef(null);
   const exportMenuRef = useRef(null);
-  const addModalRef = useModalAccessibility(showAddModal, () => setShowAddModal(false));
-  const renameModalRef = useModalAccessibility(showRenameModal, () => setShowRenameModal(false));
-  const deleteModalRef = useModalAccessibility(!!teamToDelete, () => setTeamToDelete(null));
 
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (searchContainerRef.current && !searchContainerRef.current.contains(event.target)) {
-        setShowSuggestions(false);
-      }
-    };
+  const closeAddModal = useCallback(() => {
+    setShowAddModal(false);
+    setSelectedSlot(null);
+  }, []);
 
-    if (showAddModal) {
-      document.addEventListener("mousedown", handleClickOutside);
-      return () => document.removeEventListener("mousedown", handleClickOutside);
-    }
-  }, [showAddModal]);
+  const closeRenameModal = useCallback(() => setShowRenameModal(false), []);
+  const closeDeleteModal = useCallback(() => setTeamToDelete(null), []);
 
-  useEffect(() => {
-    setShowSuggestions(searchQuery.length > 0);
-  }, [searchQuery]);
+  const renameModalRef = useModalAccessibility(showRenameModal, closeRenameModal);
+  const deleteModalRef = useModalAccessibility(!!teamToDelete, closeDeleteModal);
 
   // Import team from share link (?team=base64)
   useEffect(() => {
@@ -213,40 +197,13 @@ const TeamBuilder = () => {
     return () => { cancelled = true; };
   }, [movePickerPokemon]);
 
-  const handleSearch = async (query) => {
-    if (!query.trim()) {
-      setSearchResults([]);
-      return;
-    }
-
-    setIsSearching(true);
-    setShowSuggestions(false);
-    try {
-      const pokemon = await searchPokemon(query.toLowerCase());
-      if (pokemon) {
-        setSearchResults([pokemon]);
-      } else {
-        setSearchResults([]);
-      }
-    } catch (error) {
-      setSearchResults([]);
-    } finally {
-      setIsSearching(false);
-    }
-  };
-
-  const handleSuggestionSelect = (suggestion) => {
-    setSearchQuery(suggestion);
-    handleSearch(suggestion);
-  };
-
-  const handleAddPokemon = (pokemon) => {
+  const handleAddPokemon = useCallback((pokemon) => {
     if (!canAddToTeam()) {
       showToast("Team is full! Remove a Pokemon first.", "error");
       return;
     }
 
-    const isAlreadyInTeam = team.some(p => p && p.name === pokemon.name);
+    const isAlreadyInTeam = team.some((entry) => entry && entry.name === pokemon.name);
     if (isAlreadyInTeam) {
       showToast(`${pokemon.name} is already in your team!`, "info");
       return;
@@ -254,11 +211,8 @@ const TeamBuilder = () => {
 
     addToTeam(pokemon);
     showToast(`${pokemon.name} added to team!`, "success");
-    setShowAddModal(false);
-    setSearchQuery("");
-    setSearchResults([]);
-    setSelectedSlot(null);
-  };
+    closeAddModal();
+  }, [addToTeam, canAddToTeam, closeAddModal, showToast, team]);
 
   const handleSlotClick = (slotIndex) => {
     if (team[slotIndex]) {
@@ -707,102 +661,13 @@ const TeamBuilder = () => {
           regulationLabel={regulation.label}
         />
 
-        {showAddModal && (
-          <div className="add-pokemon-modal-overlay" onClick={() => setShowAddModal(false)} role="presentation">
-            <div
-              className="add-pokemon-modal"
-              ref={addModalRef}
-              role="dialog"
-              aria-modal="true"
-              aria-labelledby="add-pokemon-title"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <div className="modal-header">
-                <h2 id="add-pokemon-title">Add Pokémon to team</h2>
-                <button 
-                  className="modal-close-btn"
-                  onClick={() => setShowAddModal(false)}
-                >
-                  ×
-                </button>
-              </div>
-              <div className="modal-content">
-                <div className="search-input-container" ref={searchContainerRef}>
-                  <input
-                    ref={searchInputRef}
-                    type="text"
-                    placeholder="Search Pokemon by name or ID..."
-                    value={searchQuery}
-                    onChange={(e) => {
-                      const value = e.target.value;
-                      setSearchQuery(value);
-                      if (value.length === 0) {
-                        setSearchResults([]);
-                      }
-                    }}
-                    onKeyPress={(e) => {
-                      if (e.key === "Enter" && searchQuery.trim()) {
-                        handleSearch(searchQuery);
-                      }
-                    }}
-                    onFocus={() => setShowSuggestions(searchQuery.length > 0)}
-                    className="search-input"
-                    autoFocus
-                  />
-                  {showSuggestions && (
-                    <SearchSuggestions
-                      searchTerm={searchQuery}
-                      onSelect={handleSuggestionSelect}
-                      onClose={() => setShowSuggestions(false)}
-                    />
-                  )}
-                </div>
-                {isSearching && (
-                  <div className="search-loading-skeleton" aria-busy="true" aria-label="Searching">
-                    <div className="search-skeleton-row skeleton-shimmer" />
-                    <div className="search-skeleton-row skeleton-shimmer" />
-                  </div>
-                )}
-                {searchResults.length > 0 && (
-                  <div className="search-results">
-                    {searchResults.map((pokemon) => (
-                      <div
-                        key={pokemon.id}
-                        className="search-result-item"
-                        onClick={() => handleAddPokemon(pokemon)}
-                      >
-                        <img
-                          src={pokemon.sprites?.front_default}
-                          alt={pokemon.name}
-                          className="result-sprite"
-                        />
-                        <div className="result-info">
-                          <span className="result-name">{pokemon.name}</span>
-                          <span className="result-id">#{pokemon.id}</span>
-                        </div>
-                        <button className="add-btn">+</button>
-                      </div>
-                    ))}
-                  </div>
-                )}
-                {searchQuery && !isSearching && searchResults.length === 0 && !showSuggestions && (
-                  <div className="no-results">No Pokemon found</div>
-                )}
-                <div className="modal-footer">
-                  <button
-                    className="browse-btn"
-                    onClick={() => {
-                      setShowAddModal(false);
-                      navigate("/browse");
-                    }}
-                  >
-                    Browse All Pokemon
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
+        <AddPokemonModal
+          isOpen={showAddModal}
+          onClose={closeAddModal}
+          onAdd={handleAddPokemon}
+          canAdd={canAddToTeam()}
+          teamNames={teamNames}
+        />
       </div>
     </div>
   );

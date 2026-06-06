@@ -36,3 +36,16 @@ export const TEAM_ROLE_OPTIONS = [
   { value: "tr", label: "Trick Room" },
   { value: "anti-meta", label: "Anti-meta" },
 ];
+
+export function getCoverageAccessibilityLabel(type, coverageValue) {
+  const multiplier =
+    coverageValue === "super-effective"
+      ? "2× super-effective"
+      : coverageValue === "effective"
+        ? "1× effective"
+        : coverageValue === "no-effect"
+          ? "0× no effect"
+          : "0.5× not very effective";
+
+  return `${type}: ${multiplier} offensive coverage`;
+}

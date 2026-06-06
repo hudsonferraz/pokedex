@@ -181,8 +181,15 @@ const MetaGapPanel = ({ team }) => {
                           className={`meta-threat-cell ${cell.cellClass}`}
                           title={cell.tooltip}
                           aria-label={cell.tooltip}
+                          aria-describedby={`threat-desc-${row.speciesId}-${cell.defenderName}`}
                         >
                           {cell.label}
+                          <span
+                            id={`threat-desc-${row.speciesId}-${cell.defenderName}`}
+                            className="sr-only"
+                          >
+                            {cell.tooltip}
+                          </span>
                         </button>
                       </td>
                     ))}

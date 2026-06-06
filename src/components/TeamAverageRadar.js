@@ -34,89 +34,112 @@ const TeamAverageRadar = ({ averages, color = "#6890F0", compact = false }) => {
     points.map((point, index) => `${index === 0 ? "M" : "L"} ${point.x} ${point.y}`).join(" ") +
     " Z";
 
+  const summaryText = STAT_LABELS.map(
+    (label, index) => `${label} ${getValue(index)}`,
+  ).join(", ");
+
   return (
-    <svg
-      width={size}
-      height={size}
-      viewBox={`0 0 ${size} ${size}`}
-      className="radar-chart-svg team-average-radar"
-      role="img"
-      aria-label="Team average base stats radar chart"
-    >
-      {[0.25, 0.5, 0.75, 1].map((scale, index) => (
-        <circle
-          key={index}
-          cx={centerX}
-          cy={centerY}
-          r={radius * scale}
-          fill="none"
-          stroke="var(--border-color)"
-          strokeWidth="1"
-        />
-      ))}
-      {STAT_LABELS.map((_, index) => {
-        const angle = (index * 2 * Math.PI) / STAT_LABELS.length - Math.PI / 2;
-        const x = centerX + radius * Math.cos(angle);
-        const y = centerY + radius * Math.sin(angle);
-        return (
-          <line
+    <div className="team-average-radar-wrap">
+      <svg
+        width={size}
+        height={size}
+        viewBox={`0 0 ${size} ${size}`}
+        className="radar-chart-svg team-average-radar"
+        role="img"
+        aria-label={`Team average base stats: ${summaryText}`}
+      >
+        {[0.25, 0.5, 0.75, 1].map((scale, index) => (
+          <circle
             key={index}
-            x1={centerX}
-            y1={centerY}
-            x2={x}
-            y2={y}
+            cx={centerX}
+            cy={centerY}
+            r={radius * scale}
+            fill="none"
             stroke="var(--border-color)"
             strokeWidth="1"
           />
-        );
-      })}
-      <path
-        d={pathData}
-        fill={color}
-        fillOpacity="0.35"
-        stroke={color}
-        strokeWidth="2"
-      />
-      {points.map((point, index) => (
-        <circle
-          key={index}
-          cx={point.x}
-          cy={point.y}
-          r="3"
+        ))}
+        {STAT_LABELS.map((_, index) => {
+          const angle = (index * 2 * Math.PI) / STAT_LABELS.length - Math.PI / 2;
+          const x = centerX + radius * Math.cos(angle);
+          const y = centerY + radius * Math.sin(angle);
+          return (
+            <line
+              key={index}
+              x1={centerX}
+              y1={centerY}
+              x2={x}
+              y2={y}
+              stroke="var(--border-color)"
+              strokeWidth="1"
+            />
+          );
+        })}
+        <path
+          d={pathData}
           fill={color}
-          stroke="var(--card-bg)"
-          strokeWidth="1.5"
+          fillOpacity="0.35"
+          stroke={color}
+          strokeWidth="2"
         />
-      ))}
-      {STAT_LABELS.map((label, index) => {
-        const labelPoint = getLabelPoint(index);
-        const value = getValue(index);
-        return (
-          <g key={label}>
-            <text
-              x={labelPoint.x}
-              y={labelPoint.y}
-              textAnchor="middle"
-              dominantBaseline="middle"
-              className="radar-label"
-              fontSize="9"
-            >
-              {label}
-            </text>
-            <text
-              x={labelPoint.x}
-              y={labelPoint.y + 10}
-              textAnchor="middle"
-              dominantBaseline="middle"
-              className="radar-value"
-              fontSize="8"
-            >
-              {value}
-            </text>
-          </g>
-        );
-      })}
-    </svg>
+        {points.map((point, index) => (
+          <circle
+            key={index}
+            cx={point.x}
+            cy={point.y}
+            r="3"
+            fill={color}
+            stroke="var(--card-bg)"
+            strokeWidth="1.5"
+          />
+        ))}
+        {STAT_LABELS.map((label, index) => {
+          const labelPoint = getLabelPoint(index);
+          const value = getValue(index);
+          return (
+            <g key={label}>
+              <text
+                x={labelPoint.x}
+                y={labelPoint.y}
+                textAnchor="middle"
+                dominantBaseline="middle"
+                className="radar-label"
+                fontSize="9"
+              >
+                {label}
+              </text>
+              <text
+                x={labelPoint.x}
+                y={labelPoint.y + 10}
+                textAnchor="middle"
+                dominantBaseline="middle"
+                className="radar-value"
+                fontSize="8"
+              >
+                {value}
+              </text>
+            </g>
+          );
+        })}
+      </svg>
+      <table className="sr-only">
+        <caption>Team average base stats</caption>
+        <thead>
+          <tr>
+            <th scope="col">Stat</th>
+            <th scope="col">Average</th>
+          </tr>
+        </thead>
+        <tbody>
+          {STAT_LABELS.map((label, index) => (
+            <tr key={label}>
+              <th scope="row">{label}</th>
+              <td>{getValue(index)}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
   );
 };
 

@@ -29,6 +29,7 @@ const Navbar = () => {
           Browse
         </Link>
         <button
+          type="button"
           onClick={toggleTheme}
           className="theme-toggle-btn"
           aria-label={isDarkMode ? "Switch to light mode" : "Switch to dark mode"}

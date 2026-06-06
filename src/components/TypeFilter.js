@@ -1,8 +1,7 @@
 import React, { useState } from "react";
-import { TYPE_COLORS, ALL_POKEMON_TYPES } from "../constants/typeColors";
+import { getTypeColor, ALL_POKEMON_TYPES } from "../constants/typeColors";
 import "./TypeFilter.css";
 
-const typeColors = TYPE_COLORS;
 const allTypes = ALL_POKEMON_TYPES;
 
 const TypeFilter = ({ selectedTypes, onTypeToggle, onClearAll, selectedGeneration, onGenerationChange }) => {
@@ -83,7 +82,7 @@ const TypeFilter = ({ selectedTypes, onTypeToggle, onClearAll, selectedGeneratio
                 onClick={() => onTypeToggle(type)}
                 className={`type-filter-button ${selectedTypes.includes(type) ? "active" : ""}`}
                 style={{
-                  backgroundColor: selectedTypes.includes(type) ? typeColors[type] : "#f0f0f0",
+                  backgroundColor: selectedTypes.includes(type) ? getTypeColor(type) : "#f0f0f0",
                   color: selectedTypes.includes(type) ? "white" : "#333",
                 }}
                 aria-pressed={selectedTypes.includes(type)}
@@ -114,7 +113,7 @@ const TypeFilter = ({ selectedTypes, onTypeToggle, onClearAll, selectedGeneratio
             <span
               key={type}
               className="active-filter-chip"
-              style={{ backgroundColor: typeColors[type] }}
+              style={{ backgroundColor: getTypeColor(type) }}
             >
               {type}
               <button
