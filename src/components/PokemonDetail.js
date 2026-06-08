@@ -14,7 +14,7 @@ import { useToast } from "./ToastProvider";
 import { useComparison } from "../contexts/ComparisonContext";
 import PokemonComparison from "./PokemonComparison";
 import { addToRecentlyViewed } from "../utils/recentlyViewed";
-import { getTypeColor } from "../constants/typeColors";
+import { getTypeColor, getTypeThemeStyle } from "../constants/typeColors";
 import Navbar from "./Navbar";
 import BrowseEmptyState from "./BrowseEmptyState";
 import PokemonDetailSkeleton from "./PokemonDetailSkeleton";
@@ -501,6 +501,7 @@ const PokemonDetail = () => {
 
   const primaryType = pokemon.types[0]?.type.name || "normal";
   const cardColor = getTypeColor(primaryType);
+  const typeThemeStyle = getTypeThemeStyle(primaryType);
 
   const formatStatName = (statName) =>
     statName
@@ -514,7 +515,7 @@ const PokemonDetail = () => {
   return (
     <>
       <Navbar />
-      <div className="pokemon-detail-page">
+      <div className="pokemon-detail-page" style={typeThemeStyle}>
         <div className="pokemon-detail-container">
           <div className="pokemon-detail-navigation">
             <div className="pokemon-detail-breadcrumb">

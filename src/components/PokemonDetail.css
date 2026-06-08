@@ -1,6 +1,19 @@
 .pokemon-detail-page {
   min-height: 100vh;
   background-color: var(--bg-color);
+  background-image:
+    radial-gradient(
+      ellipse 120% 55% at 50% -5%,
+      var(--pokemon-type-glow, transparent) 0%,
+      transparent 70%
+    ),
+    linear-gradient(
+      180deg,
+      var(--pokemon-type-tint, transparent) 0%,
+      var(--pokemon-type-tint-soft, transparent) 28%,
+      var(--bg-color) 55%
+    );
+  transition: background-color 0.35s ease;
 }
 
 .pokemon-detail-container {

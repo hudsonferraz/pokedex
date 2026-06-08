@@ -1,13 +1,21 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
 import { getTypeColor } from "../constants/typeColors";
-import { formatSpeciesLabel } from "../utils/regulation";
+import { useRegulation } from "../contexts/RegulationContext";
+import { formatSpeciesLabel, getSpeciesRegulationStatus } from "../utils/regulation";
 import "./Pokemon.css";
 
 const Pokemon = ({ pokemon, usagePercent, winRate, usageLabel }) => {
   const navigate = useNavigate();
+  const { regulation } = useRegulation();
   const primaryType = pokemon.types[0]?.type.name || "normal";
   const accentColor = getTypeColor(primaryType);
+  const { status, regulation: formatRegulation } = getSpeciesRegulationStatus(
+    pokemon.name,
+    regulation.id,
+  );
+  const isBanned = status === "banned";
+  const isRestricted = status === "restricted";
 
   const onCardClick = () => {
     navigate(`/pokemon/${pokemon.name}`);
@@ -17,9 +25,24 @@ const Pokemon = ({ pokemon, usagePercent, winRate, usageLabel }) => {
     pokemon.sprites?.other?.["official-artwork"]?.front_default ||
     pokemon.sprites?.front_default;
 
+  const regulationLabel = isBanned
+    ? `Banned in ${formatRegulation.label}`
+    : isRestricted
+      ? `Restricted in ${formatRegulation.label}`
+      : "";
+
+  const cardClassName = [
+    "pokemon-card-v2",
+    "card-surface",
+    isBanned ? "pokemon-card-v2--banned" : "",
+    isRestricted ? "pokemon-card-v2--restricted" : "",
+  ]
+    .filter(Boolean)
+    .join(" ");
+
   return (
     <article
-      className="pokemon-card-v2 card-surface"
+      className={cardClassName}
       style={{ "--pokemon-accent": accentColor }}
       onClick={onCardClick}
       onKeyDown={(event) => {
@@ -30,8 +53,17 @@ const Pokemon = ({ pokemon, usagePercent, winRate, usageLabel }) => {
       }}
       role="button"
       tabIndex={0}
-      aria-label={`View ${formatSpeciesLabel(pokemon.name)}, #${pokemon.id}`}
+      aria-label={`View ${formatSpeciesLabel(pokemon.name)}, #${pokemon.id}${regulationLabel ? `, ${regulationLabel}` : ""}`}
+      title={regulationLabel || undefined}
     >
+      {(isBanned || isRestricted) && (
+        <span
+          className={`pokemon-card-v2-regulation-stamp${isBanned ? " banned" : " restricted"}`}
+          aria-hidden="true"
+        >
+          {isBanned ? "Banned" : "Restricted"}
+        </span>
+      )}
       {usagePercent != null && (
         <div className="pokemon-card-v2-meta">
           <span className="pokemon-card-v2-usage" title={usageLabel || "VGC usage"}>

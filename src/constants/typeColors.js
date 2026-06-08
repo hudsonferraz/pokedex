@@ -25,6 +25,30 @@ export const getTypeColor = (typeName) =>
   TYPE_COLORS[typeName?.toLowerCase?.() ? typeName.toLowerCase() : typeName] ||
   TYPE_COLORS.normal;
 
+function parseHexColor(hex) {
+  const normalized = (hex || "").replace("#", "");
+  if (normalized.length !== 6) {
+    return { red: 168, green: 168, blue: 120 };
+  }
+  return {
+    red: Number.parseInt(normalized.slice(0, 2), 16),
+    green: Number.parseInt(normalized.slice(2, 4), 16),
+    blue: Number.parseInt(normalized.slice(4, 6), 16),
+  };
+}
+
+export function getTypeThemeStyle(primaryType) {
+  const hex = getTypeColor(primaryType);
+  const { red, green, blue } = parseHexColor(hex);
+
+  return {
+    "--pokemon-type-color": hex,
+    "--pokemon-type-tint": `rgba(${red}, ${green}, ${blue}, 0.12)`,
+    "--pokemon-type-tint-soft": `rgba(${red}, ${green}, ${blue}, 0.05)`,
+    "--pokemon-type-glow": `rgba(${red}, ${green}, ${blue}, 0.2)`,
+  };
+}
+
 export const TEAM_ROLE_OPTIONS = [
   { value: "", label: "Role" },
   { value: "lead", label: "Lead" },
