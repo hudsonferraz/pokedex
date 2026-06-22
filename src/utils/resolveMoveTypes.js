@@ -1,23 +1,5 @@
-import { getMoveDetails } from "../api";
+import { fetchMoveInfo, getCachedMoveType } from "./moveDetailsCache";
 import { normalizeSetEntry } from "./pokemonSets";
-
-const moveTypeCache = new Map();
-
-async function fetchMoveType(moveName) {
-  if (moveTypeCache.has(moveName)) {
-    return moveTypeCache.get(moveName);
-  }
-
-  try {
-    const data = await getMoveDetails(`https://pokeapi.co/api/v2/move/${moveName}`);
-    const type = data?.type?.name || "";
-    moveTypeCache.set(moveName, type);
-    return type;
-  } catch {
-    moveTypeCache.set(moveName, "");
-    return "";
-  }
-}
 
 /**
  * Returns sets with moveTypes filled from PokeAPI when missing (for coverage analysis).
@@ -44,7 +26,8 @@ export async function enrichSetsWithMoveTypes(team, setsByName) {
 
   await Promise.all(
     [...movesNeedingTypes].map(async (moveName) => {
-      const type = await fetchMoveType(moveName);
+      const cachedType = getCachedMoveType(moveName);
+      const type = cachedType || (await fetchMoveInfo(moveName))?.type || "";
       if (!type) return;
       team.forEach((pokemon) => {
         const entry = enriched[pokemon.name];

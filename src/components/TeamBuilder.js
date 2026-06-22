@@ -3,8 +3,8 @@ import { useSearchParams } from "react-router-dom";
 import TeamContext from "../contexts/TeamContext";
 import { useRegulation } from "../contexts/RegulationContext";
 import { useToast } from "./ToastProvider";
-import { searchPokemon, getMoveDetails } from "../api";
-import { buildMoveInfoFromApi } from "../utils/moveDetails";
+import { searchPokemon } from "../api";
+import { getCachedMoveInfo } from "../utils/moveDetailsCache";
 import TeamSlot from "./TeamSlot";
 import TeamAnalysis from "./TeamAnalysis";
 import TeamAITips from "./TeamAITips";
@@ -71,8 +71,6 @@ const TeamBuilder = () => {
   const [renameValue, setRenameValue] = useState("");
   const [teamToDelete, setTeamToDelete] = useState(null);
   const [movePickerPokemon, setMovePickerPokemon] = useState(null);
-  const [movePickerDetails, setMovePickerDetails] = useState({});
-  const [movePickerDetailsLoading, setMovePickerDetailsLoading] = useState(false);
   const [shareLinkCopied, setShareLinkCopied] = useState(false);
   const [showShowdownImport, setShowShowdownImport] = useState(false);
   const [showdownImporting, setShowdownImporting] = useState(false);
@@ -159,44 +157,6 @@ const TeamBuilder = () => {
       return () => document.removeEventListener("mousedown", handleClickOutside);
     }
   }, [showExportMenu]);
-
-  // Load move details when move picker opens so modal shows types, stats, effect
-  useEffect(() => {
-    if (!movePickerPokemon?.moves?.length) {
-      setMovePickerDetails({});
-      setMovePickerDetailsLoading(false);
-      return;
-    }
-    let cancelled = false;
-    setMovePickerDetailsLoading(true);
-    setMovePickerDetails({});
-    const uniqueMoves = [];
-    const seen = new Set();
-    for (const m of movePickerPokemon.moves) {
-      const name = m.move?.name;
-      if (name && !seen.has(name)) {
-        seen.add(name);
-        uniqueMoves.push(m);
-      }
-    }
-    Promise.all(
-      uniqueMoves.map(async (move) => {
-        const moveData = await getMoveDetails(move.move.url);
-        return buildMoveInfoFromApi(moveData, move);
-      })
-    ).then((results) => {
-      if (cancelled) return;
-      const details = {};
-      results.forEach((info) => {
-        if (info?.name) details[info.name] = info;
-      });
-      setMovePickerDetails(details);
-      setMovePickerDetailsLoading(false);
-    }).catch(() => {
-      if (!cancelled) setMovePickerDetailsLoading(false);
-    });
-    return () => { cancelled = true; };
-  }, [movePickerPokemon]);
 
   const handleAddPokemon = useCallback((pokemon) => {
     if (!canAddToTeam()) {
@@ -607,14 +567,14 @@ const TeamBuilder = () => {
           <MovePickerModal
             pokemon={movePickerPokemon}
             currentMoves={getMoveset(movePickerPokemon.name)}
-            moveDetails={movePickerDetails}
-            moveDetailsLoading={movePickerDetailsLoading}
             regulationId={regulationId}
             onSave={(moves) => {
               const moveTypes = {};
               moves.forEach((moveName) => {
-                const details = movePickerDetails[moveName];
-                if (details?.type) moveTypes[moveName] = details.type;
+                const details = getCachedMoveInfo(moveName);
+                if (details?.type) {
+                  moveTypes[moveName] = details.type;
+                }
               });
               setMoveset(movePickerPokemon.name, moves, moveTypes);
               showToast("Moves saved");

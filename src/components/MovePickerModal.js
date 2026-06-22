@@ -1,6 +1,7 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useRef } from "react";
 import { getTypeColor } from "../constants/typeColors";
 import { useModalAccessibility } from "../hooks/useModalAccessibility";
+import { useLazyMoveDetails } from "../hooks/useLazyMoveDetails";
 import { fetchPokemonMeta } from "../services/metaDataService";
 import "./MovePickerModal.css";
 
@@ -9,8 +10,6 @@ const MAX_MOVES = 4;
 const MovePickerModal = ({
   pokemon,
   currentMoves,
-  moveDetails = null,
-  moveDetailsLoading = false,
   regulationId,
   onSave,
   onClose,
@@ -22,6 +21,8 @@ const MovePickerModal = ({
   const [hoveredMoveName, setHoveredMoveName] = useState(null);
   const [metaMoveIds, setMetaMoveIds] = useState([]);
   const modalRef = useModalAccessibility(true, onClose);
+  const listRef = useRef(null);
+  const observerRef = useRef(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -49,15 +50,25 @@ const MovePickerModal = ({
     [learnset],
   );
 
-  const getType = (moveName) => {
-    if (moveDetails && moveDetails[moveName] && moveDetails[moveName].type) {
-      return moveDetails[moveName].type;
+  const searchFilteredNames = useMemo(() => {
+    if (!search.trim()) {
+      return uniqueMoves;
     }
-    return null;
-  };
+    const query = search.toLowerCase().replace(/-/g, " ");
+    return uniqueMoves.filter((name) => name.replace(/-/g, " ").includes(query));
+  }, [uniqueMoves, search]);
 
-  const getDetails = (moveName) =>
-    moveDetails && moveDetails[moveName] ? moveDetails[moveName] : null;
+  const { moveDetails, requestMoveDetails } = useLazyMoveDetails({
+    pokemon,
+    selectedMoves: selected,
+    metaMoveIds,
+    searchQuery: search,
+    filteredMoveNames: searchFilteredNames,
+  });
+
+  const getType = (moveName) => moveDetails[moveName]?.type || null;
+
+  const getDetails = (moveName) => moveDetails[moveName] || null;
 
   const formatMoveStats = (details) => {
     if (!details) return null;
@@ -77,7 +88,7 @@ const MovePickerModal = ({
   const movesByType = useMemo(() => {
     const map = {};
     uniqueMoves.forEach((name) => {
-      const type = getType(name) || "other";
+      const type = moveDetails[name]?.type || "other";
       if (!map[type]) map[type] = [];
       map[type].push(name);
     });
@@ -108,21 +119,63 @@ const MovePickerModal = ({
   }, [uniqueMoves, moveDetails]);
 
   const filteredBySearch = useMemo(() => {
-    if (!search.trim()) return movesByType;
-    const q = search.toLowerCase().replace(/-/g, " ");
+    if (!search.trim()) {
+      return movesByType;
+    }
+    const allowedNames = new Set(searchFilteredNames);
     return movesByType
       .map(({ type, moves }) => ({
         type,
-        moves: moves.filter((name) => name.replace(/-/g, " ").includes(q)),
+        moves: moves.filter((name) => allowedNames.has(name)),
       }))
-      .filter((g) => g.moves.length > 0);
-  }, [movesByType, search]);
+      .filter((group) => group.moves.length > 0);
+  }, [movesByType, search, searchFilteredNames]);
 
   useEffect(() => {
     setSelected(
       Array.isArray(currentMoves) ? currentMoves.slice(0, MAX_MOVES) : [],
     );
   }, [pokemon?.name, currentMoves]);
+
+  useEffect(() => {
+    if (search.trim()) {
+      return undefined;
+    }
+
+    const listElement = listRef.current;
+    if (!listElement) {
+      return undefined;
+    }
+
+    observerRef.current?.disconnect();
+    observerRef.current = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (!entry.isIntersecting) {
+            return;
+          }
+          const moveName = entry.target.dataset.moveName;
+          if (moveName) {
+            requestMoveDetails(moveName);
+          }
+          observerRef.current?.unobserve(entry.target);
+        });
+      },
+      { root: listElement, rootMargin: "120px" },
+    );
+
+    listElement
+      .querySelectorAll("[data-move-name]")
+      .forEach((element) => observerRef.current.observe(element));
+
+    return () => observerRef.current?.disconnect();
+  }, [filteredBySearch, search, requestMoveDetails]);
+
+  useEffect(() => {
+    if (hoveredMoveName) {
+      requestMoveDetails(hoveredMoveName);
+    }
+  }, [hoveredMoveName, requestMoveDetails]);
 
   const toggle = (moveName) => {
     setSelected((prev) => {
@@ -144,7 +197,9 @@ const MovePickerModal = ({
     return { slot: i, moveName: moveName || null };
   });
 
-  const skeletonRows = Array.from({ length: 8 });
+  const hoveredDetails = hoveredMoveName ? getDetails(hoveredMoveName) : null;
+  const hoveredEffectLoading = Boolean(hoveredMoveName && !hoveredDetails);
+  const hoveredEffect = hoveredDetails?.effect || null;
 
   return (
     <div className="move-picker-overlay" onClick={onClose} role="presentation">
@@ -218,17 +273,17 @@ const MovePickerModal = ({
         </div>
 
         <div className="move-picker-effect-preview" aria-live="polite">
-          {moveDetailsLoading ? (
+          {hoveredEffectLoading ? (
             <span className="move-picker-effect-preview-placeholder">
               Loading move details…
             </span>
-          ) : hoveredMoveName && getDetails(hoveredMoveName)?.effect ? (
+          ) : hoveredMoveName && hoveredEffect ? (
             <>
               <span className="move-picker-effect-preview-label">
                 {displayName(hoveredMoveName)}:
               </span>{" "}
               <span className="move-picker-effect-preview-text">
-                {getDetails(hoveredMoveName).effect}
+                {hoveredEffect}
               </span>
             </>
           ) : (
@@ -238,14 +293,8 @@ const MovePickerModal = ({
           )}
         </div>
 
-        <div className="move-picker-list">
-          {moveDetailsLoading ? (
-            <div className="move-picker-skeleton-list" aria-busy="true" aria-label="Loading moves">
-              {skeletonRows.map((_, index) => (
-                <div key={index} className="move-picker-skeleton-row skeleton-shimmer" />
-              ))}
-            </div>
-          ) : filteredBySearch.length === 0 ? (
+        <div className="move-picker-list" ref={listRef}>
+          {filteredBySearch.length === 0 ? (
             <p className="move-picker-no-results">No moves match.</p>
           ) : (
             filteredBySearch.map(({ type, moves: typeMoves }) => (
@@ -261,11 +310,11 @@ const MovePickerModal = ({
                 <div className="move-picker-type-moves">
                   {typeMoves.map((name) => {
                     const details = getDetails(name);
-                    const statsLine = formatMoveStats(details);
                     return (
                       <span
                         key={name}
                         className="move-picker-item-wrap"
+                        data-move-name={name}
                         onMouseEnter={() => setHoveredMoveName(name)}
                         onMouseLeave={() => setHoveredMoveName(null)}
                       >
@@ -298,9 +347,9 @@ const MovePickerModal = ({
                               )}
                             </span>
                           </div>
-                          {statsLine && (
+                          {details && (
                             <span className="move-picker-item-stats">
-                              {statsLine}
+                              {formatMoveStats(details)}
                             </span>
                           )}
                         </button>
