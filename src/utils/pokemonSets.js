@@ -6,6 +6,12 @@ export const EMPTY_POKEMON_SET = {
   nature: "",
   teraType: "",
   evs: "",
+  ivs: "",
+  level: 50,
+  gender: "",
+  shiny: false,
+  happiness: null,
+  nickname: "",
 };
 
 export function normalizeSetEntry(value) {
@@ -23,6 +29,16 @@ export function normalizeSetEntry(value) {
       nature: value.nature || "",
       teraType: value.teraType || "",
       evs: value.evs || "",
+      ivs: value.ivs || "",
+      level:
+        typeof value.level === "number" && !Number.isNaN(value.level) ? value.level : 50,
+      gender: value.gender || "",
+      shiny: Boolean(value.shiny),
+      happiness:
+        typeof value.happiness === "number" && !Number.isNaN(value.happiness)
+          ? value.happiness
+          : null,
+      nickname: value.nickname || "",
     };
   }
   return { ...EMPTY_POKEMON_SET };

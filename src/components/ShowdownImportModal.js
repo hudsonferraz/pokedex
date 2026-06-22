@@ -40,8 +40,8 @@ const ShowdownImportModal = ({ onImport, onClose, isLoading }) => {
           </button>
         </header>
         <p className="showdown-import-hint">
-          Paste a team from Pokémon Showdown. We parse species, item, ability, nature, EVs, Tera type,
-          and moves (up to six Pokémon).
+          Paste a team from Pokémon Showdown. We parse species (including nicknames like Sparky (Pikachu)),
+          item, ability, level, IVs/EVs, gender, shiny, happiness, Tera type, and moves (up to six Pokémon).
         </p>
         <textarea
           className="showdown-import-textarea"

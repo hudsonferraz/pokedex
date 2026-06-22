@@ -267,8 +267,10 @@ const TeamBuilder = () => {
 
       for (const entry of parsed) {
         let pokemon = await searchPokemon(entry.apiId);
-        if (!pokemon) {
-          pokemon = await searchPokemon(entry.speciesLine.toLowerCase().replace(/\s+/g, "-"));
+        if (!pokemon && entry.speciesLine) {
+          pokemon = await searchPokemon(
+            entry.speciesLine.toLowerCase().replace(/\s+/g, "-"),
+          );
         }
         if (!pokemon) continue;
 
@@ -281,6 +283,12 @@ const TeamBuilder = () => {
           nature: entry.nature,
           teraType: entry.teraType,
           evs: entry.evs,
+          ivs: entry.ivs,
+          level: entry.level,
+          gender: entry.gender,
+          shiny: entry.shiny,
+          happiness: entry.happiness,
+          nickname: entry.nickname,
         };
       }
 
