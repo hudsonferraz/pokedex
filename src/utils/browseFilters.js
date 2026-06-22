@@ -1,4 +1,4 @@
-import { getRegulationById, normalizeSpeciesId } from "./regulation";
+import { getRegulationById, isRegulationLegalityVerified, getSpeciesRegulationStatus, normalizeSpeciesId } from "./regulation";
 import {
   getTopUsageFromMeta,
   getUsagePercentFromMeta,
@@ -70,14 +70,14 @@ export function filterByVgcOptions(speciesList, vgcFilters, meta, regulationId) 
 
   if (vgcFilters.legalInRegulation) {
     const regulation = getRegulationById(regulationId);
-    if (regulation.banned?.length > 0) {
-      const banned = new Set(regulation.banned.map(normalizeSpeciesId));
-      result = result.filter((entry) => {
-        const speciesId = normalizeSpeciesId(entry.name);
-        const baseForm = speciesId.split("-")[0];
-        return !banned.has(speciesId) && !banned.has(baseForm);
-      });
+    if (!isRegulationLegalityVerified(regulation)) {
+      return result;
     }
+
+    result = result.filter((entry) => {
+      const { status } = getSpeciesRegulationStatus(entry.name, regulationId);
+      return status !== "banned";
+    });
   }
 
   return result;

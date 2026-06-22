@@ -180,6 +180,17 @@
   border: 2px solid rgba(255, 255, 255, 0.4);
 }
 
+.pokemon-card-v2--unknown {
+  border-style: dashed;
+}
+
+.pokemon-card-v2-regulation-stamp.unknown {
+  background: rgba(100, 116, 139, 0.88);
+  color: #fff;
+  border: 2px solid rgba(255, 255, 255, 0.35);
+  font-size: 0.62rem;
+}
+
 .pokemon-card-v2--banned .pokemon-card-v2-meta,
 .pokemon-card-v2--restricted .pokemon-card-v2-meta {
   z-index: 4;

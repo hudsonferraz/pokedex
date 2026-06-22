@@ -26,7 +26,10 @@ export function RegulationProvider({ children }) {
   const regulation = getRegulationById(regulationId);
 
   const validateTeam = React.useCallback(
-    (team) => validateTeamForRegulation(team, regulationId),
+    (team, options = {}) =>
+      validateTeamForRegulation(team, regulationId, {
+        sets: options.sets,
+      }),
     [regulationId],
   );
 

@@ -19,6 +19,7 @@ const RegulationSelector = ({ compact = false }) => {
         {regulations.map((entry) => (
           <option key={entry.id} value={entry.id}>
             {entry.label}
+            {entry.isPlaceholder ? " (placeholder)" : ""}
             {entry.series ? ` (${entry.series})` : ""}
           </option>
         ))}
@@ -26,7 +27,10 @@ const RegulationSelector = ({ compact = false }) => {
       {!compact && (
         <p className="regulation-selector-hint">
           {regulation.notes} · Max {regulation.maxRestricted ?? 2} Restricted.
-          Ban/restricted lists are bundled — verify against the{" "}
+          {regulation.legalityUnverified && regulation.legalityInheritsFrom
+            ? ` Legality inherits from ${regulation.legalityInheritsFrom.replace(/-/g, " ")} until official lists are bundled.`
+            : ""}
+          {" "}Verify against the{" "}
           <a
             href="https://play.pokemon.com/en-us/resources/rules/?category=vgc"
             target="_blank"

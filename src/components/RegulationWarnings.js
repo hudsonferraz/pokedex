@@ -2,9 +2,12 @@ import React, { useMemo } from "react";
 import { useRegulation } from "../contexts/RegulationContext";
 import "./RegulationWarnings.css";
 
-const RegulationWarnings = ({ team }) => {
+const RegulationWarnings = ({ team, sets }) => {
   const { validateTeam, regulation } = useRegulation();
-  const { issues, warnings } = useMemo(() => validateTeam(team), [team, validateTeam]);
+  const { issues, warnings, legalityVerified } = useMemo(
+    () => validateTeam(team, { sets }),
+    [team, sets, validateTeam],
+  );
 
   if (!team?.length) return null;
   if (issues.length === 0 && warnings.length === 0) {
@@ -14,8 +17,22 @@ const RegulationWarnings = ({ team }) => {
           ✓
         </span>
         <span>
-          No {regulation.label} ban or Restricted limit issues detected.
+          No {regulation.label} team validation issues detected.
         </span>
+      </div>
+    );
+  }
+
+  if (issues.length === 0 && warnings.length > 0 && !legalityVerified) {
+    return (
+      <div className="regulation-warnings card-surface" role="status">
+        <div className="regulation-warn-list">
+          {warnings.map((warning, index) => (
+            <p key={`warn-${index}`} className="regulation-warn-item">
+              {warning.message}
+            </p>
+          ))}
+        </div>
       </div>
     );
   }

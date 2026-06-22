@@ -365,7 +365,7 @@ const TeamBuilder = () => {
         </section>
 
         <RegulationSelector />
-        <RegulationWarnings team={team} />
+        <RegulationWarnings team={team} sets={activeTeam?.sets} />
         <MetaGapPanel team={team} />
 
         <div className="team-builder-header">

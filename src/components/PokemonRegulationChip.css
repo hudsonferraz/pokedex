@@ -28,3 +28,13 @@
 .dark-mode .pokemon-regulation-chip.restricted {
   color: #fbbf24;
 }
+
+.pokemon-regulation-chip.unknown {
+  background: rgba(100, 116, 139, 0.15);
+  color: #64748b;
+  border: 1px solid rgba(100, 116, 139, 0.35);
+}
+
+.dark-mode .pokemon-regulation-chip.unknown {
+  color: #94a3b8;
+}

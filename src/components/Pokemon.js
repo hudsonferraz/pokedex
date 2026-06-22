@@ -16,6 +16,7 @@ const Pokemon = ({ pokemon, usagePercent, winRate, usageLabel }) => {
   );
   const isBanned = status === "banned";
   const isRestricted = status === "restricted";
+  const isUnknown = status === "unknown";
 
   const onCardClick = () => {
     navigate(`/pokemon/${pokemon.name}`);
@@ -29,13 +30,16 @@ const Pokemon = ({ pokemon, usagePercent, winRate, usageLabel }) => {
     ? `Banned in ${formatRegulation.label}`
     : isRestricted
       ? `Restricted in ${formatRegulation.label}`
-      : "";
+      : isUnknown
+        ? `Legality unverified for ${formatRegulation.label}`
+        : "";
 
   const cardClassName = [
     "pokemon-card-v2",
     "card-surface",
     isBanned ? "pokemon-card-v2--banned" : "",
     isRestricted ? "pokemon-card-v2--restricted" : "",
+    isUnknown ? "pokemon-card-v2--unknown" : "",
   ]
     .filter(Boolean)
     .join(" ");
@@ -62,6 +66,11 @@ const Pokemon = ({ pokemon, usagePercent, winRate, usageLabel }) => {
           aria-hidden="true"
         >
           {isBanned ? "Banned" : "Restricted"}
+        </span>
+      )}
+      {isUnknown && (
+        <span className="pokemon-card-v2-regulation-stamp unknown" aria-hidden="true">
+          Unverified
         </span>
       )}
       {usagePercent != null && (

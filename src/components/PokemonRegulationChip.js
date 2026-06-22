@@ -1,5 +1,5 @@
 import React from "react";
-import { getSpeciesRegulationStatus, formatSpeciesLabel } from "../utils/regulation";
+import { getSpeciesRegulationStatus, formatSpeciesLabel, isRegulationLegalityVerified } from "../utils/regulation";
 import "./PokemonRegulationChip.css";
 
 const PokemonRegulationChip = ({ speciesName, regulationId }) => {
@@ -7,6 +7,20 @@ const PokemonRegulationChip = ({ speciesName, regulationId }) => {
 
   if (status === "legal") {
     return null;
+  }
+
+  if (status === "unknown") {
+    if (isRegulationLegalityVerified(regulation)) {
+      return null;
+    }
+    return (
+      <span
+        className="pokemon-regulation-chip unknown"
+        title={`Bundled ${regulation.label} legality lists are unverified — confirm against official rules`}
+      >
+        Legality unverified · {regulation.label}
+      </span>
+    );
   }
 
   const isBanned = status === "banned";
