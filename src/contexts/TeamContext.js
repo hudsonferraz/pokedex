@@ -15,6 +15,7 @@ const TeamContext = React.createContext({
   team: [],
   setActiveTeam: () => null,
   addTeam: () => null,
+  addTeamWithRoster: () => null,
   removeTeam: () => null,
   renameTeam: () => null,
   setCurrentTeamPokemon: () => null,
@@ -49,6 +50,56 @@ function pruneSetsAndRoles(teamRecord, names) {
   });
   const bringList = (teamRecord.bringList || []).filter((name) => names.has(name)).slice(0, 4);
   return { keptSets, keptRoles, bringList };
+}
+
+function applyRosterToTeamRecord(
+  teamRecord,
+  pokemon,
+  setsToApply,
+  rolesToApply,
+  bringListNames,
+) {
+  const nextPokemon = Array.isArray(pokemon) ? pokemon : [];
+  const names = new Set(
+    nextPokemon.map((entry) => entry?.name).filter(Boolean),
+  );
+  const { keptSets, keptRoles, bringList: prunedBringList } = pruneSetsAndRoles(
+    teamRecord,
+    names,
+  );
+
+  const appliedSets = {};
+  if (setsToApply && typeof setsToApply === "object") {
+    Object.entries(setsToApply).forEach(([speciesName, entry]) => {
+      if (names.has(speciesName)) {
+        appliedSets[speciesName] = normalizeSetEntry(entry);
+      }
+    });
+  }
+
+  const appliedRoles = { ...keptRoles };
+  if (rolesToApply && typeof rolesToApply === "object") {
+    Object.entries(rolesToApply).forEach(([speciesName, role]) => {
+      if (names.has(speciesName) && typeof role === "string" && role.trim()) {
+        appliedRoles[speciesName] = role.trim();
+      }
+    });
+  }
+
+  let bringList = prunedBringList;
+  if (Array.isArray(bringListNames) && bringListNames.length > 0) {
+    bringList = bringListNames
+      .filter((speciesName) => names.has(speciesName))
+      .slice(0, 4);
+  }
+
+  return {
+    ...teamRecord,
+    pokemon: nextPokemon,
+    sets: { ...keptSets, ...appliedSets },
+    roles: appliedRoles,
+    bringList,
+  };
 }
 
 function TeamProviderWithState({ children }) {
@@ -89,6 +140,42 @@ function TeamProviderWithState({ children }) {
       persist(teams, newTeam.id);
     },
     [state.teams, persist],
+  );
+
+  const addTeamWithRoster = React.useCallback(
+    (optionalName, pokemon, setsToApply, rolesToApply, bringListNames) => {
+      const newTeamId = generateId();
+
+      setState((previousState) => {
+        const name =
+          typeof optionalName === "string" && optionalName.trim()
+            ? optionalName.trim()
+            : `Team ${previousState.teams.length + 1}`;
+
+        const emptyTeam = migrateTeamRecord({
+          id: newTeamId,
+          name,
+          pokemon: [],
+          sets: {},
+          roles: {},
+          bringList: [],
+        });
+        const populatedTeam = applyRosterToTeamRecord(
+          emptyTeam,
+          pokemon,
+          setsToApply,
+          rolesToApply,
+          bringListNames,
+        );
+
+        const teams = [...previousState.teams, populatedTeam];
+        saveToStorage(teams, newTeamId);
+        return { teams, activeTeamId: newTeamId };
+      });
+
+      return newTeamId;
+    },
+    [],
   );
 
   const removeTeam = React.useCallback(
@@ -227,30 +314,9 @@ function TeamProviderWithState({ children }) {
   const setCurrentTeamPokemon = React.useCallback(
     (pokemon, setsToApply, rolesToApply) => {
       if (!activeTeam) return;
-      const nextPokemon = Array.isArray(pokemon) ? pokemon : [];
-      const names = new Set(nextPokemon.map((entry) => entry && entry.name).filter(Boolean));
-      const { keptSets, keptRoles, bringList } = pruneSetsAndRoles(activeTeam, names);
-
-      const applied = {};
-      if (setsToApply && typeof setsToApply === "object") {
-        Object.entries(setsToApply).forEach(([name, entry]) => {
-          if (names.has(name)) applied[name] = normalizeSetEntry(entry);
-        });
-      }
-
-      const appliedRoles = { ...keptRoles };
-      if (rolesToApply && typeof rolesToApply === "object") {
-        Object.entries(rolesToApply).forEach(([name, role]) => {
-          if (names.has(name) && typeof role === "string" && role.trim()) {
-            appliedRoles[name] = role.trim();
-          }
-        });
-      }
-
-      const sets = { ...keptSets, ...applied };
       const teams = state.teams.map((team) =>
         team.id === activeTeam.id
-          ? { ...team, pokemon: nextPokemon, sets, roles: appliedRoles, bringList }
+          ? applyRosterToTeamRecord(team, pokemon, setsToApply, rolesToApply)
           : team,
       );
       persist(teams, state.activeTeamId);
@@ -380,6 +446,7 @@ function TeamProviderWithState({ children }) {
     team,
     setActiveTeam,
     addTeam,
+    addTeamWithRoster,
     removeTeam,
     renameTeam,
     setCurrentTeamPokemon,

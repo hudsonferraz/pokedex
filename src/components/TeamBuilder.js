@@ -43,6 +43,7 @@ const TeamBuilder = () => {
     team,
     setActiveTeam,
     addTeam,
+    addTeamWithRoster,
     removeTeam,
     renameTeam,
     setCurrentTeamPokemon,
@@ -132,14 +133,14 @@ const TeamBuilder = () => {
           if (decoded.regulationId) {
             setRegulationId(decoded.regulationId);
           }
-          addTeam(decoded.name);
-          setTimeout(() => {
-            setCurrentTeamPokemon(fullTeam, decoded.sets || null, decoded.roles || null);
-            if (decoded.bringList?.length) {
-              setBringList(decoded.bringList);
-            }
-            showToast(`Imported "${decoded.name}"`, "success");
-          }, 0);
+          addTeamWithRoster(
+            decoded.name,
+            fullTeam,
+            decoded.sets || null,
+            decoded.roles || null,
+            decoded.bringList || null,
+          );
+          showToast(`Imported "${decoded.name}"`, "success");
         }
         setSearchParams({});
       } catch (e) {
