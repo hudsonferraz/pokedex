@@ -1,3 +1,4 @@
+// Defender-centric chart: each type lists attacking types that deal 0×, 2×, or 0.5×.
 const typeEffectiveness = {
   normal: { immune: ["ghost"], weak: ["fighting"], strong: [] },
   fire: { immune: [], weak: ["water", "ground", "rock"], strong: ["fire", "grass", "ice", "bug", "steel", "fairy"] },
@@ -19,22 +20,31 @@ const typeEffectiveness = {
   fairy: { immune: ["dragon"], weak: ["poison", "steel"], strong: ["fighting", "bug", "dark"] },
 };
 
+function getMatchupMultiplier(attackingType, defendingType) {
+  const defenderData = typeEffectiveness[defendingType];
+  if (!defenderData) {
+    return 1;
+  }
+
+  if (defenderData.immune.includes(attackingType)) {
+    return 0;
+  }
+  if (defenderData.weak.includes(attackingType)) {
+    return 2;
+  }
+  if (defenderData.strong.includes(attackingType)) {
+    return 0.5;
+  }
+  return 1;
+}
+
 export const calculateTypeEffectiveness = (attackingType, defendingTypes) => {
   let effectiveness = 1;
-  
-  defendingTypes.forEach(defendingType => {
-    const typeData = typeEffectiveness[attackingType];
-    if (!typeData) return;
-    
-    if (typeData.immune.includes(defendingType)) {
-      effectiveness = 0;
-    } else if (typeData.weak.includes(defendingType)) {
-      effectiveness *= 0.5;
-    } else if (typeData.strong.includes(defendingType)) {
-      effectiveness *= 2;
-    }
+
+  defendingTypes.forEach((defendingType) => {
+    effectiveness *= getMatchupMultiplier(attackingType, defendingType);
   });
-  
+
   return effectiveness;
 };
 
@@ -58,10 +68,10 @@ export const getTeamWeaknesses = (team) => {
       weaknesses[attackingType] = "super-effective";
     } else if (averageEffectiveness >= 1.5) {
       weaknesses[attackingType] = "effective";
-    } else if (averageEffectiveness <= 0.5) {
-      weaknesses[attackingType] = "resistant";
     } else if (averageEffectiveness === 0) {
       weaknesses[attackingType] = "immune";
+    } else if (averageEffectiveness <= 0.5) {
+      weaknesses[attackingType] = "resistant";
     }
   });
   
@@ -79,18 +89,8 @@ export const getTeamTypeCoverage = (team) => {
       if (!pokemon || !pokemon.types) return;
       pokemon.types.forEach(pokemonType => {
         const attackingType = pokemonType.type.name;
-        const typeData = typeEffectiveness[attackingType];
-        if (!typeData) return;
-        
-        let effectiveness = 1;
-        if (typeData.immune.includes(defendingType)) {
-          effectiveness = 0;
-        } else if (typeData.weak.includes(defendingType)) {
-          effectiveness = 0.5;
-        } else if (typeData.strong.includes(defendingType)) {
-          effectiveness = 2;
-        }
-        
+        const effectiveness = calculateTypeEffectiveness(attackingType, [defendingType]);
+
         if (effectiveness > bestEffectiveness) {
           bestEffectiveness = effectiveness;
         }
@@ -172,15 +172,7 @@ export function getTeamMoveCoverage(team, setsByName) {
         const attackingType = (moveTypes[moveName] || "").toLowerCase();
         if (!attackingType || !typeEffectiveness[attackingType]) return;
 
-        const typeData = typeEffectiveness[attackingType];
-        let effectiveness = 1;
-        if (typeData.immune.includes(defendingType)) {
-          effectiveness = 0;
-        } else if (typeData.weak.includes(defendingType)) {
-          effectiveness = 0.5;
-        } else if (typeData.strong.includes(defendingType)) {
-          effectiveness = 2;
-        }
+        const effectiveness = calculateTypeEffectiveness(attackingType, [defendingType]);
 
         if (effectiveness > bestEffectiveness) {
           bestEffectiveness = effectiveness;
