@@ -4,7 +4,7 @@ import TeamContext from "../contexts/TeamContext";
 import { useRegulation } from "../contexts/RegulationContext";
 import { useToast } from "./ToastProvider";
 import { searchPokemon } from "../api";
-import { getCachedMoveInfo } from "../utils/moveDetailsCache";
+import { buildMoveTypesMap, learnsetMapFromPokemon } from "../utils/resolveMoveTypes";
 import TeamSlot from "./TeamSlot";
 import TeamAnalysis from "./TeamAnalysis";
 import TeamAITips from "./TeamAITips";
@@ -343,10 +343,12 @@ const TeamBuilder = () => {
         }
         if (!pokemon) continue;
 
+        const moveTypes = await buildMoveTypesMap(entry.moves, learnsetMapFromPokemon(pokemon));
+
         fullTeam.push(pokemon);
         sets[pokemon.name] = {
           moves: entry.moves,
-          moveTypes: {},
+          moveTypes,
           ability: entry.ability,
           item: entry.item,
           nature: entry.nature,
@@ -441,8 +443,6 @@ const TeamBuilder = () => {
           </ul>
         </section>
 
-        <RegulationSelector />
-
         <div className="team-builder-header">
           <div className="team-builder-title-block">
             <h2 className="team-builder-section-title">Your teams</h2>
@@ -515,6 +515,7 @@ const TeamBuilder = () => {
         </div>
 
         <div className="team-builder-workflow-sticky">
+          <RegulationSelector compact />
           <TeamBuildGuide
             steps={workflow.steps}
             activeStepId={activeBuildStepId}
@@ -653,6 +654,15 @@ const TeamBuilder = () => {
           isActive={activeBuildStepId === "sets"}
           onActivate={() => handleBuildStepChange("sets")}
         >
+          <div className="build-step-inline-actions">
+            <button
+              type="button"
+              className="action-btn"
+              onClick={() => setShowShowdownImport(true)}
+            >
+              Import Showdown paste
+            </button>
+          </div>
           {workflow.health.completedSets.incompleteNames.length > 0 ? (
             <div className="build-step-hint" role="status">
               <strong>Incomplete:</strong>{" "}
@@ -677,6 +687,7 @@ const TeamBuilder = () => {
           isActive={activeBuildStepId === "legality"}
           onActivate={() => handleBuildStepChange("legality")}
         >
+          <RegulationSelector />
           <RegulationWarnings team={team} sets={activeTeam?.sets} />
         </BuildStepSection>
 
@@ -784,14 +795,11 @@ const TeamBuilder = () => {
             pokemon={movePickerPokemon}
             currentMoves={getMoveset(movePickerPokemon.name)}
             regulationId={regulationId}
-            onSave={(moves) => {
-              const moveTypes = {};
-              moves.forEach((moveName) => {
-                const details = getCachedMoveInfo(moveName);
-                if (details?.type) {
-                  moveTypes[moveName] = details.type;
-                }
-              });
+            onSave={async (moves) => {
+              const moveTypes = await buildMoveTypesMap(
+                moves,
+                learnsetMapFromPokemon(movePickerPokemon),
+              );
               setMoveset(movePickerPokemon.name, moves, moveTypes);
               showToast("Moves saved");
             }}

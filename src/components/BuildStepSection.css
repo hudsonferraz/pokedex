@@ -170,3 +170,9 @@
   opacity: 0.85;
   line-height: 1.4;
 }
+
+.build-step-inline-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}

@@ -267,6 +267,19 @@ async function requestAiText(prompt, instructions) {
   );
 }
 
+function upstreamErrorStatus(error) {
+  const message = error instanceof Error ? error.message : "Fetch failed";
+  return message.includes("timed out") ? 504 : 502;
+}
+
+app.get("/api/health", (req, res) => {
+  res.json({
+    ok: true,
+    huggingFaceConfigured: Boolean(getToken()),
+    cache: getCacheStats(),
+  });
+});
+
 const PIKALYTICS_FORMATS = {
   "gen9vgc2025regi": "VGC 2025 Regulation I",
   "gen9vgc2025regj": "VGC 2025 Regulation J",
@@ -318,7 +331,7 @@ app.get("/api/meta/usage/:formatCode", metaRateLimiter, async (req, res) => {
   } catch (error) {
     const message = error instanceof Error ? error.message : "Fetch failed";
     console.error("Pikalytics meta error:", message);
-    return res.status(502).json({
+    return res.status(upstreamErrorStatus(error)).json({
       error: `Could not load live meta from Pikalytics: ${message}`,
     });
   }
@@ -372,7 +385,7 @@ app.get("/api/meta/pokemon/:formatCode/:speciesApiId", metaRateLimiter, async (r
   } catch (error) {
     const message = error instanceof Error ? error.message : "Fetch failed";
     console.error("Pikalytics pokemon meta error:", message);
-    return res.status(502).json({
+    return res.status(upstreamErrorStatus(error)).json({
       error: `Could not load Pokémon meta from Pikalytics: ${message}`,
     });
   }

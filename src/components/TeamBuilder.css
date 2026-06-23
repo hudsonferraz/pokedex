@@ -25,6 +25,11 @@
   margin-bottom: 0;
 }
 
+.team-builder-workflow-sticky .regulation-selector-compact {
+  margin-bottom: var(--space-3);
+  padding: var(--space-3);
+}
+
 .team-builder-hero {
   display: flex;
   flex-wrap: wrap;
