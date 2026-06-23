@@ -108,6 +108,92 @@ function applyRosterToTeamRecord(
   };
 }
 
+function buildTeamWithRosterState(
+  previousState,
+  optionalName,
+  pokemon,
+  setsToApply,
+  rolesToApply,
+  bringListNames,
+  regulationId,
+  newTeamId,
+) {
+  const name =
+    typeof optionalName === "string" && optionalName.trim()
+      ? optionalName.trim()
+      : `Team ${previousState.teams.length + 1}`;
+
+  const sourceTeam =
+    previousState.teams.find((team) => team.id === previousState.activeTeamId) ||
+    previousState.teams[0];
+
+  const emptyTeam = createEmptyTeamRecord({
+    id: newTeamId,
+    name,
+    regulationId:
+      regulationId != null
+        ? normalizeRegulationId(regulationId)
+        : sourceTeam?.regulationId || DEFAULT_REGULATION_ID,
+  });
+
+  const populatedTeam = applyRosterToTeamRecord(
+    emptyTeam,
+    pokemon,
+    setsToApply,
+    rolesToApply,
+    bringListNames,
+  );
+
+  return {
+    teams: [...previousState.teams, populatedTeam],
+    activeTeamId: newTeamId,
+  };
+}
+
+function buildAddPokemonToTeamWithSetState(previousState, pokemon, patch) {
+  const activeTeamId = previousState.activeTeamId;
+  const currentTeam =
+    previousState.teams.find((team) => team.id === activeTeamId) ||
+    previousState.teams[0];
+
+  if (!currentTeam) {
+    return null;
+  }
+
+  if (currentTeam.pokemon.length >= 6) {
+    return null;
+  }
+
+  if (currentTeam.pokemon.some((entry) => entry?.name === pokemon.name)) {
+    return null;
+  }
+
+  const nextPokemon = normalizeTeamPokemonList([...currentTeam.pokemon, pokemon]);
+  const names = new Set(
+    nextPokemon.map((entry) => entry?.name).filter(Boolean),
+  );
+  const { keptSets, keptRoles, bringList } = pruneSetsAndRoles(
+    currentTeam,
+    names,
+  );
+  const sets = {
+    ...keptSets,
+    [pokemon.name]: mergeSetUpdate(
+      normalizeSetEntry(keptSets[pokemon.name]),
+      patch || {},
+    ),
+  };
+
+  return {
+    teams: previousState.teams.map((team) =>
+      team.id === currentTeam.id
+        ? { ...team, pokemon: nextPokemon, sets, roles: keptRoles, bringList }
+        : team,
+    ),
+    activeTeamId,
+  };
+}
+
 function clonePersistedState(state) {
   return JSON.parse(JSON.stringify(state));
 }
@@ -186,46 +272,22 @@ function TeamProviderWithState({ children }) {
   const addTeamWithRoster = React.useCallback(
     (optionalName, pokemon, setsToApply, rolesToApply, bringListNames, regulationId) => {
       const newTeamId = generateId();
-
-      setState((previousState) => {
-        undoSnapshotRef.current = clonePersistedState({
-          teams: previousState.teams,
-          activeTeamId: previousState.activeTeamId,
-        });
-
-        const name =
-          typeof optionalName === "string" && optionalName.trim()
-            ? optionalName.trim()
-            : `Team ${previousState.teams.length + 1}`;
-
-        const sourceTeam =
-          previousState.teams.find((team) => team.id === previousState.activeTeamId) ||
-          previousState.teams[0];
-
-        const emptyTeam = createEmptyTeamRecord({
-          id: newTeamId,
-          name,
-          regulationId:
-            regulationId != null
-              ? normalizeRegulationId(regulationId)
-              : sourceTeam?.regulationId || DEFAULT_REGULATION_ID,
-        });
-        const populatedTeam = applyRosterToTeamRecord(
-          emptyTeam,
-          pokemon,
-          setsToApply,
-          rolesToApply,
-          bringListNames,
-        );
-
-        const teams = [...previousState.teams, populatedTeam];
-        saveToStorage(teams, newTeamId);
-        return { teams, activeTeamId: newTeamId };
-      });
+      captureUndoSnapshot();
+      const nextState = buildTeamWithRosterState(
+        state,
+        optionalName,
+        pokemon,
+        setsToApply,
+        rolesToApply,
+        bringListNames,
+        regulationId,
+        newTeamId,
+      );
+      persist(nextState.teams, nextState.activeTeamId);
 
       return newTeamId;
     },
-    [],
+    [state, persist, captureUndoSnapshot],
   );
 
   const removeTeam = React.useCallback(
@@ -277,70 +339,22 @@ function TeamProviderWithState({ children }) {
     [activeTeam, replaceTeamPokemon],
   );
 
-  const addPokemonToTeamWithSet = React.useCallback((pokemon, patch) => {
-    if (!pokemon?.name) {
-      return false;
-    }
-
-    let added = false;
-
-    setState((previousState) => {
-      const activeTeamId = previousState.activeTeamId;
-      const currentTeam =
-        previousState.teams.find((team) => team.id === activeTeamId) ||
-        previousState.teams[0];
-
-      if (!currentTeam) {
-        return previousState;
+  const addPokemonToTeamWithSet = React.useCallback(
+    (pokemon, patch) => {
+      if (!pokemon?.name) {
+        return false;
       }
 
-      if (currentTeam.pokemon.length >= 6) {
-        return previousState;
+      const nextState = buildAddPokemonToTeamWithSetState(state, pokemon, patch);
+      if (!nextState) {
+        return false;
       }
 
-      if (currentTeam.pokemon.some((entry) => entry?.name === pokemon.name)) {
-        return previousState;
-      }
-
-      const nextPokemon = normalizeTeamPokemonList([...currentTeam.pokemon, pokemon]);
-      const names = new Set(
-        nextPokemon.map((entry) => entry?.name).filter(Boolean),
-      );
-      const { keptSets, keptRoles, bringList } = pruneSetsAndRoles(
-        currentTeam,
-        names,
-      );
-      const sets = {
-        ...keptSets,
-        [pokemon.name]: mergeSetUpdate(
-          normalizeSetEntry(keptSets[pokemon.name]),
-          patch || {},
-        ),
-      };
-
-      const teams = previousState.teams.map((team) =>
-        team.id === currentTeam.id
-          ? { ...team, pokemon: nextPokemon, sets, roles: keptRoles, bringList }
-          : team,
-      );
-
-      const saveResult = saveToStorage(teams, activeTeamId);
-      if (!saveResult.ok) {
-        window.queueMicrotask(() => {
-          setStorageError(saveResult.message || "Team could not be saved.");
-        });
-      } else {
-        window.queueMicrotask(() => {
-          setStorageError(null);
-        });
-      }
-
-      added = true;
-      return { teams, activeTeamId };
-    });
-
-    return added;
-  }, []);
+      persist(nextState.teams, nextState.activeTeamId);
+      return true;
+    },
+    [state, persist],
+  );
 
   const removeFromTeam = React.useCallback(
     (pokemonName) => {
