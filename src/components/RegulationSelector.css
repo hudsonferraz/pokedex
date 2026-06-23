@@ -1,3 +1,11 @@
+.regulation-selector-block {
+  margin-bottom: var(--space-4);
+}
+
+.regulation-selector-block .regulation-selector {
+  margin-bottom: 0;
+}
+
 .regulation-selector {
   display: flex;
   flex-wrap: wrap;

@@ -1,6 +1,7 @@
 import {
   getSpeciesClauseKey,
   getSpeciesRegulationStatus,
+  getRegulationLegalityTransparency,
   validateTeamForRegulation,
 } from "./regulation";
 import { parseShowdownEvs } from "./regulationValidation";
@@ -46,6 +47,26 @@ describe("species clause", () => {
   test("urshifu forms share a clause key", () => {
     expect(getSpeciesClauseKey("urshifu-rapid-strike")).toBe("urshifu");
     expect(getSpeciesClauseKey("urshifu-single-strike")).toBe("urshifu");
+  });
+});
+
+describe("regulation transparency", () => {
+  test("flags champions regulation as inherited and unverified", () => {
+    const notice = getRegulationLegalityTransparency(
+      validateTeamForRegulation([], "champions-reg-ma").regulation,
+    );
+
+    expect(notice).not.toBeNull();
+    expect(notice.title).toMatch(/inherited legality/i);
+    expect(notice.message).toContain("Regulation I");
+  });
+
+  test("returns null for verified regulation-i", () => {
+    const notice = getRegulationLegalityTransparency(
+      validateTeamForRegulation([], "regulation-i").regulation,
+    );
+
+    expect(notice).toBeNull();
   });
 });
 

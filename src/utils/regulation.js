@@ -95,6 +95,41 @@ export function isRegulationLegalityVerified(regulation) {
   return legality.banned.length > 0 || legality.restricted.length > 0;
 }
 
+export const OFFICIAL_VGC_HANDBOOK_URL =
+  "https://play.pokemon.com/en-us/resources/rules/?category=vgc";
+
+export function getRegulationLegalityTransparency(regulation) {
+  if (isRegulationLegalityVerified(regulation)) {
+    return null;
+  }
+
+  const inheritedFrom = regulation.legalityInheritsFrom
+    ? getRegulationById(regulation.legalityInheritsFrom)
+    : null;
+
+  if (regulation.isPlaceholder) {
+    return {
+      title: "Placeholder regulation",
+      message: `${regulation.label} is a placeholder ruleset. Ban and Restricted lists mirror ${inheritedFrom?.label || "another regulation"} until Pokémon publishes official lists.`,
+      detail: regulation.notes || null,
+    };
+  }
+
+  if (regulation.legalityUnverified && inheritedFrom) {
+    return {
+      title: "Inherited legality — not independently verified",
+      message: `${regulation.label} uses ban/restricted lists from ${inheritedFrom.label}. This app has not verified them against the latest official handbook for ${regulation.label}.`,
+      detail: regulation.notes || null,
+    };
+  }
+
+  return {
+    title: "Legality lists incomplete",
+    message: `${regulation.label} does not have bundled ban/restricted lists in this app. Species legality checks may be incomplete.`,
+    detail: regulation.notes || null,
+  };
+}
+
 export function normalizeSpeciesId(name) {
   if (!name || typeof name !== "string") return "";
   return name

@@ -14,6 +14,8 @@ const RegulationWarnings = ({ team, sets, learnsetBySpecies = {}, isLoadingLearn
     [team, sets, validateTeam, learnsetBySpecies, isLoadingLearnsets],
   );
 
+  const teamWarnings = warnings.filter((warning) => warning.type !== "legality-unverified");
+
   if (!team?.length) return null;
 
   if (isLoadingLearnsets) {
@@ -27,7 +29,21 @@ const RegulationWarnings = ({ team, sets, learnsetBySpecies = {}, isLoadingLearn
     );
   }
 
-  if (issues.length === 0 && warnings.length === 0) {
+  if (issues.length === 0 && teamWarnings.length === 0) {
+    if (!legalityVerified) {
+      return (
+        <div className="regulation-status regulation-status-neutral card-surface" role="status">
+          <span className="regulation-status-icon" aria-hidden>
+            i
+          </span>
+          <span>
+            No team-specific validation issues detected. Regulation list status is shown above the
+            format selector.
+          </span>
+        </div>
+      );
+    }
+
     return (
       <div className="regulation-status regulation-status-ok card-surface" role="status">
         <span className="regulation-status-icon" aria-hidden>
@@ -40,11 +56,11 @@ const RegulationWarnings = ({ team, sets, learnsetBySpecies = {}, isLoadingLearn
     );
   }
 
-  if (issues.length === 0 && warnings.length > 0 && !legalityVerified) {
+  if (issues.length === 0 && teamWarnings.length > 0 && !legalityVerified) {
     return (
       <div className="regulation-warnings card-surface" role="status">
         <div className="regulation-warn-list">
-          {warnings.map((warning, index) => (
+          {teamWarnings.map((warning, index) => (
             <p key={`warn-${index}`} className="regulation-warn-item">
               {warning.message}
             </p>
@@ -68,9 +84,9 @@ const RegulationWarnings = ({ team, sets, learnsetBySpecies = {}, isLoadingLearn
           </ul>
         </div>
       )}
-      {warnings.length > 0 && (
+      {teamWarnings.length > 0 && (
         <div className="regulation-warn-list">
-          {warnings.map((warning, index) => (
+          {teamWarnings.map((warning, index) => (
             <p key={`warn-${index}`} className="regulation-warn-item">
               {warning.message}
             </p>

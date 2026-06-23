@@ -23,6 +23,16 @@
   border-color: rgba(255, 193, 7, 0.35);
 }
 
+.regulation-status-neutral {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  font-size: 0.9rem;
+  color: var(--text-color);
+  opacity: 0.9;
+  border-color: rgba(255, 193, 7, 0.35);
+}
+
 .regulation-status-icon {
   font-weight: 800;
   font-size: 1.1rem;
