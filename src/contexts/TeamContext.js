@@ -5,9 +5,10 @@ import {
   EMPTY_POKEMON_SET,
   getMovesFromSet,
   mergeSetUpdate,
-  migrateTeamRecord,
   normalizeSetEntry,
+  createEmptyTeamRecord,
 } from "../utils/pokemonSets";
+import { DEFAULT_REGULATION_ID, normalizeRegulationId } from "../utils/regulation";
 
 const TeamContext = React.createContext({
   teams: [],
@@ -38,6 +39,8 @@ const TeamContext = React.createContext({
   canAddToTeam: () => false,
   storageError: null,
   clearStorageError: () => null,
+  setTeamRegulationId: () => null,
+  undoLastChange: () => false,
 });
 
 function pruneSetsAndRoles(teamRecord, names) {
@@ -105,9 +108,14 @@ function applyRosterToTeamRecord(
   };
 }
 
+function clonePersistedState(state) {
+  return JSON.parse(JSON.stringify(state));
+}
+
 function TeamProviderWithState({ children }) {
   const [state, setState] = React.useState(() => loadFromStorage());
   const [storageError, setStorageError] = React.useState(null);
+  const undoSnapshotRef = React.useRef(null);
 
   const persist = React.useCallback((teams, activeTeamId) => {
     setState({ teams, activeTeamId });
@@ -117,6 +125,27 @@ function TeamProviderWithState({ children }) {
     } else {
       setStorageError(result.message || "Team could not be saved.");
     }
+  }, []);
+
+  const captureUndoSnapshot = React.useCallback(() => {
+    undoSnapshotRef.current = clonePersistedState({
+      teams: state.teams,
+      activeTeamId: state.activeTeamId,
+    });
+  }, [state.teams, state.activeTeamId]);
+
+  const undoLastChange = React.useCallback(() => {
+    const snapshot = undoSnapshotRef.current;
+    if (!snapshot) {
+      return false;
+    }
+    persist(snapshot.teams, snapshot.activeTeamId);
+    undoSnapshotRef.current = null;
+    return true;
+  }, [persist]);
+
+  const clearUndoSnapshot = React.useCallback(() => {
+    undoSnapshotRef.current = null;
   }, []);
 
   const clearStorageError = React.useCallback(() => {
@@ -141,37 +170,45 @@ function TeamProviderWithState({ children }) {
         typeof optionalName === "string" && optionalName.trim()
           ? optionalName.trim()
           : `Team ${state.teams.length + 1}`;
-      const newTeam = migrateTeamRecord({
+      const sourceTeam =
+        state.teams.find((team) => team.id === state.activeTeamId) || state.teams[0];
+      const newTeam = createEmptyTeamRecord({
         id: generateId(),
         name,
-        pokemon: [],
-        sets: {},
-        roles: {},
-        bringList: [],
+        regulationId: sourceTeam?.regulationId || DEFAULT_REGULATION_ID,
       });
       const teams = [...state.teams, newTeam];
       persist(teams, newTeam.id);
     },
-    [state.teams, persist],
+    [state.teams, state.activeTeamId, persist],
   );
 
   const addTeamWithRoster = React.useCallback(
-    (optionalName, pokemon, setsToApply, rolesToApply, bringListNames) => {
+    (optionalName, pokemon, setsToApply, rolesToApply, bringListNames, regulationId) => {
       const newTeamId = generateId();
 
       setState((previousState) => {
+        undoSnapshotRef.current = clonePersistedState({
+          teams: previousState.teams,
+          activeTeamId: previousState.activeTeamId,
+        });
+
         const name =
           typeof optionalName === "string" && optionalName.trim()
             ? optionalName.trim()
             : `Team ${previousState.teams.length + 1}`;
 
-        const emptyTeam = migrateTeamRecord({
+        const sourceTeam =
+          previousState.teams.find((team) => team.id === previousState.activeTeamId) ||
+          previousState.teams[0];
+
+        const emptyTeam = createEmptyTeamRecord({
           id: newTeamId,
           name,
-          pokemon: [],
-          sets: {},
-          roles: {},
-          bringList: [],
+          regulationId:
+            regulationId != null
+              ? normalizeRegulationId(regulationId)
+              : sourceTeam?.regulationId || DEFAULT_REGULATION_ID,
         });
         const populatedTeam = applyRosterToTeamRecord(
           emptyTeam,
@@ -195,10 +232,11 @@ function TeamProviderWithState({ children }) {
     (id) => {
       const teams = state.teams.filter((team) => team.id !== id);
       if (teams.length === 0) return;
+      captureUndoSnapshot();
       const nextActive = state.activeTeamId === id ? teams[0].id : state.activeTeamId;
       persist(teams, nextActive);
     },
-    [state.teams, state.activeTeamId, persist],
+    [state.teams, state.activeTeamId, persist, captureUndoSnapshot],
   );
 
   const renameTeam = React.useCallback(
@@ -307,21 +345,23 @@ function TeamProviderWithState({ children }) {
   const removeFromTeam = React.useCallback(
     (pokemonName) => {
       if (!activeTeam) return;
+      captureUndoSnapshot();
       const updated = activeTeam.pokemon.filter((entry) => entry && entry.name !== pokemonName);
       replaceTeamPokemon(activeTeam.id, updated);
     },
-    [activeTeam, replaceTeamPokemon],
+    [activeTeam, replaceTeamPokemon, captureUndoSnapshot],
   );
 
   const clearTeam = React.useCallback(() => {
     if (!activeTeam) return;
+    captureUndoSnapshot();
     const teams = state.teams.map((team) =>
       team.id === activeTeam.id
         ? { ...team, pokemon: [], sets: {}, roles: {}, bringList: [] }
         : team,
     );
     persist(teams, state.activeTeamId);
-  }, [activeTeam, state.teams, state.activeTeamId, persist]);
+  }, [activeTeam, state.teams, state.activeTeamId, persist, captureUndoSnapshot]);
 
   const isInTeam = React.useCallback(
     (pokemonName) =>
@@ -337,6 +377,7 @@ function TeamProviderWithState({ children }) {
   const setCurrentTeamPokemon = React.useCallback(
     (pokemon, setsToApply, rolesToApply) => {
       if (!activeTeam) return;
+      captureUndoSnapshot();
       const teams = state.teams.map((team) =>
         team.id === activeTeam.id
           ? applyRosterToTeamRecord(team, pokemon, setsToApply, rolesToApply)
@@ -344,7 +385,20 @@ function TeamProviderWithState({ children }) {
       );
       persist(teams, state.activeTeamId);
     },
-    [activeTeam, state.teams, state.activeTeamId, persist],
+    [activeTeam, state.teams, state.activeTeamId, persist, captureUndoSnapshot],
+  );
+
+  const setTeamRegulationId = React.useCallback(
+    (regulationId) => {
+      if (!activeTeam) return;
+      const normalizedId = normalizeRegulationId(regulationId);
+      const teams = state.teams.map((team) =>
+        team.id === activeTeam.id ? { ...team, regulationId: normalizedId } : team,
+      );
+      clearUndoSnapshot();
+      persist(teams, state.activeTeamId);
+    },
+    [activeTeam, state.teams, state.activeTeamId, persist, clearUndoSnapshot],
   );
 
   const getPokemonSet = React.useCallback(
@@ -491,6 +545,8 @@ function TeamProviderWithState({ children }) {
     canAddToTeam,
     storageError,
     clearStorageError,
+    setTeamRegulationId,
+    undoLastChange,
   };
 
   return <TeamContext.Provider value={value}>{children}</TeamContext.Provider>;

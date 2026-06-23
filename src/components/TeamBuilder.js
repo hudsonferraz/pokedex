@@ -11,6 +11,9 @@ import TeamAITips from "./TeamAITips";
 import SpeedTierTable from "./SpeedTierTable";
 import MetaThreatHints from "./MetaThreatHints";
 import TeamEmptyState from "./TeamEmptyState";
+import TeamBuildGuide from "./TeamBuildGuide";
+import TeamHealthSummary from "./TeamHealthSummary";
+import BuildStepSection from "./BuildStepSection";
 import MovePickerModal from "./MovePickerModal";
 import RegulationSelector from "./RegulationSelector";
 import RegulationWarnings from "./RegulationWarnings";
@@ -34,6 +37,7 @@ import {
 } from "../utils/teamExport";
 import { parseShowdownPaste } from "../utils/showdownTeam";
 import { ensurePokemonHasLearnset } from "../utils/teamPokemonModel";
+import { computeTeamBuildHealth, BUILD_STEPS } from "../utils/teamBuildHealth";
 import "./TeamBuilder.css";
 
 const TeamBuilder = () => {
@@ -63,9 +67,10 @@ const TeamBuilder = () => {
     canAddToTeam,
     storageError,
     clearStorageError,
+    undoLastChange,
   } = useContext(TeamContext);
-  const { showToast } = useToast();
-  const { regulation, regulationId, setRegulationId } = useRegulation();
+  const { showToast, showUndoToast } = useToast();
+  const { regulation, regulationId, validateTeam } = useRegulation();
   const [searchParams, setSearchParams] = useSearchParams();
   const [showAddModal, setShowAddModal] = useState(false);
   const [selectedSlot, setSelectedSlot] = useState(null);
@@ -79,6 +84,49 @@ const TeamBuilder = () => {
   const [showdownImporting, setShowdownImporting] = useState(false);
   const [setEditorPokemon, setSetEditorPokemon] = useState(null);
   const [metaFocusIndex, setMetaFocusIndex] = useState(0);
+  const [activeBuildStepId, setActiveBuildStepId] = useState("roster");
+  const suggestedStepRef = useRef("roster");
+
+  const workflow = useMemo(
+    () =>
+      computeTeamBuildHealth({
+        team,
+        sets: activeTeam?.sets,
+        validateTeam,
+      }),
+    [team, activeTeam?.sets, validateTeam],
+  );
+
+  useEffect(() => {
+    const { suggestedStepId } = workflow;
+    const stepOrder = BUILD_STEPS.map((step) => step.id);
+    const previousSuggested = suggestedStepRef.current;
+    const previousIndex = stepOrder.indexOf(previousSuggested);
+    const nextIndex = stepOrder.indexOf(suggestedStepId);
+
+    if (team.length === 0) {
+      setActiveBuildStepId("roster");
+    } else if (nextIndex > previousIndex && activeBuildStepId === previousSuggested) {
+      setActiveBuildStepId(suggestedStepId);
+    }
+
+    suggestedStepRef.current = suggestedStepId;
+  }, [workflow, team.length, activeBuildStepId]);
+
+  const handleBuildStepChange = useCallback((stepId) => {
+    setActiveBuildStepId(stepId);
+  }, []);
+
+  const getStepMeta = useCallback(
+    (stepId) => workflow.steps.find((step) => step.id === stepId) || { status: "upcoming" },
+    [workflow.steps],
+  );
+
+  const handleUndo = useCallback(() => {
+    if (undoLastChange()) {
+      showToast("Restored", "success");
+    }
+  }, [undoLastChange, showToast]);
 
   const filledSlotIndices = useMemo(
     () => team.map((entry, index) => (entry ? index : -1)).filter((index) => index >= 0),
@@ -149,17 +197,15 @@ const TeamBuilder = () => {
           if (p) fullTeam.push(p);
         }
         if (!cancelled && fullTeam.length > 0) {
-          if (decoded.regulationId) {
-            setRegulationId(decoded.regulationId);
-          }
           addTeamWithRoster(
             decoded.name,
             fullTeam,
             decoded.sets || null,
             decoded.roles || null,
             decoded.bringList || null,
+            decoded.regulationId || null,
           );
-          showToast(`Imported "${decoded.name}"`, "success");
+          showUndoToast(`Imported "${decoded.name}"`, handleUndo, "success");
         }
         setSearchParams({});
       } catch (e) {
@@ -206,7 +252,7 @@ const TeamBuilder = () => {
 
   const handleRemovePokemon = (pokemonName) => {
     removeFromTeam(pokemonName);
-    showToast(`${pokemonName} removed from team`, "info");
+    showUndoToast(`${pokemonName} removed from team`, handleUndo, "info");
   };
 
   const handleAddTeammate = async (speciesApiId) => {
@@ -234,7 +280,7 @@ const TeamBuilder = () => {
   const handleClearTeam = () => {
     if (window.confirm("Are you sure you want to clear your entire team?")) {
       clearTeam();
-      showToast("Team cleared", "info");
+      showUndoToast("Team cleared", handleUndo, "info");
     }
   };
 
@@ -267,8 +313,10 @@ const TeamBuilder = () => {
 
   const confirmDeleteTeam = () => {
     if (teamToDelete) {
+      const deletedName =
+        teams.find((entry) => entry.id === teamToDelete)?.name || "Team";
       removeTeam(teamToDelete);
-      showToast("Team deleted", "info");
+      showUndoToast(`Deleted "${deletedName}"`, handleUndo, "info");
       setTeamToDelete(null);
     }
   };
@@ -320,7 +368,7 @@ const TeamBuilder = () => {
 
       setCurrentTeamPokemon(fullTeam, sets);
       setBringList([]);
-      showToast(`Imported ${fullTeam.length} Pokémon from Showdown`, "success");
+      showUndoToast(`Imported ${fullTeam.length} Pokémon from Showdown`, handleUndo, "success");
       setShowShowdownImport(false);
     } catch {
       showToast("Showdown import failed", "error");
@@ -353,7 +401,7 @@ const TeamBuilder = () => {
       activeTeam?.name || "Team",
       activeTeam?.sets,
       bringList,
-      regulationId,
+      activeTeam?.regulationId || regulationId,
       activeTeam?.roles,
     );
 
@@ -382,20 +430,18 @@ const TeamBuilder = () => {
             <p className="team-builder-hero-eyebrow">VGC team lab</p>
             <h1>Build your {regulation.label} squad</h1>
             <p className="team-builder-hero-copy">
-              Six slots, typed roles, Pikalytics meta sets, and live analysis — tuned for{" "}
-              {regulation.series || "VGC"} doubles prep.
+              Follow the six-step workflow below — roster, sets, legality, matchups, coach, then
+              export. Your team health stays pinned as you build.
             </p>
           </div>
-          <ul className="team-builder-hero-features" aria-label="Features">
-            <li>Type coverage &amp; weaknesses</li>
-            <li>4-move sets per Pokémon</li>
-            <li>AI tips via Hugging Face</li>
+          <ul className="team-builder-hero-features" aria-label="Workflow">
+            <li>Six-slot roster with meta partners</li>
+            <li>Legality &amp; matchup review</li>
+            <li>Focused AI coach questions</li>
           </ul>
         </section>
 
         <RegulationSelector />
-        <RegulationWarnings team={team} sets={activeTeam?.sets} />
-        <MetaGapPanel team={team} />
 
         <div className="team-builder-header">
           <div className="team-builder-title-block">
@@ -468,12 +514,17 @@ const TeamBuilder = () => {
           </div>
         </div>
 
-        {team.length === 0 && (
-          <TeamEmptyState
-            onAddFirst={() => handleSlotClick(0)}
-            regulationLabel={regulation.label}
+        <div className="team-builder-workflow-sticky">
+          <TeamBuildGuide
+            steps={workflow.steps}
+            activeStepId={activeBuildStepId}
+            onStepChange={handleBuildStepChange}
           />
-        )}
+          <TeamHealthSummary
+            health={workflow.health}
+            onNavigateStep={handleBuildStepChange}
+          />
+        </div>
 
         {teamToDelete && (
           <div className="modal-overlay" onClick={() => setTeamToDelete(null)} role="presentation">
@@ -540,57 +591,193 @@ const TeamBuilder = () => {
           </div>
         </div>
 
-        {filledSlotIndices.length > 0 && (
-          <>
-            <div className="teammate-slot-chips" role="tablist" aria-label="Select Pokémon for partner suggestions">
-              {filledSlotIndices.map((slotIndex) => {
-                const member = team[slotIndex];
-                return (
-                  <button
-                    key={member.name}
-                    type="button"
-                    role="tab"
-                    aria-selected={metaFocusIndex === slotIndex}
-                    className={`teammate-slot-chip ${metaFocusIndex === slotIndex ? "active" : ""}`}
-                    onClick={() => setMetaFocusIndex(slotIndex)}
-                  >
-                    {member.name}
-                  </button>
-                );
-              })}
-            </div>
-            <TeammateSuggestions
-              selectedPokemon={focusedPokemon}
-              regulationId={regulationId}
+        <BuildStepSection
+          stepId="roster"
+          stepNumber={1}
+          title="Build six Pokémon"
+          description="Fill every slot. Use partner suggestions and the sixth-slot recommender when you are one short."
+          status={getStepMeta("roster").status}
+          isActive={activeBuildStepId === "roster"}
+          onActivate={() => handleBuildStepChange("roster")}
+        >
+          {team.length === 0 && (
+            <TeamEmptyState
+              onAddFirst={() => handleSlotClick(0)}
               regulationLabel={regulation.label}
-              teamNames={teamNames}
-              canAddToTeam={canAddToTeam()}
-              onAddTeammate={handleAddTeammate}
             />
-          </>
-        )}
+          )}
+          {filledSlotIndices.length > 0 && (
+            <>
+              <div className="teammate-slot-chips" role="tablist" aria-label="Select Pokémon for partner suggestions">
+                {filledSlotIndices.map((slotIndex) => {
+                  const member = team[slotIndex];
+                  return (
+                    <button
+                      key={member.name}
+                      type="button"
+                      role="tab"
+                      aria-selected={metaFocusIndex === slotIndex}
+                      className={`teammate-slot-chip ${metaFocusIndex === slotIndex ? "active" : ""}`}
+                      onClick={() => setMetaFocusIndex(slotIndex)}
+                    >
+                      {member.name}
+                    </button>
+                  );
+                })}
+              </div>
+              <TeammateSuggestions
+                selectedPokemon={focusedPokemon}
+                regulationId={regulationId}
+                regulationLabel={regulation.label}
+                teamNames={teamNames}
+                canAddToTeam={canAddToTeam()}
+                onAddTeammate={handleAddTeammate}
+              />
+            </>
+          )}
+          <SuggestSixthPanel
+            team={team}
+            regulationId={regulationId}
+            teamNames={teamNames}
+            canAddToTeam={canAddToTeam()}
+            onAddSuggestion={handleAddTeammate}
+          />
+        </BuildStepSection>
 
-        <SuggestSixthPanel
-          team={team}
-          regulationId={regulationId}
-          teamNames={teamNames}
-          canAddToTeam={canAddToTeam()}
-          onAddSuggestion={handleAddTeammate}
-        />
+        <BuildStepSection
+          stepId="sets"
+          stepNumber={2}
+          title="Complete sets"
+          description="Each Pokémon needs four moves plus ability, item, and nature. Use Edit set on a slot or import a Showdown paste."
+          status={getStepMeta("sets").status}
+          isActive={activeBuildStepId === "sets"}
+          onActivate={() => handleBuildStepChange("sets")}
+        >
+          {workflow.health.completedSets.incompleteNames.length > 0 ? (
+            <div className="build-step-hint" role="status">
+              <strong>Incomplete:</strong>{" "}
+              {workflow.health.completedSets.incompleteNames.join(", ")} — open{" "}
+              <em>Edit set</em> or <em>Moves</em> on their slot above.
+            </div>
+          ) : team.length > 0 ? (
+            <div className="build-step-hint" role="status">
+              All rostered Pokémon have full sets. Review legality next.
+            </div>
+          ) : (
+            <div className="build-step-hint">Add Pokémon to the roster first.</div>
+          )}
+        </BuildStepSection>
 
-        <BringFourPreview
-          team={team}
-          bringList={bringList}
-          onToggle={toggleBringPokemon}
-        />
+        <BuildStepSection
+          stepId="legality"
+          stepNumber={3}
+          title="Review legality"
+          description={`Confirm your squad meets ${regulation.label} rules — species clause, restricteds, items, and learnsets.`}
+          status={getStepMeta("legality").status}
+          isActive={activeBuildStepId === "legality"}
+          onActivate={() => handleBuildStepChange("legality")}
+        >
+          <RegulationWarnings team={team} sets={activeTeam?.sets} />
+        </BuildStepSection>
 
-        <TeamPreviewSimulator
-          team={team}
-          sets={activeTeam?.sets}
-          bringList={bringList}
-          setBringList={setBringList}
-          regulationId={regulationId}
-        />
+        <BuildStepSection
+          stepId="matchups"
+          stepNumber={4}
+          title="Inspect matchup gaps"
+          description="Check meta staples, shared weaknesses, speed tiers, and offensive coverage before you finalize bring-4."
+          status={getStepMeta("matchups").status}
+          isActive={activeBuildStepId === "matchups"}
+          onActivate={() => handleBuildStepChange("matchups")}
+        >
+          <MetaGapPanel team={team} />
+          <MetaThreatHints team={team} regulationId={regulationId} />
+          <TeamAnalysis
+            team={team}
+            sets={activeTeam?.sets}
+            teamName={activeTeam?.name || "Team"}
+            regulationId={regulationId}
+          />
+          <SpeedTierTable team={team} sets={activeTeam?.sets} />
+          <BringFourPreview
+            team={team}
+            bringList={bringList}
+            onToggle={toggleBringPokemon}
+          />
+          <TeamPreviewSimulator
+            team={team}
+            sets={activeTeam?.sets}
+            bringList={bringList}
+            setBringList={setBringList}
+            regulationId={regulationId}
+          />
+        </BuildStepSection>
+
+        <BuildStepSection
+          stepId="coach"
+          stepNumber={5}
+          title="Ask the coach a focused question"
+          description="Get rule-based tips first, then ask one specific question about speed, typings, or meta — not a generic team review."
+          status={getStepMeta("coach").status}
+          isActive={activeBuildStepId === "coach"}
+          onActivate={() => handleBuildStepChange("coach")}
+        >
+          <TeamAITips
+            team={team}
+            sets={activeTeam?.sets}
+            roles={activeTeam?.roles}
+            bringList={bringList}
+            regulationId={regulationId}
+            regulationLabel={regulation.label}
+          />
+        </BuildStepSection>
+
+        <BuildStepSection
+          stepId="export"
+          stepNumber={6}
+          title="Export or share"
+          description="Copy a Showdown paste, plain-text summary, or share link with regulation and roles baked in."
+          status={getStepMeta("export").status}
+          isActive={activeBuildStepId === "export"}
+          onActivate={() => handleBuildStepChange("export")}
+        >
+          <div className="build-step-export-actions">
+            <button
+              type="button"
+              className="build-step-export-card"
+              onClick={handleCopyShowdown}
+              disabled={team.length === 0}
+            >
+              <span className="build-step-export-card-title">Showdown paste</span>
+              <span className="build-step-export-card-copy">
+                Full sets for Pokémon Showdown teambuilder or damage calc.
+              </span>
+            </button>
+            <button
+              type="button"
+              className="build-step-export-card"
+              onClick={handleCopyAsText}
+              disabled={team.length === 0}
+            >
+              <span className="build-step-export-card-title">Plain text</span>
+              <span className="build-step-export-card-copy">
+                Readable roster summary for notes or Discord.
+              </span>
+            </button>
+            <button
+              type="button"
+              className={`build-step-export-card ${shareLinkCopied ? "copied-flash" : ""}`}
+              onClick={handleCopyShareLink}
+              disabled={team.length === 0}
+            >
+              <span className="build-step-export-card-title">
+                {shareLinkCopied ? "Link copied ✓" : "Share link"}
+              </span>
+              <span className="build-step-export-card-copy">
+                URL with team, sets, bring-4, and regulation for collaborators.
+              </span>
+            </button>
+          </div>
+        </BuildStepSection>
 
         {movePickerPokemon && (
           <MovePickerModal
@@ -634,23 +821,6 @@ const TeamBuilder = () => {
             isLoading={showdownImporting}
           />
         )}
-
-        <SpeedTierTable team={team} sets={activeTeam?.sets} />
-        <MetaThreatHints team={team} regulationId={regulationId} />
-        <TeamAnalysis
-          team={team}
-          sets={activeTeam?.sets}
-          teamName={activeTeam?.name || "Team"}
-          regulationId={regulationId}
-        />
-        <TeamAITips
-          team={team}
-          sets={activeTeam?.sets}
-          roles={activeTeam?.roles}
-          bringList={bringList}
-          regulationId={regulationId}
-          regulationLabel={regulation.label}
-        />
 
         <AddPokemonModal
           isOpen={showAddModal}

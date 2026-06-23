@@ -53,6 +53,13 @@ export function getRegulationById(regulationId) {
   return REGULATION_MAP[regulationId] || REGULATION_MAP[DEFAULT_REGULATION_ID];
 }
 
+export function normalizeRegulationId(regulationId) {
+  if (regulationId && REGULATION_MAP[regulationId]) {
+    return regulationId;
+  }
+  return DEFAULT_REGULATION_ID;
+}
+
 export function getEffectiveLegality(regulation) {
   const source = regulation.legalityInheritsFrom
     ? getRegulationById(regulation.legalityInheritsFrom)

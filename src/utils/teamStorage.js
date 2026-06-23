@@ -1,7 +1,8 @@
-import { migrateTeamRecord } from "./pokemonSets";
+import { migrateTeamRecord, createEmptyTeamRecord } from "./pokemonSets";
 import {
   compactTeamRecord,
   expandTeamRecord,
+  normalizeTeamPokemonList,
 } from "./teamPokemonModel";
 
 const TEAMS_KEY = "pokemon-teams";
@@ -39,15 +40,14 @@ function loadFromStorage() {
       const pokemon = JSON.parse(legacy);
       if (Array.isArray(pokemon) && pokemon.length > 0) {
         const team = expandTeamRecord(
-          migrateTeamRecord({
-            id: generateId(),
-            name: "My Team",
-            pokemon,
-            sets: {},
-            roles: {},
-            bringList: [],
-          }),
+          migrateTeamRecord(
+            createEmptyTeamRecord({
+              id: generateId(),
+              name: "My Team",
+            }),
+          ),
         );
+        team.pokemon = normalizeTeamPokemonList(pokemon);
         window.localStorage.removeItem(LEGACY_TEAM_KEY);
         const saveResult = saveToStorage([team], team.id);
         if (!saveResult.ok) {
@@ -61,14 +61,12 @@ function loadFromStorage() {
   }
 
   const defaultTeam = expandTeamRecord(
-    migrateTeamRecord({
-      id: generateId(),
-      name: "Team 1",
-      pokemon: [],
-      sets: {},
-      roles: {},
-      bringList: [],
-    }),
+    migrateTeamRecord(
+      createEmptyTeamRecord({
+        id: generateId(),
+        name: "Team 1",
+      }),
+    ),
   );
   return { teams: [defaultTeam], activeTeamId: defaultTeam.id };
 }

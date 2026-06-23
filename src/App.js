@@ -16,14 +16,12 @@ function AppRoutes() {
   const { regulationId } = useRegulation();
   return (
     <MetaDataProvider regulationId={regulationId}>
-      <TeamProvider>
-        <ScrollToTop />
-        <Routes>
-          <Route path="/" element={<TeamBuilder />} />
-          <Route path="/browse" element={<Home />} />
-          <Route path="/pokemon/:name" element={<PokemonDetail />} />
-        </Routes>
-      </TeamProvider>
+      <ScrollToTop />
+      <Routes>
+        <Route path="/" element={<TeamBuilder />} />
+        <Route path="/browse" element={<Home />} />
+        <Route path="/pokemon/:name" element={<PokemonDetail />} />
+      </Routes>
     </MetaDataProvider>
   );
 }
@@ -33,9 +31,11 @@ function App() {
     <ThemeProvider>
       <ComparisonProvider>
         <ToastProvider>
-          <RegulationProvider>
-            <AppRoutes />
-          </RegulationProvider>
+          <TeamProvider>
+            <RegulationProvider>
+              <AppRoutes />
+            </RegulationProvider>
+          </TeamProvider>
         </ToastProvider>
       </ComparisonProvider>
     </ThemeProvider>

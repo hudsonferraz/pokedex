@@ -26,7 +26,7 @@ const RegulationSelector = ({ compact = false }) => {
       </select>
       {!compact && (
         <p className="regulation-selector-hint">
-          {regulation.notes} · Max {regulation.maxRestricted ?? 2} Restricted.
+        Saved with the active team. {regulation.notes} · Max {regulation.maxRestricted ?? 2} Restricted.
           {regulation.legalityUnverified && regulation.legalityInheritsFrom
             ? ` Legality inherits from ${regulation.legalityInheritsFrom.replace(/-/g, " ")} until official lists are bundled.`
             : ""}

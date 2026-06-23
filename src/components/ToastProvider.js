@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState } from "react";
+import React, { createContext, useContext, useState, useCallback } from "react";
 import Toast from "./Toast";
 
 const ToastContext = createContext();
@@ -14,17 +14,32 @@ export const useToast = () => {
 export const ToastProvider = ({ children }) => {
   const [toasts, setToasts] = useState([]);
 
-  const showToast = (message, type = "success", duration = 3000) => {
-    const id = Date.now();
-    setToasts((prev) => [...prev, { id, message, type, duration }]);
-  };
-
-  const removeToast = (id) => {
+  const removeToast = useCallback((id) => {
     setToasts((prev) => prev.filter((toast) => toast.id !== id));
-  };
+  }, []);
+
+  const showToast = useCallback((message, type = "success", options = {}) => {
+    const duration = options.duration ?? 3000;
+    const action = options.action ?? null;
+    const id = Date.now() + Math.random();
+    setToasts((prev) => [...prev, { id, message, type, duration, action }]);
+  }, []);
+
+  const showUndoToast = useCallback(
+    (message, onUndo, type = "info") => {
+      showToast(message, type, {
+        duration: 8000,
+        action: {
+          label: "Undo",
+          onClick: onUndo,
+        },
+      });
+    },
+    [showToast],
+  );
 
   return (
-    <ToastContext.Provider value={{ showToast }}>
+    <ToastContext.Provider value={{ showToast, showUndoToast }}>
       {children}
       <div className="toast-container">
         {toasts.map((toast) => (
@@ -33,6 +48,7 @@ export const ToastProvider = ({ children }) => {
             message={toast.message}
             type={toast.type}
             duration={toast.duration}
+            action={toast.action}
             onClose={() => removeToast(toast.id)}
           />
         ))}
@@ -40,4 +56,3 @@ export const ToastProvider = ({ children }) => {
     </ToastContext.Provider>
   );
 };
-

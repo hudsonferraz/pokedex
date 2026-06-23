@@ -1,0 +1,85 @@
+.team-build-guide {
+  padding: var(--space-3);
+  margin-bottom: var(--space-3);
+  overflow-x: auto;
+}
+
+.team-build-guide-steps {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  gap: var(--space-2);
+  min-width: min-content;
+}
+
+.team-build-guide-step {
+  flex: 1 1 0;
+  min-width: 88px;
+}
+
+.team-build-guide-step-btn {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-1);
+  padding: var(--space-2) var(--space-2);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  background: var(--card-bg);
+  color: var(--text-color);
+  font: inherit;
+  cursor: pointer;
+  transition: border-color 0.15s ease, background-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.team-build-guide-step-btn:hover {
+  border-color: var(--accent);
+}
+
+.team-build-guide-step-btn.active {
+  border-color: var(--accent);
+  background: var(--accent-muted);
+  box-shadow: var(--shadow-sm);
+}
+
+.team-build-guide-step-index {
+  font-size: 0.65rem;
+  font-weight: 700;
+  opacity: 0.55;
+}
+
+.team-build-guide-step-label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-align: center;
+  line-height: 1.2;
+}
+
+.team-build-guide-step-status {
+  font-size: 0.7rem;
+  font-weight: 800;
+}
+
+.team-build-guide-step-btn.status-complete .team-build-guide-step-status {
+  color: var(--success);
+}
+
+.team-build-guide-step-btn.status-attention .team-build-guide-step-status {
+  color: #d97706;
+}
+
+.team-build-guide-step-btn.status-upcoming {
+  opacity: 0.75;
+}
+
+@media (max-width: 720px) {
+  .team-build-guide-step {
+    min-width: 72px;
+  }
+
+  .team-build-guide-step-label {
+    font-size: 0.68rem;
+  }
+}

@@ -1,4 +1,5 @@
 import React from "react";
+import TeamContext from "./TeamContext";
 import {
   DEFAULT_REGULATION_ID,
   getRegulationById,
@@ -6,6 +7,7 @@ import {
   setStoredRegulationId,
   REGULATIONS,
   validateTeamForRegulation,
+  normalizeRegulationId,
 } from "../utils/regulation";
 
 const RegulationContext = React.createContext({
@@ -16,12 +18,22 @@ const RegulationContext = React.createContext({
 });
 
 export function RegulationProvider({ children }) {
-  const [regulationId, setRegulationIdState] = React.useState(getStoredRegulationId);
+  const { activeTeam, setTeamRegulationId } = React.useContext(TeamContext);
+  const [browseRegulationId, setBrowseRegulationId] = React.useState(getStoredRegulationId);
 
-  const setRegulationId = React.useCallback((id) => {
-    setRegulationIdState(id);
-    setStoredRegulationId(id);
-  }, []);
+  const regulationId = activeTeam?.regulationId || browseRegulationId;
+
+  const setRegulationId = React.useCallback(
+    (id) => {
+      const normalizedId = normalizeRegulationId(id);
+      if (activeTeam) {
+        setTeamRegulationId(normalizedId);
+      }
+      setBrowseRegulationId(normalizedId);
+      setStoredRegulationId(normalizedId);
+    },
+    [activeTeam, setTeamRegulationId],
+  );
 
   const regulation = getRegulationById(regulationId);
 
@@ -39,6 +51,7 @@ export function RegulationProvider({ children }) {
     regulations: REGULATIONS,
     setRegulationId,
     validateTeam,
+    isTeamRegulation: Boolean(activeTeam?.regulationId),
   };
 
   return (

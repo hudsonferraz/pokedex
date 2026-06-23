@@ -4,6 +4,7 @@ import {
   validateTeamForRegulation,
 } from "./regulation";
 import { parseShowdownEvs } from "./regulationValidation";
+import { migrateTeamRecord } from "./pokemonSets";
 
 describe("regulation legality", () => {
   test("flutter-mane is legal in regulation-i", () => {
@@ -88,5 +89,17 @@ describe("validateTeamForRegulation", () => {
 describe("parseShowdownEvs", () => {
   test("accepts valid spread", () => {
     expect(parseShowdownEvs("252 Atk / 4 Def / 252 Spe").valid).toBe(true);
+  });
+});
+
+describe("per-team regulation migration", () => {
+  test("migrateTeamRecord preserves regulationId on team records", () => {
+    const team = migrateTeamRecord({
+      id: "t1",
+      name: "Team 1",
+      pokemon: [],
+      regulationId: "regulation-i",
+    });
+    expect(team.regulationId).toBe("regulation-i");
   });
 });

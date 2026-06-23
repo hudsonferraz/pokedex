@@ -1,0 +1,85 @@
+.team-health-summary {
+  padding: var(--space-3) var(--space-4);
+  margin-bottom: var(--space-4);
+}
+
+.team-health-summary-title {
+  margin: 0 0 var(--space-2);
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-color);
+  opacity: 0.65;
+}
+
+.team-health-metrics {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.team-health-metric {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-color);
+  background: var(--filter-bg);
+  min-width: 0;
+  font: inherit;
+  text-align: left;
+  cursor: default;
+}
+
+button.team-health-metric {
+  cursor: pointer;
+  transition: border-color 0.15s ease, background-color 0.15s ease;
+}
+
+button.team-health-metric:hover {
+  border-color: var(--accent);
+  background: var(--accent-muted);
+}
+
+.team-health-metric-label {
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  opacity: 0.7;
+}
+
+.team-health-metric-value {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text-color);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 140px;
+}
+
+.team-health-metric-ok {
+  border-color: color-mix(in srgb, var(--success) 45%, var(--border-color));
+}
+
+.team-health-metric-warn {
+  border-color: color-mix(in srgb, #d97706 50%, var(--border-color));
+}
+
+.team-health-metric-error {
+  border-color: color-mix(in srgb, var(--danger) 50%, var(--border-color));
+}
+
+.team-health-metric-neutral {
+  opacity: 0.85;
+}
+
+@media (max-width: 640px) {
+  .team-health-metric-value {
+    max-width: 100px;
+  }
+}

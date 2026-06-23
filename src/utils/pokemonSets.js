@@ -1,3 +1,9 @@
+import {
+  DEFAULT_REGULATION_ID,
+  getStoredRegulationId,
+  normalizeRegulationId,
+} from "./regulation";
+
 export const EMPTY_POKEMON_SET = {
   moves: [],
   moveTypes: {},
@@ -60,12 +66,29 @@ export function migrateTeamRecord(team) {
     ? team.bringList.filter((name) => typeof name === "string").slice(0, 4)
     : [];
 
+  const regulationId = team.regulationId
+    ? normalizeRegulationId(team.regulationId)
+    : getStoredRegulationId();
+
   return {
     ...team,
     sets,
     bringList,
     roles: team.roles && typeof team.roles === "object" ? team.roles : {},
+    regulationId,
   };
+}
+
+export function createEmptyTeamRecord({ id, name, regulationId = DEFAULT_REGULATION_ID }) {
+  return migrateTeamRecord({
+    id,
+    name,
+    pokemon: [],
+    sets: {},
+    roles: {},
+    bringList: [],
+    regulationId,
+  });
 }
 
 export function getMovesFromSet(set) {
