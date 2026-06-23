@@ -21,7 +21,7 @@
     "start:server": "node server/index.js",
     "build": "react-scripts build",
     "test": "react-scripts test",
-    "test:server": "node --test server/__tests__/pikalyticsParser.test.js",
+    "test:server": "node --test server/__tests__/pikalyticsParser.test.js server/__tests__/httpProtection.test.js",
     "eject": "react-scripts eject"
   },
   "eslintConfig": {
