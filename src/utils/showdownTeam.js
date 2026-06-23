@@ -1,5 +1,8 @@
 import { normalizeSetEntry } from "./pokemonSets";
-import { normalizeSpeciesId } from "./regulation";
+import {
+  formatShowdownSpeciesName,
+  resolveApiSpeciesIdFromShowdownSpecies,
+} from "./showdownSpeciesNames";
 
 const GENDER_TOKENS = new Set(["m", "f"]);
 
@@ -36,7 +39,7 @@ export function parseShowdownSpeciesLine(speciesPart) {
     speciesLine: species,
     nickname,
     gender,
-    apiId: normalizeSpeciesId(species.replace(/\s+/g, "-")),
+    apiId: resolveApiSpeciesIdFromShowdownSpecies(species),
   };
 }
 
@@ -92,13 +95,6 @@ function parseHappinessLine(line) {
 
 function formatShowdownMoveName(moveName) {
   return moveName.replace(/-/g, " ").replace(/\b\w/g, (character) => character.toUpperCase());
-}
-
-function formatShowdownSpeciesName(apiName) {
-  return normalizeSpeciesId(apiName)
-    .split("-")
-    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
-    .join("-");
 }
 
 function formatShowdownSpeciesHeader(speciesApiName, set) {

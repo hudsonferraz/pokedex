@@ -101,6 +101,22 @@ describe("parseShowdownSpeciesLine", () => {
       apiId: "urshifu-rapid-strike",
     });
   });
+
+  test("parses Showdown form aliases to internal api ids", () => {
+    expect(parseShowdownSpeciesLine("Calyrex-Ice")).toEqual({
+      speciesLine: "Calyrex-Ice",
+      nickname: "",
+      gender: "",
+      apiId: "calyrex-ice-rider",
+    });
+
+    expect(parseShowdownSpeciesLine("Indeedee-F")).toEqual({
+      speciesLine: "Indeedee-F",
+      nickname: "",
+      gender: "",
+      apiId: "indeedee-female",
+    });
+  });
 });
 
 describe("showdownSpeciesToApiId", () => {
@@ -220,5 +236,27 @@ describe("exportShowdownPaste round-trip", () => {
 
     expect(exported).toContain("Urshifu-Rapid-Strike");
     expect(parseShowdownPaste(exported)[0].apiId).toBe("urshifu-rapid-strike");
+  });
+
+  test("exports Showdown form display names for common VGC species", () => {
+    const exported = exportShowdownPaste(
+      [
+        { name: "calyrex-ice-rider" },
+        { name: "indeedee-female" },
+        { name: "ogerpon-teal" },
+        { name: "maushold-family-of-four" },
+      ],
+      {
+        "calyrex-ice-rider": { moves: ["glaciallance"], moveTypes: {} },
+        "indeedee-female": { moves: ["follow-me"], moveTypes: {} },
+        "ogerpon-teal": { moves: ["ivycudgel"], moveTypes: {} },
+        "maushold-family-of-four": { moves: ["protect"], moveTypes: {} },
+      },
+    );
+
+    expect(exported).toContain("Calyrex-Ice");
+    expect(exported).toContain("Indeedee-F");
+    expect(exported).toContain("Ogerpon\n");
+    expect(exported).toContain("Maushold-Four");
   });
 });
