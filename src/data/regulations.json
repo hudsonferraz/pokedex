@@ -106,20 +106,9 @@
     "id": "regulation-h",
     "label": "Regulation H",
     "series": "Series 2",
-    "maxRestricted": 2,
-    "notes": "Historical ruleset for reference (Reg H restricted pool).",
-    "banned": ["mewtwo", "mew", "arceus"],
-    "restricted": [
-      "koraidon",
-      "miraidon",
-      "calyrex-ice-rider",
-      "calyrex-shadow-rider",
-      "zacian-crowned",
-      "zamazenta-crowned",
-      "urshifu-rapid-strike",
-      "flutter-mane",
-      "incineroar",
-      "rillaboom"
-    ]
+    "maxRestricted": 0,
+    "notes": "Ban-only format: Paradox Pokémon, Treasures of Ruin, Legendary and Mythical Pokémon are not allowed. Most other Paldea, Kitakami, and Blueberry dex Pokémon are legal.",
+    "banned": [],
+    "restricted": []
   }
 }

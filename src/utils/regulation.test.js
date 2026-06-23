@@ -28,6 +28,18 @@ describe("regulation legality", () => {
   test("champions inherits regulation-i legality", () => {
     expect(getSpeciesRegulationStatus("miraidon", "champions-reg-ma").status).toBe("restricted");
   });
+
+  test("incineroar is legal in regulation-h", () => {
+    expect(getSpeciesRegulationStatus("incineroar", "regulation-h").status).toBe("legal");
+  });
+
+  test("flutter-mane is banned in regulation-h", () => {
+    expect(getSpeciesRegulationStatus("flutter-mane", "regulation-h").status).toBe("banned");
+  });
+
+  test("koraidon is banned in regulation-h", () => {
+    expect(getSpeciesRegulationStatus("koraidon", "regulation-h").status).toBe("banned");
+  });
 });
 
 describe("species clause", () => {
@@ -83,6 +95,22 @@ describe("validateTeamForRegulation", () => {
     });
 
     expect(result.issues.some((issue) => issue.type === "invalid-evs")).toBe(true);
+  });
+
+  test("flags banned paradox pokemon in regulation-h", () => {
+    const result = validateTeamForRegulation(
+      [incineroar, { name: "flutter-mane" }],
+      "regulation-h",
+      {
+        sets: {
+          incineroar: { moves: ["fake-out", "flare-blitz", "knock-off", "parting-shot"] },
+          "flutter-mane": { moves: ["moonblast", "dazzling-gleam", "shadow-ball", "protect"] },
+        },
+      },
+    );
+
+    expect(result.issues.some((issue) => issue.type === "banned")).toBe(true);
+    expect(result.issues.some((issue) => issue.type === "restricted-limit")).toBe(false);
   });
 });
 

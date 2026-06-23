@@ -1,20 +1,20 @@
 import { migrateTeamRecord, createEmptyTeamRecord } from "./pokemonSets";
 import {
-  compactTeamRecord,
-  expandTeamRecord,
-  normalizeTeamPokemonList,
-} from "./teamPokemonModel";
+  compactTeamForStorage,
+  expandTeamForUse,
+  TEAM_SCHEMA_VERSION,
+} from "./teamModel";
+import { normalizeTeamPokemonList } from "./teamPokemonModel";
 
 const TEAMS_KEY = "pokemon-teams";
 const LEGACY_TEAM_KEY = "pokemon-team";
-const STORAGE_VERSION = 2;
 
 function generateId() {
   return `t_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`;
 }
 
 function normalizeLoadedTeams(teams) {
-  return teams.map((team) => expandTeamRecord(migrateTeamRecord(team)));
+  return teams.map((team) => expandTeamForUse(migrateTeamRecord(team)));
 }
 
 function loadFromStorage() {
@@ -24,10 +24,11 @@ function loadFromStorage() {
       const data = JSON.parse(raw);
       if (data.teams && Array.isArray(data.teams) && data.teams.length > 0) {
         const teams = normalizeLoadedTeams(data.teams);
-        return {
-          teams,
-          activeTeamId: data.activeTeamId || data.teams[0].id,
-        };
+        const activeTeamId =
+          data.activeTeamId && teams.some((team) => team.id === data.activeTeamId)
+            ? data.activeTeamId
+            : teams[0].id;
+        return { teams, activeTeamId };
       }
     }
   } catch {
@@ -39,7 +40,7 @@ function loadFromStorage() {
     if (legacy) {
       const pokemon = JSON.parse(legacy);
       if (Array.isArray(pokemon) && pokemon.length > 0) {
-        const team = expandTeamRecord(
+        const team = expandTeamForUse(
           migrateTeamRecord(
             createEmptyTeamRecord({
               id: generateId(),
@@ -60,7 +61,7 @@ function loadFromStorage() {
     // ignore migration error
   }
 
-  const defaultTeam = expandTeamRecord(
+  const defaultTeam = expandTeamForUse(
     migrateTeamRecord(
       createEmptyTeamRecord({
         id: generateId(),
@@ -73,8 +74,8 @@ function loadFromStorage() {
 
 function saveToStorage(teams, activeTeamId) {
   const payload = {
-    version: STORAGE_VERSION,
-    teams: teams.map((team) => compactTeamRecord(migrateTeamRecord(team))),
+    version: TEAM_SCHEMA_VERSION,
+    teams: teams.map((team) => compactTeamForStorage(migrateTeamRecord(team))),
     activeTeamId,
   };
 

@@ -1,5 +1,5 @@
 import { normalizeSetEntry } from "./pokemonSets";
-import { formatSpeciesLabel, normalizeSpeciesId } from "./regulation";
+import { normalizeSpeciesId } from "./regulation";
 
 const GENDER_TOKENS = new Set(["m", "f"]);
 
@@ -94,6 +94,13 @@ function formatShowdownMoveName(moveName) {
   return moveName.replace(/-/g, " ").replace(/\b\w/g, (character) => character.toUpperCase());
 }
 
+function formatShowdownSpeciesName(apiName) {
+  return normalizeSpeciesId(apiName)
+    .split("-")
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join("-");
+}
+
 function formatShowdownSpeciesHeader(speciesApiName, set) {
   const speciesLabel = formatShowdownSpeciesName(speciesApiName);
   const displayName = set.nickname
@@ -108,17 +115,48 @@ function formatShowdownSpeciesHeader(speciesApiName, set) {
   return `${displayName}${genderSuffix}`;
 }
 
-export function parseShowdownPaste(text) {
-  if (!text || typeof text !== "string") return [];
+function isTeamNameBlock(block, blockIndex, blocks) {
+  if (blockIndex !== 0 || blocks.length < 2) {
+    return false;
+  }
 
-  const blocks = text
+  const lines = block.split("\n").map((line) => line.trim()).filter(Boolean);
+  if (lines.length !== 1) {
+    return false;
+  }
+
+  const line = lines[0];
+  if (line.includes("@") || /^Ability:/i.test(line) || /^Level:/i.test(line)) {
+    return false;
+  }
+
+  const nextBlock = blocks[1];
+  return (
+    nextBlock.includes("@") ||
+    /^Ability:/m.test(nextBlock) ||
+    /^Level:/m.test(nextBlock) ||
+    /^[-*]\s/m.test(nextBlock)
+  );
+}
+
+function splitShowdownBlocks(text) {
+  return text
     .split(/\n\s*\n/)
     .map((block) => block.trim())
     .filter(Boolean);
+}
 
+export function parseShowdownPaste(text) {
+  if (!text || typeof text !== "string") return [];
+
+  const blocks = splitShowdownBlocks(text);
   const parsed = [];
 
-  blocks.forEach((block) => {
+  blocks.forEach((block, blockIndex) => {
+    if (isTeamNameBlock(block, blockIndex, blocks)) {
+      return;
+    }
+
     const lines = block.split("\n").map((line) => line.trim()).filter(Boolean);
     if (lines.length === 0) return;
 
@@ -182,12 +220,10 @@ export function parseShowdownPaste(text) {
   return parsed.slice(0, 6);
 }
 
-function formatShowdownSpeciesName(apiName) {
-  return formatSpeciesLabel(normalizeSpeciesId(apiName));
-}
-
 export function exportShowdownPaste(team, setsByName, teamName = "Team") {
-  if (!team || team.length === 0) return `${teamName}\n`;
+  if (!team || team.length === 0) {
+    return `${teamName}\n`;
+  }
 
   const blocks = team.map((pokemon) => {
     const set = normalizeSetEntry(setsByName?.[pokemon.name]);
@@ -212,5 +248,28 @@ export function exportShowdownPaste(team, setsByName, teamName = "Team") {
     return lines.join("\n");
   });
 
-  return `${blocks.join("\n\n")}\n`;
+  const body = blocks.join("\n\n");
+  if (teamName && teamName.trim()) {
+    return `${teamName.trim()}\n\n${body}\n`;
+  }
+
+  return `${body}\n`;
+}
+
+export function parsedShowdownToSet(entry) {
+  return normalizeSetEntry({
+    moves: entry.moves,
+    moveTypes: {},
+    ability: entry.ability,
+    item: entry.item,
+    nature: entry.nature,
+    teraType: entry.teraType,
+    evs: entry.evs,
+    ivs: entry.ivs,
+    level: entry.level,
+    gender: entry.gender,
+    shiny: entry.shiny,
+    happiness: entry.happiness,
+    nickname: entry.nickname,
+  });
 }

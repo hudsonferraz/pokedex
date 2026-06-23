@@ -1,5 +1,7 @@
 import { normalizeSetEntry } from "./pokemonSets";
 import { exportShowdownPaste } from "./showdownTeam";
+import { normalizeRegulationId } from "./regulation";
+import { normalizeTeamRecord } from "./teamModel";
 import { SHARE_URL_SAFE_LENGTH } from "./metaThreatHeatmap";
 
 /**
@@ -23,22 +25,35 @@ export function getTeamExportText(team, teamName = "Team", sets = null) {
   return `${teamName}\n${lines.join("\n")}`;
 }
 
+function normalizeShareSets(sets) {
+  if (!sets || typeof sets !== "object") {
+    return null;
+  }
+
+  const normalized = {};
+  Object.entries(sets).forEach(([name, entry]) => {
+    normalized[name] = normalizeSetEntry(entry);
+  });
+  return normalized;
+}
+
 function buildSharePayload(team, teamName, sets, bringList, regulationId, roles) {
   const payload = {
     name: teamName,
     pokemon: (team || []).map((pokemon) => pokemon.name),
   };
 
-  if (sets && typeof sets === "object" && Object.keys(sets).length > 0) {
-    payload.sets = sets;
+  const normalizedSets = normalizeShareSets(sets);
+  if (normalizedSets && Object.keys(normalizedSets).length > 0) {
+    payload.sets = normalizedSets;
   }
 
   if (Array.isArray(bringList) && bringList.length > 0) {
-    payload.bringList = bringList;
+    payload.bringList = bringList.slice(0, 4);
   }
 
   if (regulationId) {
-    payload.regulationId = regulationId;
+    payload.regulationId = normalizeRegulationId(regulationId);
   }
 
   if (roles && typeof roles === "object" && Object.keys(roles).length > 0) {
@@ -108,11 +123,27 @@ export function decodeTeamFromShare(encoded) {
 
     const bringList = Array.isArray(data.bringList) ? data.bringList : null;
     const regulationId =
-      typeof data.regulationId === "string" ? data.regulationId : null;
+      typeof data.regulationId === "string" ? normalizeRegulationId(data.regulationId) : null;
     const roles =
       data.roles && typeof data.roles === "object" ? data.roles : null;
 
-    return { name, pokemon, sets, bringList, regulationId, roles };
+    const normalized = normalizeTeamRecord({
+      name,
+      pokemon: pokemon.map((speciesName) => ({ name: speciesName })),
+      sets: sets || {},
+      roles: roles || {},
+      bringList: bringList || [],
+      regulationId,
+    });
+
+    return {
+      name: normalized.name,
+      pokemon: normalized.pokemon.map((entry) => entry.name),
+      sets: normalized.sets,
+      bringList: normalized.bringList,
+      regulationId: normalized.regulationId,
+      roles: normalized.roles,
+    };
   } catch {
     return null;
   }

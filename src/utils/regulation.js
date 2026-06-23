@@ -1,11 +1,18 @@
 import regulationsData from "../data/regulations.json";
+import regulationHBanned from "../data/regulation-h-banned.json";
 import { validateTeamSets } from "./regulationValidation";
-
-export const REGULATIONS = Object.values(regulationsData);
 
 export const DEFAULT_REGULATION_ID = "champions-reg-ma";
 
-const REGULATION_MAP = regulationsData;
+const REGULATION_MAP = {
+  ...regulationsData,
+  "regulation-h": {
+    ...regulationsData["regulation-h"],
+    banned: regulationHBanned,
+    restricted: [],
+    maxRestricted: 0,
+  },
+};
 
 export const SPECIES_CLAUSE_ALIASES = {
   "urshifu-single-strike": "urshifu",
@@ -53,11 +60,18 @@ export function getRegulationById(regulationId) {
   return REGULATION_MAP[regulationId] || REGULATION_MAP[DEFAULT_REGULATION_ID];
 }
 
+export const REGULATIONS = Object.keys(regulationsData).map((id) => getRegulationById(id));
+
 export function normalizeRegulationId(regulationId) {
   if (regulationId && REGULATION_MAP[regulationId]) {
     return regulationId;
   }
   return DEFAULT_REGULATION_ID;
+}
+
+export function isBanOnlyRegulation(regulation) {
+  const legality = getEffectiveLegality(regulation);
+  return (legality.maxRestricted ?? 2) === 0;
 }
 
 export function getEffectiveLegality(regulation) {
@@ -184,14 +198,14 @@ export function validateTeamForRegulation(team, regulationId, options = {}) {
   });
 
   const maxRestricted = legality.maxRestricted ?? 2;
-  if (restrictedCount > maxRestricted) {
+  if (!isBanOnlyRegulation(regulation) && restrictedCount > maxRestricted) {
     issues.push({
       type: "restricted-limit",
       message: `${restrictedCount} Restricted Pokémon — ${regulation.label} allows up to ${maxRestricted}`,
       restrictedCount,
       maxRestricted,
     });
-  } else if (restrictedCount > 0) {
+  } else if (!isBanOnlyRegulation(regulation) && restrictedCount > 0) {
     warnings.push({
       type: "restricted-count",
       message: `${restrictedCount}/${maxRestricted} Restricted slots used`,

@@ -3,6 +3,7 @@ import {
   getStoredRegulationId,
   normalizeRegulationId,
 } from "./regulation";
+import { normalizeTeamRecord } from "./teamModel";
 
 export const EMPTY_POKEMON_SET = {
   moves: [],
@@ -51,31 +52,13 @@ export function normalizeSetEntry(value) {
 }
 
 export function migrateTeamRecord(team) {
-  const sets = {};
-  if (team.sets && typeof team.sets === "object") {
-    Object.entries(team.sets).forEach(([name, entry]) => {
-      sets[name] = normalizeSetEntry(entry);
-    });
-  } else if (team.movesets && typeof team.movesets === "object") {
-    Object.entries(team.movesets).forEach(([name, entry]) => {
-      sets[name] = normalizeSetEntry(entry);
-    });
-  }
-
-  const bringList = Array.isArray(team.bringList)
-    ? team.bringList.filter((name) => typeof name === "string").slice(0, 4)
-    : [];
-
-  const regulationId = team.regulationId
-    ? normalizeRegulationId(team.regulationId)
-    : getStoredRegulationId();
+  const normalized = normalizeTeamRecord(team, {
+    regulationIdFallback: getStoredRegulationId(),
+  });
 
   return {
-    ...team,
-    sets,
-    bringList,
-    roles: team.roles && typeof team.roles === "object" ? team.roles : {},
-    regulationId,
+    ...normalized,
+    regulationId: normalizeRegulationId(normalized.regulationId),
   };
 }
 
