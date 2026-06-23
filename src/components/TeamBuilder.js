@@ -73,7 +73,6 @@ const TeamBuilder = () => {
   const { regulation, regulationId, validateTeam } = useRegulation();
   const [searchParams, setSearchParams] = useSearchParams();
   const [showAddModal, setShowAddModal] = useState(false);
-  const [selectedSlot, setSelectedSlot] = useState(null);
   const [showExportMenu, setShowExportMenu] = useState(false);
   const [showRenameModal, setShowRenameModal] = useState(false);
   const [renameValue, setRenameValue] = useState("");
@@ -169,7 +168,6 @@ const TeamBuilder = () => {
 
   const closeAddModal = useCallback(() => {
     setShowAddModal(false);
-    setSelectedSlot(null);
   }, []);
 
   const closeRenameModal = useCallback(() => setShowRenameModal(false), []);
@@ -178,23 +176,34 @@ const TeamBuilder = () => {
   const renameModalRef = useModalAccessibility(showRenameModal, closeRenameModal);
   const deleteModalRef = useModalAccessibility(!!teamToDelete, closeDeleteModal);
 
+  const importedShareTeamRef = useRef(null);
+  const teamShareParam = searchParams.get("team");
+
   // Import team from share link (?team=base64)
   useEffect(() => {
-    const encoded = searchParams.get("team");
-    if (!encoded) return;
-    const decoded = decodeTeamFromShare(encoded);
-    if (!decoded || decoded.pokemon.length === 0) {
-      setSearchParams({});
+    if (!teamShareParam) {
       return;
     }
+    if (importedShareTeamRef.current === teamShareParam) {
+      return;
+    }
+
+    const decoded = decodeTeamFromShare(teamShareParam);
+    if (!decoded || decoded.pokemon.length === 0) {
+      setSearchParams({}, { replace: true });
+      return;
+    }
+
+    importedShareTeamRef.current = teamShareParam;
     let cancelled = false;
+
     (async () => {
       try {
         const fullTeam = [];
         for (const name of decoded.pokemon.slice(0, 6)) {
           if (cancelled) return;
-          const p = await searchPokemon(name);
-          if (p) fullTeam.push(p);
+          const pokemon = await searchPokemon(name);
+          if (pokemon) fullTeam.push(pokemon);
         }
         if (!cancelled && fullTeam.length > 0) {
           addTeamWithRoster(
@@ -207,13 +216,28 @@ const TeamBuilder = () => {
           );
           showUndoToast(`Imported "${decoded.name}"`, handleUndo, "success");
         }
-        setSearchParams({});
-      } catch (e) {
-        if (!cancelled) showToast("Failed to import team", "error");
+        if (!cancelled) {
+          setSearchParams({}, { replace: true });
+        }
+      } catch {
+        if (!cancelled) {
+          importedShareTeamRef.current = null;
+          showToast("Failed to import team", "error");
+        }
       }
     })();
-    return () => { cancelled = true; };
-  }, [searchParams]);
+
+    return () => {
+      cancelled = true;
+    };
+  }, [
+    teamShareParam,
+    addTeamWithRoster,
+    showUndoToast,
+    handleUndo,
+    showToast,
+    setSearchParams,
+  ]);
 
   useEffect(() => {
     const handleClickOutside = (e) => {
@@ -246,7 +270,6 @@ const TeamBuilder = () => {
     if (team[slotIndex]) {
       return;
     }
-    setSelectedSlot(slotIndex);
     setShowAddModal(true);
   };
 
