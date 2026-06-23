@@ -33,6 +33,7 @@ import {
   buildTeamShareUrl,
 } from "../utils/teamExport";
 import { parseShowdownPaste } from "../utils/showdownTeam";
+import { ensurePokemonHasLearnset } from "../utils/teamPokemonModel";
 import "./TeamBuilder.css";
 
 const TeamBuilder = () => {
@@ -60,6 +61,8 @@ const TeamBuilder = () => {
     removeFromTeam,
     clearTeam,
     canAddToTeam,
+    storageError,
+    clearStorageError,
   } = useContext(TeamContext);
   const { showToast } = useToast();
   const { regulation, regulationId, setRegulationId } = useRegulation();
@@ -97,6 +100,24 @@ const TeamBuilder = () => {
   }, [team, metaFocusIndex, filledSlotIndices]);
   const bringList = getBringList();
   const exportMenuRef = useRef(null);
+
+  useEffect(() => {
+    if (!storageError) {
+      return;
+    }
+    showToast(storageError, "error");
+    clearStorageError();
+  }, [storageError, clearStorageError, showToast]);
+
+  const openMovePicker = async (pokemon) => {
+    const hydratedPokemon = await ensurePokemonHasLearnset(pokemon);
+    setMovePickerPokemon(hydratedPokemon);
+  };
+
+  const openSetEditor = async (pokemon) => {
+    const hydratedPokemon = await ensurePokemonHasLearnset(pokemon);
+    setSetEditorPokemon(hydratedPokemon);
+  };
 
   const closeAddModal = useCallback(() => {
     setShowAddModal(false);
@@ -512,8 +533,8 @@ const TeamBuilder = () => {
                 onRoleChange={(name, value) => setRole(name, value)}
                 onRemove={handleRemovePokemon}
                 onAdd={() => handleSlotClick(slotIndex)}
-                onEditSet={(pokemon) => setSetEditorPokemon(pokemon)}
-                onEditMoves={(pokemon) => setMovePickerPokemon(pokemon)}
+                onEditSet={openSetEditor}
+                onEditMoves={openMovePicker}
               />
             ))}
           </div>

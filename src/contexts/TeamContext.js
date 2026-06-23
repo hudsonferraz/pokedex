@@ -1,5 +1,6 @@
 import React from "react";
 import { loadFromStorage, saveToStorage, generateId } from "../utils/teamStorage";
+import { normalizeTeamPokemonList } from "../utils/teamPokemonModel";
 import {
   EMPTY_POKEMON_SET,
   getMovesFromSet,
@@ -35,6 +36,8 @@ const TeamContext = React.createContext({
   clearTeam: () => null,
   isInTeam: () => false,
   canAddToTeam: () => false,
+  storageError: null,
+  clearStorageError: () => null,
 });
 
 function pruneSetsAndRoles(teamRecord, names) {
@@ -59,7 +62,7 @@ function applyRosterToTeamRecord(
   rolesToApply,
   bringListNames,
 ) {
-  const nextPokemon = Array.isArray(pokemon) ? pokemon : [];
+  const nextPokemon = normalizeTeamPokemonList(pokemon);
   const names = new Set(
     nextPokemon.map((entry) => entry?.name).filter(Boolean),
   );
@@ -104,10 +107,20 @@ function applyRosterToTeamRecord(
 
 function TeamProviderWithState({ children }) {
   const [state, setState] = React.useState(() => loadFromStorage());
+  const [storageError, setStorageError] = React.useState(null);
 
   const persist = React.useCallback((teams, activeTeamId) => {
     setState({ teams, activeTeamId });
-    saveToStorage(teams, activeTeamId);
+    const result = saveToStorage(teams, activeTeamId);
+    if (result.ok) {
+      setStorageError(null);
+    } else {
+      setStorageError(result.message || "Team could not be saved.");
+    }
+  }, []);
+
+  const clearStorageError = React.useCallback(() => {
+    setStorageError(null);
   }, []);
 
   const activeTeam =
@@ -202,7 +215,7 @@ function TeamProviderWithState({ children }) {
 
   const replaceTeamPokemon = React.useCallback(
     (id, pokemon) => {
-      const nextPokemon = Array.isArray(pokemon) ? pokemon : [];
+      const nextPokemon = normalizeTeamPokemonList(pokemon);
       const teams = state.teams.map((team) => {
         if (team.id !== id) return team;
         const names = new Set(nextPokemon.map((entry) => entry && entry.name).filter(Boolean));
@@ -251,7 +264,7 @@ function TeamProviderWithState({ children }) {
         return previousState;
       }
 
-      const nextPokemon = [...currentTeam.pokemon, pokemon];
+      const nextPokemon = normalizeTeamPokemonList([...currentTeam.pokemon, pokemon]);
       const names = new Set(
         nextPokemon.map((entry) => entry?.name).filter(Boolean),
       );
@@ -273,7 +286,17 @@ function TeamProviderWithState({ children }) {
           : team,
       );
 
-      saveToStorage(teams, activeTeamId);
+      const saveResult = saveToStorage(teams, activeTeamId);
+      if (!saveResult.ok) {
+        window.queueMicrotask(() => {
+          setStorageError(saveResult.message || "Team could not be saved.");
+        });
+      } else {
+        window.queueMicrotask(() => {
+          setStorageError(null);
+        });
+      }
+
       added = true;
       return { teams, activeTeamId };
     });
@@ -466,6 +489,8 @@ function TeamProviderWithState({ children }) {
     clearTeam,
     isInTeam,
     canAddToTeam,
+    storageError,
+    clearStorageError,
   };
 
   return <TeamContext.Provider value={value}>{children}</TeamContext.Provider>;
