@@ -3,6 +3,7 @@ const assert = require("node:assert/strict");
 
 const {
   createRateLimiter,
+  pruneExpiredBuckets,
   validateAiTeamTipsBody,
   parseAllowedOrigins,
 } = require("../httpProtection");
@@ -73,6 +74,29 @@ test("validateAiTeamTipsBody normalizes valid payload", () => {
   assert.equal(nextCalled, true);
   assert.equal(req.body.userMessage, "What should I improve?");
   assert.equal(req.body.format, "Reg I");
+});
+
+test("pruneExpiredBuckets removes stale entries", () => {
+  const buckets = new Map([
+    ["test:203.0.113.1", { count: 1, resetAt: 100 }],
+    ["test:203.0.113.2", { count: 2, resetAt: 500 }],
+    ["test:203.0.113.3", { count: 1, resetAt: 200 }],
+  ]);
+
+  const lastPrunedAt = pruneExpiredBuckets(buckets, 250, 0, 0);
+  assert.equal(lastPrunedAt, 250);
+  assert.equal(buckets.size, 1);
+  assert.ok(buckets.has("test:203.0.113.2"));
+});
+
+test("pruneExpiredBuckets skips work until interval elapses", () => {
+  const buckets = new Map([
+    ["test:203.0.113.1", { count: 1, resetAt: 100 }],
+  ]);
+
+  const lastPrunedAt = pruneExpiredBuckets(buckets, 200, 150, 100);
+  assert.equal(lastPrunedAt, 150);
+  assert.equal(buckets.size, 1);
 });
 
 test("rate limiter blocks after maxRequests", () => {

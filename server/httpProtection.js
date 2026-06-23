@@ -29,12 +29,33 @@ function getRequestIp(req) {
   return req.ip || req.socket?.remoteAddress || "unknown";
 }
 
-function createRateLimiter({ windowMs, maxRequests, name = "api" }) {
+function pruneExpiredBuckets(buckets, now, lastPrunedAt, pruneIntervalMs) {
+  if (now - lastPrunedAt < pruneIntervalMs) {
+    return lastPrunedAt;
+  }
+
+  for (const [key, bucket] of buckets) {
+    if (now >= bucket.resetAt) {
+      buckets.delete(key);
+    }
+  }
+
+  return now;
+}
+
+function createRateLimiter({
+  windowMs,
+  maxRequests,
+  name = "api",
+  pruneIntervalMs = windowMs,
+}) {
   const buckets = new Map();
+  let lastPrunedAt = 0;
 
   return function rateLimitMiddleware(req, res, next) {
     const key = `${name}:${getRequestIp(req)}`;
     const now = Date.now();
+    lastPrunedAt = pruneExpiredBuckets(buckets, now, lastPrunedAt, pruneIntervalMs);
     let bucket = buckets.get(key);
 
     if (!bucket || now >= bucket.resetAt) {
@@ -155,6 +176,7 @@ async function fetchWithTimeout(fetchImpl, url, options = {}, timeoutMs = 15000)
 module.exports = {
   createCorsOptions,
   createRateLimiter,
+  pruneExpiredBuckets,
   validateAiTeamTipsBody,
   fetchWithTimeout,
   getRequestIp,
