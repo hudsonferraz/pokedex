@@ -29,6 +29,7 @@ import ApiStatusChip from "./ApiStatusChip";
 import AddPokemonModal from "./AddPokemonModal";
 import { normalizeSpeciesId, formatSpeciesLabel } from "../utils/regulation";
 import { useModalAccessibility } from "../hooks/useModalAccessibility";
+import { useTeamLearnsets } from "../hooks/useTeamLearnsets";
 import {
   getTeamExportText,
   getTeamShowdownExport,
@@ -85,15 +86,30 @@ const TeamBuilder = () => {
   const [metaFocusIndex, setMetaFocusIndex] = useState(0);
   const [activeBuildStepId, setActiveBuildStepId] = useState("roster");
   const suggestedStepRef = useRef("roster");
+  const { learnsetBySpecies, isLoading: isLoadingLearnsets } = useTeamLearnsets(
+    team,
+    activeTeam?.sets,
+  );
+
+  const validateTeamWithLearnsets = useCallback(
+    (roster, options = {}) =>
+      validateTeam(roster, {
+        ...options,
+        learnsetBySpecies,
+        learnsetValidationPending: isLoadingLearnsets,
+      }),
+    [validateTeam, learnsetBySpecies, isLoadingLearnsets],
+  );
 
   const workflow = useMemo(
     () =>
       computeTeamBuildHealth({
         team,
         sets: activeTeam?.sets,
-        validateTeam,
+        validateTeam: validateTeamWithLearnsets,
+        learnsetValidationPending: isLoadingLearnsets,
       }),
-    [team, activeTeam?.sets, validateTeam],
+    [team, activeTeam?.sets, validateTeamWithLearnsets, isLoadingLearnsets],
   );
 
   useEffect(() => {
@@ -705,13 +721,18 @@ const TeamBuilder = () => {
           stepId="legality"
           stepNumber={3}
           title="Review legality"
-          description={`Confirm your squad meets ${regulation.label} rules — species clause, restricteds, items, and learnsets.`}
+          description={`Confirm your squad meets ${regulation.label} rules — species clause, restricteds, items, and move learnsets (loaded on demand).`}
           status={getStepMeta("legality").status}
           isActive={activeBuildStepId === "legality"}
           onActivate={() => handleBuildStepChange("legality")}
         >
           <RegulationSelector />
-          <RegulationWarnings team={team} sets={activeTeam?.sets} />
+          <RegulationWarnings
+            team={team}
+            sets={activeTeam?.sets}
+            learnsetBySpecies={learnsetBySpecies}
+            isLoadingLearnsets={isLoadingLearnsets}
+          />
         </BuildStepSection>
 
         <BuildStepSection

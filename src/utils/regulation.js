@@ -214,7 +214,11 @@ export function validateTeamForRegulation(team, regulationId, options = {}) {
     });
   }
 
-  const setValidation = validateTeamSets(team, sets, regulationId);
+  const setValidation = validateTeamSets(team, sets, {
+    regulationId,
+    learnsetBySpecies: options.learnsetBySpecies,
+    learnsetValidationPending: options.learnsetValidationPending,
+  });
   issues.push(...setValidation.issues);
   warnings.push(...setValidation.warnings);
 

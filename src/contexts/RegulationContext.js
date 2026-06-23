@@ -41,6 +41,8 @@ export function RegulationProvider({ children }) {
     (team, options = {}) =>
       validateTeamForRegulation(team, regulationId, {
         sets: options.sets,
+        learnsetBySpecies: options.learnsetBySpecies,
+        learnsetValidationPending: options.learnsetValidationPending,
       }),
     [regulationId],
   );

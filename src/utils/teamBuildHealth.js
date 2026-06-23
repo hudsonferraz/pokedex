@@ -136,7 +136,16 @@ function getMajorWeaknesses(team) {
   return { status, label, types };
 }
 
-function getLegalitySummary(validation) {
+function getLegalitySummary(validation, { learnsetValidationPending = false } = {}) {
+  if (learnsetValidationPending) {
+    return {
+      status: "attention",
+      label: "Checking learnsets",
+      issueCount: validation.issues?.length || 0,
+      warningCount: validation.warnings?.length || 0,
+    };
+  }
+
   const issueCount = validation.issues?.length || 0;
   const warningCount = validation.warnings?.length || 0;
 
@@ -216,12 +225,19 @@ export function getSuggestedStepId(steps) {
   return "export";
 }
 
-export function computeTeamBuildHealth({ team, sets, validateTeam }) {
+export function computeTeamBuildHealth({
+  team,
+  sets,
+  validateTeam,
+  learnsetValidationPending = false,
+}) {
   const roster = team.filter(Boolean);
   const setsByName = sets || {};
   const setCompletion = countCompleteSets(roster, setsByName);
-  const validation = validateTeam ? validateTeam(roster, { sets }) : { issues: [], warnings: [] };
-  const legality = getLegalitySummary(validation);
+  const validation = validateTeam
+    ? validateTeam(roster, { sets, learnsetValidationPending })
+    : { issues: [], warnings: [] };
+  const legality = getLegalitySummary(validation, { learnsetValidationPending });
   const speedControl = getSpeedControlSummary(roster, setsByName);
   const damageBalance = getDamageBalanceSummary(roster, setsByName);
   const weaknesses = getMajorWeaknesses(roster);

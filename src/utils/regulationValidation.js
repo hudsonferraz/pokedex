@@ -1,5 +1,5 @@
 import { TERA_TYPES, VGC_NATURES } from "../constants/vgcOptions";
-import { formatSpeciesLabel, normalizeSpeciesId } from "./regulation";
+import { normalizeSpeciesId, formatSpeciesLabel } from "./regulation";
 import { normalizeSetEntry } from "./pokemonSets";
 
 const VALID_TERA_TYPES = new Set(
@@ -89,20 +89,32 @@ function getPokemonAbilityIds(pokemon) {
     .filter(Boolean);
 }
 
-function getPokemonLearnset(pokemon) {
-  return new Set(
+function getPokemonLearnset(pokemon, learnsetBySpecies = {}) {
+  const fromPokemon = new Set(
     (pokemon?.moves || [])
       .map((entry) => normalizeSpeciesId(entry?.move?.name || ""))
       .filter(Boolean),
   );
+
+  if (fromPokemon.size > 0) {
+    return fromPokemon;
+  }
+
+  const speciesKey = normalizeSpeciesId(pokemon?.name);
+  const fromCache = learnsetBySpecies[speciesKey];
+  if (!fromCache) {
+    return new Set();
+  }
+
+  return fromCache instanceof Set ? fromCache : new Set(fromCache);
 }
 
-function validatePokemonSet(pokemon, set) {
+function validatePokemonSet(pokemon, set, options = {}) {
   const issues = [];
   const warnings = [];
   const speciesLabel = formatSpeciesLabel(pokemon.name);
   const normalizedSet = normalizeSetEntry(set);
-  const learnset = getPokemonLearnset(pokemon);
+  const learnset = getPokemonLearnset(pokemon, options.learnsetBySpecies);
   const abilityIds = getPokemonAbilityIds(pokemon);
 
   if (normalizedSet.moves.length === 0) {
@@ -120,6 +132,18 @@ function validatePokemonSet(pokemon, set) {
   }
 
   const seenMoves = new Set();
+  const hasConfiguredMoves = normalizedSet.moves.length > 0;
+  const learnsetUnavailable =
+    hasConfiguredMoves && learnset.size === 0 && !options.learnsetValidationPending;
+
+  if (learnsetUnavailable) {
+    warnings.push({
+      type: "learnset-unavailable",
+      speciesId: normalizeSpeciesId(pokemon.name),
+      message: `${speciesLabel}: learnset not loaded — move legality cannot be verified yet`,
+    });
+  }
+
   normalizedSet.moves.forEach((moveName) => {
     const moveId = normalizeSpeciesId(moveName);
     if (seenMoves.has(moveId)) {
@@ -190,7 +214,7 @@ function validatePokemonSet(pokemon, set) {
   return { issues, warnings };
 }
 
-export function validateTeamSets(team, setsByName, regulationId) {
+export function validateTeamSets(team, setsByName, options = {}) {
   const issues = [];
   const warnings = [];
 
@@ -216,6 +240,7 @@ export function validateTeamSets(team, setsByName, regulationId) {
     const { issues: setIssues, warnings: setWarnings } = validatePokemonSet(
       pokemon,
       set,
+      options,
     );
     issues.push(...setIssues);
     warnings.push(...setWarnings);

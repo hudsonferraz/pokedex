@@ -2,14 +2,31 @@ import React, { useMemo } from "react";
 import { useRegulation } from "../contexts/RegulationContext";
 import "./RegulationWarnings.css";
 
-const RegulationWarnings = ({ team, sets }) => {
+const RegulationWarnings = ({ team, sets, learnsetBySpecies = {}, isLoadingLearnsets = false }) => {
   const { validateTeam, regulation } = useRegulation();
   const { issues, warnings, legalityVerified } = useMemo(
-    () => validateTeam(team, { sets }),
-    [team, sets, validateTeam],
+    () =>
+      validateTeam(team, {
+        sets,
+        learnsetBySpecies,
+        learnsetValidationPending: isLoadingLearnsets,
+      }),
+    [team, sets, validateTeam, learnsetBySpecies, isLoadingLearnsets],
   );
 
   if (!team?.length) return null;
+
+  if (isLoadingLearnsets) {
+    return (
+      <div className="regulation-status regulation-status-pending card-surface" role="status">
+        <span className="regulation-status-icon" aria-hidden>
+          …
+        </span>
+        <span>Loading learnsets to verify move legality…</span>
+      </div>
+    );
+  }
+
   if (issues.length === 0 && warnings.length === 0) {
     return (
       <div className="regulation-status regulation-status-ok card-surface" role="status">

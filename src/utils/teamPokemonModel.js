@@ -1,3 +1,5 @@
+import { seedLearnsetFromPokemon } from "./learnsetCache";
+
 export function compactPokemonFromApi(pokemon) {
   if (!pokemon?.name) {
     return null;
@@ -132,6 +134,7 @@ export async function ensurePokemonHasLearnset(pokemon) {
   }
 
   if (!pokemonNeedsLearnset(pokemon)) {
+    seedLearnsetFromPokemon(pokemon);
     return pokemon;
   }
 
@@ -142,11 +145,13 @@ export async function ensurePokemonHasLearnset(pokemon) {
   }
 
   const expanded = expandCompactPokemon(compactPokemonFromApi(fullPokemon));
-  return {
+  const hydratedPokemon = {
     ...expanded,
     moves: fullPokemon.moves || [],
     abilities: fullPokemon.abilities?.length
       ? fullPokemon.abilities
       : expanded.abilities,
   };
+  seedLearnsetFromPokemon(hydratedPokemon);
+  return hydratedPokemon;
 }
