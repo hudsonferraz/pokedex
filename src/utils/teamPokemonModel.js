@@ -1,5 +1,43 @@
 import { seedLearnsetFromPokemon } from "./learnsetCache";
 
+function compactAbilityEntry(entry) {
+  if (!entry) {
+    return null;
+  }
+
+  if (typeof entry === "string") {
+    const name = entry.trim();
+    return name ? { name, is_hidden: false } : null;
+  }
+
+  if (typeof entry === "object") {
+    const name = (entry.name || entry.ability?.name || entry.ability || "").trim();
+    if (!name) {
+      return null;
+    }
+
+    return {
+      name,
+      is_hidden: Boolean(entry.is_hidden),
+    };
+  }
+
+  return null;
+}
+
+function expandAbilityEntry(entry, index) {
+  const compact = compactAbilityEntry(entry);
+  if (!compact) {
+    return null;
+  }
+
+  return {
+    ability: { name: compact.name },
+    is_hidden: compact.is_hidden,
+    slot: index + 1,
+  };
+}
+
 export function compactPokemonFromApi(pokemon) {
   if (!pokemon?.name) {
     return null;
@@ -16,7 +54,7 @@ export function compactPokemonFromApi(pokemon) {
       spriteUrl: pokemon.spriteUrl,
       types: pokemon.types,
       stats: pokemon.stats || [],
-      abilities: pokemon.abilities || [],
+      abilities: (pokemon.abilities || []).map(compactAbilityEntry).filter(Boolean),
     };
   }
 
@@ -36,9 +74,7 @@ export function compactPokemonFromApi(pokemon) {
     }))
     .filter((entry) => entry.stat.name);
 
-  const abilities = (pokemon.abilities || [])
-    .map((entry) => entry?.ability?.name || entry?.ability)
-    .filter(Boolean);
+  const abilities = (pokemon.abilities || []).map(compactAbilityEntry).filter(Boolean);
 
   return {
     id: pokemon.id,
@@ -69,9 +105,9 @@ export function expandCompactPokemon(compact) {
     base_stat: entry?.base_stat ?? 0,
   }));
 
-  const abilityNames = (compact.abilities || []).map((entry) =>
-    typeof entry === "string" ? entry : entry?.ability?.name || entry?.ability,
-  ).filter(Boolean);
+  const abilities = (compact.abilities || [])
+    .map((entry, index) => expandAbilityEntry(entry, index))
+    .filter(Boolean);
 
   return {
     id: compact.id,
@@ -81,11 +117,7 @@ export function expandCompactPokemon(compact) {
       type: { name: typeName },
     })),
     stats,
-    abilities: abilityNames.map((abilityName, index) => ({
-      ability: { name: abilityName },
-      is_hidden: index > 0,
-      slot: index + 1,
-    })),
+    abilities,
     sprites: {
       front_default: spriteUrl,
       other: {
