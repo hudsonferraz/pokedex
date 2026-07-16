@@ -3,6 +3,7 @@
 ![React 18](https://img.shields.io/badge/React-18-61dafb)
 ![Node.js](https://img.shields.io/badge/Node.js-Express-339933)
 ![License](https://img.shields.io/badge/license-MIT-green)
+[![CI](https://github.com/hudsonferraz/pokedex/actions/workflows/ci.yml/badge.svg)](https://github.com/hudsonferraz/pokedex/actions/workflows/ci.yml)
 [![Live Demo](https://img.shields.io/badge/Live%20Demo-GitHub%20Pages-blue)](https://hudsonferraz.github.io/pokedex/)
 
 **Full-stack VGC doubles team builder** with live Pikalytics meta, regulation legality checks, Showdown import/export, guided workflow, and AI coaching — default format **Pokémon Champions Reg M-A**.
