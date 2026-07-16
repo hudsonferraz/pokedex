@@ -77,4 +77,48 @@ describe("teamBuildHealth", () => {
     ];
     expect(getSuggestedStepId(steps)).toBe("sets");
   });
+
+  test("marks coach complete on a full roster so suggestion can reach export", () => {
+    const team = Array.from({ length: 6 }, (_, index) =>
+      makePokemon(`Mon${index}`, ["normal"]),
+    );
+    const sets = Object.fromEntries(
+      team.map((pokemon) => [
+        pokemon.name,
+        {
+          ...fullSet,
+          moves: ["protect", "fake-out", "u-turn", "knock-off"],
+          moveTypes: {
+            protect: "normal",
+            "fake-out": "normal",
+            "u-turn": "bug",
+            "knock-off": "dark",
+          },
+        },
+      ]),
+    );
+
+    const result = computeTeamBuildHealth({
+      team,
+      sets,
+      validateTeam: () => ({ issues: [], warnings: [] }),
+    });
+
+    expect(result.steps.find((step) => step.id === "coach").status).toBe("complete");
+    expect(result.suggestedStepId).not.toBe("coach");
+  });
+
+  test("marks coach as attention when roster is coach-ready but incomplete", () => {
+    const team = Array.from({ length: 4 }, (_, index) =>
+      makePokemon(`Mon${index}`, ["normal"]),
+    );
+
+    const result = computeTeamBuildHealth({
+      team,
+      sets: {},
+      validateTeam: () => ({ issues: [], warnings: [] }),
+    });
+
+    expect(result.steps.find((step) => step.id === "coach").status).toBe("attention");
+  });
 });

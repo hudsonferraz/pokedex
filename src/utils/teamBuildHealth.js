@@ -202,8 +202,11 @@ function getStepStatus(stepId, context) {
       return team.length >= 6 ? "complete" : "upcoming";
 
     case "coach":
+      // Optional advisory step. Available once the roster is coach-ready;
+      // complete at a full six so suggestion can advance to Export.
       if (team.length < 4) return "upcoming";
-      return "upcoming";
+      if (team.length < 6) return "attention";
+      return "complete";
 
     case "export":
       if (team.length < 6) return "upcoming";
