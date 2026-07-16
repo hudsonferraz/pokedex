@@ -215,13 +215,13 @@ const TeamBuilder = () => {
 
     (async () => {
       try {
-        const fullTeam = [];
-        for (const name of decoded.pokemon.slice(0, 6)) {
-          if (cancelled) return;
-          const pokemon = await searchPokemon(name);
-          if (pokemon) fullTeam.push(pokemon);
-        }
-        if (!cancelled && fullTeam.length > 0) {
+        const resolved = await Promise.all(
+          decoded.pokemon.slice(0, 6).map((name) => searchPokemon(name)),
+        );
+        const fullTeam = resolved.filter(Boolean);
+        if (cancelled) return;
+
+        if (fullTeam.length > 0) {
           addTeamWithRoster(
             decoded.name,
             fullTeam,
@@ -232,9 +232,7 @@ const TeamBuilder = () => {
           );
           showUndoToast(`Imported "${decoded.name}"`, handleUndo, "success");
         }
-        if (!cancelled) {
-          setSearchParams({}, { replace: true });
-        }
+        setSearchParams({}, { replace: true });
       } catch {
         if (!cancelled) {
           importedShareTeamRef.current = null;
@@ -370,20 +368,33 @@ const TeamBuilder = () => {
     }
 
     try {
+      const resolvedEntries = await Promise.all(
+        parsed.map(async (entry) => {
+          let pokemon = await searchPokemon(entry.apiId);
+          if (!pokemon && entry.speciesLine) {
+            pokemon = await searchPokemon(
+              entry.speciesLine.toLowerCase().replace(/\s+/g, "-"),
+            );
+          }
+          if (!pokemon) {
+            return null;
+          }
+
+          const moveTypes = await buildMoveTypesMap(
+            entry.moves,
+            learnsetMapFromPokemon(pokemon),
+          );
+
+          return { pokemon, entry, moveTypes };
+        }),
+      );
+
       const fullTeam = [];
       const sets = {};
 
-      for (const entry of parsed) {
-        let pokemon = await searchPokemon(entry.apiId);
-        if (!pokemon && entry.speciesLine) {
-          pokemon = await searchPokemon(
-            entry.speciesLine.toLowerCase().replace(/\s+/g, "-"),
-          );
-        }
-        if (!pokemon) continue;
-
-        const moveTypes = await buildMoveTypesMap(entry.moves, learnsetMapFromPokemon(pokemon));
-
+      resolvedEntries.forEach((resolved) => {
+        if (!resolved) return;
+        const { pokemon, entry, moveTypes } = resolved;
         fullTeam.push(pokemon);
         sets[pokemon.name] = {
           moves: entry.moves,
@@ -400,7 +411,7 @@ const TeamBuilder = () => {
           happiness: entry.happiness,
           nickname: entry.nickname,
         };
-      }
+      });
 
       if (fullTeam.length === 0) {
         showToast("Could not resolve species from paste", "error");
