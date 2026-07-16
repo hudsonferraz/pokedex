@@ -21,12 +21,42 @@ export const BUILD_STEP_IDS = [
 ];
 
 export const BUILD_STEPS = [
-  { id: "roster", label: "Build six Pokémon", shortLabel: "Roster" },
-  { id: "sets", label: "Complete sets", shortLabel: "Sets" },
-  { id: "legality", label: "Review legality", shortLabel: "Legality" },
-  { id: "matchups", label: "Inspect matchup gaps", shortLabel: "Matchups" },
-  { id: "coach", label: "Ask the coach", shortLabel: "Coach" },
-  { id: "export", label: "Export or share", shortLabel: "Export" },
+  {
+    id: "roster",
+    label: "Build six Pokémon",
+    shortLabel: "Roster",
+    help: "Fill all six slots. Partner suggestions and the sixth-slot tool help when you are one short.",
+  },
+  {
+    id: "sets",
+    label: "Complete sets",
+    shortLabel: "Sets",
+    help: "Give each Pokémon four moves plus ability, item, and nature — or import a Showdown paste.",
+  },
+  {
+    id: "legality",
+    label: "Review legality",
+    shortLabel: "Legality",
+    help: "Check species clause, restricteds, items, and learnsets for your selected regulation.",
+  },
+  {
+    id: "matchups",
+    label: "Inspect matchup gaps",
+    shortLabel: "Matchups",
+    help: "Review meta threats, shared weaknesses, speed control, and bring-4 before you lock the squad.",
+  },
+  {
+    id: "coach",
+    label: "Ask the coach",
+    shortLabel: "Coach",
+    help: "Optional: get rule-based tips, then ask one focused question about speed, typing, or meta.",
+  },
+  {
+    id: "export",
+    label: "Export or share",
+    shortLabel: "Export",
+    help: "Copy a Showdown paste, plain-text summary, or share link with regulation and roles included.",
+  },
 ];
 
 function teamHasMove(team, setsByName, moveIds) {
