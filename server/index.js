@@ -22,6 +22,11 @@ const {
 } = require("./httpProtection");
 
 const app = express();
+const TRUST_PROXY = process.env.TRUST_PROXY ?? "1";
+app.set(
+  "trust proxy",
+  TRUST_PROXY === "true" || TRUST_PROXY === "1" ? 1 : TRUST_PROXY,
+);
 const PORT = process.env.PORT || 3001;
 const JSON_BODY_LIMIT = process.env.JSON_BODY_LIMIT || "16kb";
 const HF_FETCH_TIMEOUT_MS = Number.parseInt(

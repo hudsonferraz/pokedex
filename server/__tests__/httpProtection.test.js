@@ -6,6 +6,7 @@ const {
   pruneExpiredBuckets,
   validateAiTeamTipsBody,
   parseAllowedOrigins,
+  getRequestIp,
 } = require("../httpProtection");
 
 function createMockResponse() {
@@ -97,6 +98,25 @@ test("pruneExpiredBuckets skips work until interval elapses", () => {
   const lastPrunedAt = pruneExpiredBuckets(buckets, 200, 150, 100);
   assert.equal(lastPrunedAt, 150);
   assert.equal(buckets.size, 1);
+});
+
+test("getRequestIp prefers Express req.ip over spoofed X-Forwarded-For", () => {
+  const req = {
+    ip: "203.0.113.10",
+    headers: { "x-forwarded-for": "1.1.1.1, 2.2.2.2" },
+    socket: { remoteAddress: "::1" },
+  };
+
+  assert.equal(getRequestIp(req), "203.0.113.10");
+});
+
+test("getRequestIp falls back to socket address when req.ip is missing", () => {
+  const req = {
+    headers: { "x-forwarded-for": "1.1.1.1" },
+    socket: { remoteAddress: "203.0.113.10" },
+  };
+
+  assert.equal(getRequestIp(req), "203.0.113.10");
 });
 
 test("rate limiter blocks after maxRequests", () => {

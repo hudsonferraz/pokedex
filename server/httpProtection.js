@@ -22,11 +22,13 @@ function parseAllowedOrigins() {
 }
 
 function getRequestIp(req) {
-  const forwarded = req.headers["x-forwarded-for"];
-  if (typeof forwarded === "string" && forwarded.trim()) {
-    return forwarded.split(",")[0].trim();
+  // Prefer Express-derived req.ip (requires app.set("trust proxy", …) behind Render).
+  // Do not read the left-most X-Forwarded-For entry — clients can spoof it.
+  if (req.ip) {
+    return req.ip;
   }
-  return req.ip || req.socket?.remoteAddress || "unknown";
+
+  return req.socket?.remoteAddress || "unknown";
 }
 
 function pruneExpiredBuckets(buckets, now, lastPrunedAt, pruneIntervalMs) {
