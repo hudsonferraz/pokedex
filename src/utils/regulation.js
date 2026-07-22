@@ -2,7 +2,7 @@ import regulationsData from "../data/regulations.json";
 import regulationHBanned from "../data/regulation-h-banned.json";
 import { validateTeamSets } from "./regulationValidation";
 
-export const DEFAULT_REGULATION_ID = "champions-reg-ma";
+export const DEFAULT_REGULATION_ID = "champions-reg-mb";
 
 const REGULATION_MAP = {
   ...regulationsData,

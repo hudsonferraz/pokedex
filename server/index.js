@@ -291,6 +291,7 @@ const PIKALYTICS_FORMATS = {
   "gen9vgc2025regh": "VGC 2025 Regulation H",
   "gen9vgc2026regf": "VGC 2026 Regulation F",
   "gen9championsvgc2026regma": "Pokemon Champions VGC 2026 Reg M-A",
+  "gen9championsvgc2026regmb": "Pokemon Champions VGC 2026 Reg M-B",
 };
 
 app.get("/api/meta/formats", metaRateLimiter, (req, res) => {

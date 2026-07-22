@@ -30,6 +30,7 @@
   background: var(--filter-bg);
   min-width: 0;
   font: inherit;
+  color: var(--text-color);
   text-align: left;
   cursor: default;
 }

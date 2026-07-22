@@ -2,7 +2,7 @@ import React from "react";
 import { useNavigate } from "react-router-dom";
 import "./TeamEmptyState.css";
 
-const TeamEmptyState = ({ onAddFirst, regulationLabel = "Champions Reg M-A" }) => {
+const TeamEmptyState = ({ onAddFirst, regulationLabel = "Champions Reg M-B" }) => {
   const navigate = useNavigate();
 
   return (

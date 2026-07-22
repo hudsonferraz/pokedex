@@ -2,7 +2,7 @@ import React from "react";
 import { Link } from "react-router-dom";
 import "./BrowseHero.css";
 
-const BrowseHero = ({ regulationLabel = "Champions Reg M-A" }) => (
+const BrowseHero = ({ regulationLabel = "Champions Reg M-B" }) => (
   <section className="browse-hero card-surface" aria-labelledby="browse-hero-title">
     <div className="browse-hero-text">
       <p className="browse-hero-eyebrow">VGC Pokédex</p>

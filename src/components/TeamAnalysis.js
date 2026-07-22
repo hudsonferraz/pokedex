@@ -25,7 +25,7 @@ const TeamAnalysis = ({
   team,
   sets,
   teamName = "Team",
-  regulationId = "champions-reg-ma",
+  regulationId = "champions-reg-mb",
 }) => {
   const navigate = useNavigate();
   const { showToast } = useToast();

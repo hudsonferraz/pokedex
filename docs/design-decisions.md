@@ -87,7 +87,7 @@ User research shows experienced builders prefer a single-page layout with option
 ## Honest regulation legality
 
 **Context**  
-Bundled ban/restricted lists can lag official announcements. Champions Reg M-A initially inherited Regulation I lists.
+Bundled ban/restricted lists can lag official announcements. Champions Reg M-A initially inherited Regulation I lists in error (restricted-count style); corrected to inherit the ban-only Regulation H list, matching the real rule that M-A/M-B ban all Legendary, Mythical, and Paradox Pokémon outright. Reg M-B (current as of Jun 17, 2026) reuses the same inherited list and is flagged unverified until Pokémon publishes an official Champions ban list.
 
 **Decision**  
 `legalityUnverified` and `legalityInheritsFrom` in `regulations.json`. Prominent `RegulationLegalityNotice` above the selector. Validation warns when lists are inherited; learnset checks show pending/unavailable states instead of silent passes.

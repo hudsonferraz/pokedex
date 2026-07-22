@@ -6,7 +6,7 @@
 [![CI](https://github.com/hudsonferraz/pokedex/actions/workflows/ci.yml/badge.svg)](https://github.com/hudsonferraz/pokedex/actions/workflows/ci.yml)
 [![Live Demo](https://img.shields.io/badge/Live%20Demo-GitHub%20Pages-blue)](https://hudsonferraz.github.io/pokedex/)
 
-**Full-stack VGC doubles team builder** with live Pikalytics meta, regulation legality checks, Showdown import/export, guided workflow, and AI coaching — default format **Pokémon Champions Reg M-A**.
+**Full-stack VGC doubles team builder** with live Pikalytics meta, regulation legality checks, Showdown import/export, guided workflow, and AI coaching — default format **Pokémon Champions Reg M-B**.
 
 This is a **portfolio and research project** — useful for exploring competitive team construction, meta integration, and honest legality UX. It is **not** an official Pokémon Company tool or event legality authority.
 

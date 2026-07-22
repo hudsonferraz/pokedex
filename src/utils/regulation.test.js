@@ -26,8 +26,13 @@ describe("regulation legality", () => {
     expect(getSpeciesRegulationStatus("pecharunt", "regulation-i").status).toBe("banned");
   });
 
-  test("champions inherits regulation-i legality", () => {
-    expect(getSpeciesRegulationStatus("miraidon", "champions-reg-ma").status).toBe("restricted");
+  test("champions reg m-a inherits regulation-h ban-only legality", () => {
+    expect(getSpeciesRegulationStatus("miraidon", "champions-reg-ma").status).toBe("banned");
+  });
+
+  test("champions reg m-b inherits regulation-h ban-only legality", () => {
+    expect(getSpeciesRegulationStatus("koraidon", "champions-reg-mb").status).toBe("banned");
+    expect(getSpeciesRegulationStatus("incineroar", "champions-reg-mb").status).toBe("legal");
   });
 
   test("incineroar is legal in regulation-h", () => {
@@ -58,7 +63,7 @@ describe("regulation transparency", () => {
 
     expect(notice).not.toBeNull();
     expect(notice.title).toMatch(/inherited legality/i);
-    expect(notice.message).toContain("Regulation I");
+    expect(notice.message).toContain("Regulation H");
   });
 
   test("returns null for verified regulation-i", () => {
