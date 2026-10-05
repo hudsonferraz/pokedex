@@ -30,7 +30,7 @@ This is a **portfolio and research project** — useful for exploring competitiv
 - **Live meta** — Pikalytics usage/sets via proxied API (6h cache) with bundled fallback when Render is cold
 - **Honest legality** — per-team regulation, inherited/unverified format notices, lazy learnset validation with clear pending states
 - **Showdown workflow** — import/export paste with VGC form name mapping, share links via `?team=` base64 payload
-- **Protected AI route** — Hugging Face token server-side, CORS allowlist, rate limits, body validation, outbound timeouts
+- **Protected AI route** — Groq API key server-side, CORS allowlist, rate limits, body validation, outbound timeouts
 - **No accounts, no database** — teams in `localStorage`; API holds no user roster data
 
 ## Screenshots
@@ -83,7 +83,7 @@ Set in `.env` or shell for local meta/AI:
 REACT_APP_API_URL=http://localhost:3001
 ```
 
-Add `HUGGINGFACE_TOKEN` to `server/.env` for AI tips.
+Add `GROQ_API_KEY` to `server/.env` for the AI coach (free key from [console.groq.com](https://console.groq.com/keys)).
 
 ## Production build
 
@@ -100,7 +100,7 @@ npm run deploy
 | `GET /api/health` | API liveness + whether AI token is configured |
 | `GET /api/meta/usage/:format` | Format usage table and core Pokémon |
 | `GET /api/meta/pokemon/:format/:species` | Per-species Pikalytics meta (parsed JSON) |
-| `POST /api/ai-team-tips` | AI coaching proxy (validated body, rate-limited) |
+| `POST /api/ai-team-tips` | Groq-powered VGC coach (validated body, rate-limited) |
 
 ## Architecture
 
@@ -125,7 +125,7 @@ This project is a **team-building lab**, not an official VGC rules engine. Key s
 ### Meta and AI
 
 - **Pikalytics** — markdown scraped server-side; 6-hour cache; bundled fallback if proxy is down.
-- **AI tips** — Llama 3.2 via Hugging Face; rate-limited; advisory only; token never in the browser.
+- **AI coach** — Groq (Llama 3.3 by default); rate-limited; advisory only; key never in the browser.
 - **Render cold start** — free tier may take ~30s to wake; health chip and fallback meta reflect status.
 
 ### Security
@@ -142,7 +142,7 @@ See `server/.env.example`. Key variables:
 
 | Variable | Description |
 |----------|-------------|
-| `HUGGINGFACE_TOKEN` | Hugging Face API token for AI route |
+| `GROQ_API_KEY` | Groq API key for the AI coach route |
 | `ALLOWED_ORIGINS` | Comma-separated CORS origins |
 | `AI_RATE_LIMIT_MAX` / `AI_RATE_LIMIT_WINDOW_MS` | AI requests per IP per window |
 | `META_RATE_LIMIT_MAX` / `META_RATE_LIMIT_WINDOW_MS` | Meta requests per IP per window |

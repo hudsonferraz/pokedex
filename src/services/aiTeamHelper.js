@@ -1,6 +1,5 @@
 /**
- * AI team helper: calls our backend proxy so the Hugging Face token stays server-side.
- * Backend runs with HUGGINGFACE_TOKEN in server/.env (see pokedex/server/).
+ * AI team coach: calls backend proxy so GROQ_API_KEY stays server-side.
  */
 
 function getApiBase() {
@@ -8,13 +7,18 @@ function getApiBase() {
 }
 
 /**
- * Asks the backend for AI team tips. Token is never sent from the browser.
- * @param {string} teamSummary - Short summary of team (names, types, weaknesses)
- * @param {string} userMessage - User question, e.g. "How can I improve my team?"
- * @param {string} [format] - Optional format (e.g. "VGC", "Singles OU") for format-specific advice
- * @returns {Promise<string>} Generated tip text
+ * @param {string} teamSummary
+ * @param {string} userMessage
+ * @param {string} [format]
+ * @param {{ role: 'user'|'assistant', content: string }[]} [history]
+ * @returns {Promise<string>}
  */
-export async function askAIForTeamTips(teamSummary, userMessage, format) {
+export async function askAIForTeamTips(
+  teamSummary,
+  userMessage,
+  format,
+  history = [],
+) {
   const base = getApiBase();
   const url = base ? `${base.replace(/\/$/, "")}/api/ai-team-tips` : "/api/ai-team-tips";
 
@@ -25,6 +29,7 @@ export async function askAIForTeamTips(teamSummary, userMessage, format) {
       teamSummary: teamSummary || "",
       userMessage: (userMessage || "").trim() || "Give me tips for forming a good team.",
       format: format || "",
+      history: Array.isArray(history) ? history.slice(-8) : [],
     }),
   });
 
@@ -37,6 +42,12 @@ export async function askAIForTeamTips(teamSummary, userMessage, format) {
         "AI API not found (404). On GitHub Pages, rebuild with REACT_APP_API_URL pointing at your Render server.",
       );
     }
+    if (res.status === 503) {
+      throw new Error(
+        data.error ||
+          "AI coach is not configured. Set GROQ_API_KEY on the Render server.",
+      );
+    }
     throw new Error(errorMessage || `Request failed: ${res.status}`);
   }
 
@@ -44,17 +55,13 @@ export async function askAIForTeamTips(teamSummary, userMessage, format) {
   if (!text) {
     throw new Error(
       data.error ||
-        "AI returned an empty response. Check HUGGINGFACE_TOKEN on the server.",
+        "AI returned an empty response. Check GROQ_API_KEY on the server.",
     );
   }
 
   return text;
 }
 
-/**
- * True if the app is configured to call the AI backend (same origin or REACT_APP_API_URL).
- * We always show the "Ask AI" form; this is used for optional UI hints.
- */
 export function hasAIToken() {
   return true;
 }

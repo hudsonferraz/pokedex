@@ -7,6 +7,9 @@ const DEFAULT_ALLOWED_ORIGINS = [
 const MAX_TEAM_SUMMARY_LENGTH = 6000;
 const MAX_USER_MESSAGE_LENGTH = 500;
 const MAX_FORMAT_LENGTH = 80;
+const MAX_HISTORY_MESSAGES = 8;
+const MAX_HISTORY_CONTENT_LENGTH = 1200;
+
 
 function parseAllowedOrigins() {
   const fromEnv = (process.env.ALLOWED_ORIGINS || "")
@@ -117,7 +120,7 @@ function validateAiTeamTipsBody(req, res, next) {
   }
 
   const extraKeys = Object.keys(body).filter(
-    (key) => !["teamSummary", "userMessage", "format"].includes(key),
+    (key) => !["teamSummary", "userMessage", "format", "history"].includes(key),
   );
   if (extraKeys.length > 0) {
     return res.status(400).json({ error: "Request body contains unsupported fields." });
@@ -147,10 +150,36 @@ function validateAiTeamTipsBody(req, res, next) {
     });
   }
 
+  let history = [];
+  if (body.history != null) {
+    if (!Array.isArray(body.history)) {
+      return res.status(400).json({ error: "history must be an array." });
+    }
+    if (body.history.length > MAX_HISTORY_MESSAGES) {
+      return res.status(413).json({
+        error: `history exceeds ${MAX_HISTORY_MESSAGES} messages.`,
+      });
+    }
+    history = body.history
+      .filter(
+        (entry) =>
+          entry &&
+          typeof entry === "object" &&
+          (entry.role === "user" || entry.role === "assistant") &&
+          typeof entry.content === "string",
+      )
+      .map((entry) => ({
+        role: entry.role,
+        content: entry.content.trim().slice(0, MAX_HISTORY_CONTENT_LENGTH),
+      }))
+      .filter((entry) => entry.content.length > 0);
+  }
+
   req.body = {
     teamSummary,
     userMessage,
     format,
+    history,
   };
   return next();
 }

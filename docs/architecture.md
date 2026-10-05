@@ -23,7 +23,7 @@ flowchart TB
     AI[/api/ai-team-tips]
     Health[/api/health]
     Cache[(Pikalytics cache 6h)]
-    HF[Hugging Face Llama 3.2]
+    Groq[Groq Llama 3.3]
   end
 
   subgraph bundled [Bundled JSON]
@@ -44,7 +44,7 @@ flowchart TB
   Meta --> Cache
   Cache --> Pikalytics[(Pikalytics)]
   TB --> AI
-  AI --> HF
+  AI --> Groq
   Meta --> Fallback
 ```
 
@@ -54,7 +54,7 @@ flowchart TB
 |-------|----------------|
 | **Routes** | `/` Team Builder · `/browse` Pokédex · `/pokemon/:name` detail |
 | **Contexts** | `TeamProvider` (roster + sets + undo) · `RegulationProvider` (per-team format) · `MetaDataProvider` (usage badges) |
-| **Team Builder** | Six-step guided workflow, sticky health summary, progressive disclosure |
+| **Team Builder** | Four-step workflow, Team report, dedicated Groq coach chat |
 | **Utils** | Regulation validation, Showdown parse/export, team schema normalization, lazy learnset cache |
 | **Storage** | `localStorage` key `pokemon-teams` — compact Pokémon models, schema version 3 |
 
@@ -98,10 +98,10 @@ flowchart LR
 
 ### AI coaching
 
-1. Client builds a bounded `teamSummary` string from roster + sets + roles.
+1. Client builds a bounded `teamSummary` string from roster + sets + roles (+ short chat history).
 2. `POST /api/ai-team-tips` — body validated (16 KB max), rate-limited per IP.
-3. Server calls Hugging Face with `HUGGINGFACE_TOKEN` (never exposed to browser).
-4. Response parsed into structured tips with expandable rationale.
+3. Server calls Groq chat completions with `GROQ_API_KEY` (never exposed to browser).
+4. Response shown in coach chat; structured TIP/BECAUSE/META still parsed when present.
 
 ### Share import
 
@@ -124,7 +124,7 @@ flowchart LR
 | `GET /api/health` | Liveness + AI token configured |
 | `GET /api/meta/usage/:format` | Format usage table + cores |
 | `GET /api/meta/pokemon/:format/:species` | Per-species meta markdown → JSON |
-| `POST /api/ai-team-tips` | Proxied Llama 3.2 coaching |
+| `POST /api/ai-team-tips` | Proxied Groq (Llama 3.3) coaching |
 
 ### Protection (`httpProtection.js`)
 

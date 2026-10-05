@@ -75,6 +75,30 @@ test("validateAiTeamTipsBody normalizes valid payload", () => {
   assert.equal(nextCalled, true);
   assert.equal(req.body.userMessage, "What should I improve?");
   assert.equal(req.body.format, "Reg I");
+  assert.deepEqual(req.body.history, []);
+});
+
+test("validateAiTeamTipsBody accepts optional chat history", () => {
+  const req = {
+    body: {
+      teamSummary: "Incineroar",
+      userMessage: "Speed control?",
+      history: [
+        { role: "user", content: "Hi" },
+        { role: "assistant", content: "Hello coach here." },
+      ],
+    },
+  };
+  const res = createMockResponse();
+  let nextCalled = false;
+
+  validateAiTeamTipsBody(req, res, () => {
+    nextCalled = true;
+  });
+
+  assert.equal(nextCalled, true);
+  assert.equal(req.body.history.length, 2);
+  assert.equal(req.body.history[0].role, "user");
 });
 
 test("pruneExpiredBuckets removes stale entries", () => {

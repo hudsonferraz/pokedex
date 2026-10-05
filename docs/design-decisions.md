@@ -10,7 +10,7 @@ This document records **why** the VGC Team Lab is shaped the way it is — not j
 The app needs live Pikalytics meta and optional AI coaching, but the portfolio site should stay free to host and never expose third-party API keys in the browser.
 
 **Decision**  
-Ship the React app as a static build on GitHub Pages. Run a small Express server on Render only for Pikalytics fetch/parse/cache and Hugging Face proxying.
+Ship the React app as a static build on GitHub Pages. Run a small Express server on Render only for Pikalytics fetch/parse/cache and Groq AI coaching.
 
 **Trade-off**  
 Two deploy surfaces and Render cold starts, but zero database cost, no auth system, and secrets stay server-side.
@@ -132,19 +132,19 @@ Pikalytics offers a stable JSON API or official partnership.
 
 ---
 
-## Server-side AI with guardrails
+## Server-side AI with guardrails (Groq)
 
 **Context**  
-AI tips are a portfolio differentiator but must not become an open relay for arbitrary prompts or unbounded cost.
+AI coaching is a portfolio differentiator but must not become an open relay for arbitrary prompts or unbounded cost. Hugging Face Inference was too flaky for the free-tier product story.
 
 **Decision**  
-`POST /api/ai-team-tips` only. Token in server env. Body validation (field whitelist, length caps), CORS allowlist, per-IP rate limit, 45s upstream timeout.
+`POST /api/ai-team-tips` only, proxied to Groq chat completions (`GROQ_API_KEY`). Body validation (field whitelist, optional short history, length caps), CORS allowlist, per-IP rate limit, 45s upstream timeout. UI is a dedicated coach chat; rule-based tips remain the offline fallback.
 
 **Trade-off**  
-No streaming responses; cold Render + HF latency can feel slow. Tips are advisory, not authoritative.
+No streaming yet; Render cold starts still apply. Tips are advisory, not authoritative.
 
 **Revisit when**  
-Structured rule-based coaching alone satisfies the product goal.
+Streaming or tool-calling over analysis APIs is needed.
 
 ---
 

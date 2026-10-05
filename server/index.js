@@ -29,8 +29,10 @@ app.set(
 );
 const PORT = process.env.PORT || 3001;
 const JSON_BODY_LIMIT = process.env.JSON_BODY_LIMIT || "16kb";
-const HF_FETCH_TIMEOUT_MS = Number.parseInt(
-  process.env.HF_FETCH_TIMEOUT_MS || "45000",
+const AI_FETCH_TIMEOUT_MS = Number.parseInt(
+  process.env.AI_FETCH_TIMEOUT_MS ||
+    process.env.HF_FETCH_TIMEOUT_MS ||
+    "45000",
   10,
 );
 const PIKALYTICS_FETCH_TIMEOUT_MS = Number.parseInt(
@@ -47,10 +49,9 @@ const META_RATE_LIMIT_WINDOW_MS = Number.parseInt(
   process.env.META_RATE_LIMIT_WINDOW_MS || "60000",
   10,
 );
-const HF_CHAT_URL = "https://router.huggingface.co/v1/chat/completions";
-const HF_RESPONSES_URL = "https://router.huggingface.co/v1/responses";
-// :fastest picks an available Inference Provider automatically
-const MODEL_ID = "meta-llama/Llama-3.2-3B-Instruct:fastest";
+const GROQ_CHAT_URL = "https://api.groq.com/openai/v1/chat/completions";
+const GROQ_MODEL_ID =
+  process.env.GROQ_MODEL || "llama-3.3-70b-versatile";
 const { getCached, setCached, getCacheStats } = require("./pikalyticsCache");
 const {
   parsePikalyticsMarkdown,
@@ -60,21 +61,21 @@ const {
 
 function getToken() {
   return (
-    process.env.HUGGINGFACE_TOKEN ||
-    process.env.REACT_APP_HUGGINGFACE_TOKEN ||
+    process.env.GROQ_API_KEY ||
+    process.env.REACT_APP_GROQ_API_KEY ||
     ""
   ).trim();
 }
 
 function warnIfTokenMissing() {
   if (getToken()) return;
-  console.warn("HUGGINGFACE_TOKEN is not set.");
+  console.warn("GROQ_API_KEY is not set.");
   console.warn("Expected .env at:", envPath);
   console.warn("File exists:", fs.existsSync(envPath));
   if (fs.existsSync(envPath)) {
     const content = fs.readFileSync(envPath, "utf8");
-    const hasTokenKey = /HUGGINGFACE_TOKEN\s*=/i.test(content);
-    console.warn("Line with HUGGINGFACE_TOKEN= in file:", hasTokenKey);
+    const hasTokenKey = /GROQ_API_KEY\s*=/i.test(content);
+    console.warn("Line with GROQ_API_KEY= in file:", hasTokenKey);
   }
 }
 
@@ -115,8 +116,8 @@ app.get("/", (req, res) => {
 
   if (req.accepts("html")) {
     const statusLine = aiTipsConfigured
-      ? "AI team tips are configured."
-      : "AI team tips are not configured (set HUGGINGFACE_TOKEN on the server).";
+      ? "AI team coach is configured (Groq)."
+      : "AI team coach is not configured (set GROQ_API_KEY on the server).";
     res.type("html").send(`<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -156,33 +157,6 @@ app.get("/health", (req, res) => {
   });
 });
 
-function extractOutputText(body) {
-  if (!body || typeof body !== "object") return null;
-  if (typeof body.output_text === "string" && body.output_text.trim()) {
-    return body.output_text.trim();
-  }
-  // Responses API: output = [{ type: "message", content: [{ type: "output_text", text: "..." }] }]
-  if (Array.isArray(body.output)) {
-    const parts = [];
-    for (const item of body.output) {
-      if (!item) continue;
-      if (item.type === "output_text" && typeof item.text === "string") {
-        parts.push(item.text);
-      } else if (Array.isArray(item.content)) {
-        for (const c of item.content) {
-          if (c && c.type === "output_text" && typeof c.text === "string") {
-            parts.push(c.text);
-          }
-        }
-      }
-    }
-    const text = parts.join("").trim();
-    if (text) return text;
-  }
-  if (typeof body.output === "string") return body.output.trim();
-  return null;
-}
-
 function extractChatCompletionText(body) {
   if (!body || typeof body !== "object") return null;
   const content = body.choices?.[0]?.message?.content;
@@ -192,83 +166,65 @@ function extractChatCompletionText(body) {
   return null;
 }
 
-async function requestAiText(prompt, instructions) {
+async function requestAiText(prompt, instructions, history = []) {
   const token = getToken();
   const headers = {
     "Content-Type": "application/json",
     Authorization: `Bearer ${token}`,
   };
 
-  try {
-    const chatRes = await outboundFetch(
-      HF_CHAT_URL,
-      {
-        method: "POST",
-        headers,
-        body: JSON.stringify({
-          model: MODEL_ID,
-          messages: [
-            { role: "system", content: instructions },
-            { role: "user", content: prompt },
-          ],
-          max_tokens: 280,
-          temperature: 0.6,
-        }),
-      },
-      HF_FETCH_TIMEOUT_MS,
-    );
-    const chatRaw = await chatRes.text();
-    if (chatRes.ok) {
-      const data = JSON.parse(chatRaw);
-      const text = extractChatCompletionText(data);
-      if (text) return text;
-    } else {
-      console.warn("HF chat completions:", chatRes.status, chatRaw.slice(0, 300));
-      if (chatRes.status === 401) {
-        throw new Error(
-          "Invalid Hugging Face token. Create one with Inference Providers permission at huggingface.co/settings/tokens.",
-        );
-      }
-      if (chatRes.status === 402 || chatRes.status === 403) {
-        throw new Error(
-          "Hugging Face billing or permissions issue. Enable Inference Providers credits on your HF account.",
-        );
-      }
-    }
-  } catch (error) {
-    if (error instanceof Error && error.message.includes("Hugging Face")) {
-      throw error;
-    }
-    console.warn("HF chat request failed:", error);
-  }
+  const messages = [
+    { role: "system", content: instructions },
+    ...history.map((entry) => ({
+      role: entry.role,
+      content: entry.content,
+    })),
+    { role: "user", content: prompt },
+  ];
 
-  const responsesRes = await outboundFetch(
-    HF_RESPONSES_URL,
+  const chatRes = await outboundFetch(
+    GROQ_CHAT_URL,
     {
       method: "POST",
       headers,
       body: JSON.stringify({
-        model: MODEL_ID.replace(/:fastest$/, ""),
-        instructions,
-        input: prompt,
+        model: GROQ_MODEL_ID,
+        messages,
+        max_tokens: 700,
+        temperature: 0.55,
       }),
     },
-    HF_FETCH_TIMEOUT_MS,
+    AI_FETCH_TIMEOUT_MS,
   );
-  const responsesRaw = await responsesRes.text();
-  if (!responsesRes.ok) {
-    if (responsesRes.status === 503) {
-      throw new Error("Model is loading. Please try again in 15–20 seconds.");
+  const chatRaw = await chatRes.text();
+
+  if (!chatRes.ok) {
+    console.warn("Groq chat completions:", chatRes.status, chatRaw.slice(0, 400));
+    if (chatRes.status === 401) {
+      throw new Error(
+        "Invalid Groq API key. Create one at https://console.groq.com/keys",
+      );
     }
-    throw new Error(responsesRaw || `AI service error: ${responsesRes.status}`);
+    if (chatRes.status === 429) {
+      throw new Error(
+        "Groq rate limit hit. Wait a moment and try again (free tier).",
+      );
+    }
+    throw new Error(chatRaw || `Groq error: ${chatRes.status}`);
   }
 
-  const data = JSON.parse(responsesRaw);
-  const text = extractOutputText(data);
+  let data;
+  try {
+    data = JSON.parse(chatRaw);
+  } catch {
+    throw new Error("Groq returned invalid JSON.");
+  }
+
+  const text = extractChatCompletionText(data);
   if (text) return text;
 
   throw new Error(
-    "AI service returned an empty response. Verify HUGGINGFACE_TOKEN on Render and Inference Providers credits.",
+    "Groq returned an empty response. Verify GROQ_API_KEY on Render and free-tier quota.",
   );
 }
 
@@ -280,7 +236,9 @@ function upstreamErrorStatus(error) {
 app.get("/api/health", (req, res) => {
   res.json({
     ok: true,
-    huggingFaceConfigured: Boolean(getToken()),
+    aiTipsConfigured: Boolean(getToken()),
+    groqConfigured: Boolean(getToken()),
+    provider: "groq",
     cache: getCacheStats(),
   });
 });
@@ -407,40 +365,44 @@ app.post(
   if (!token) {
     return res.status(503).json({
       error:
-        "AI tips are not configured. Set HUGGINGFACE_TOKEN in the server .env.",
+        "AI coach is not configured. Set GROQ_API_KEY in the server .env.",
     });
   }
 
-  const { teamSummary, userMessage, format } = req.body;
+  const { teamSummary, userMessage, format, history } = req.body;
   const message = userMessage || "Give me tips for forming a good team.";
   const formatHint =
     format
       ? ` Format: ${format}.`
-      : " Format: Pokémon VGC doubles (6 registered, bring 4).";
+      : " Format: Pokémon Champions VGC doubles (6 registered, bring 4).";
   const prompt =
-    `Team context: ${teamSummary}.${formatHint} User question: ${message}. ` +
-    `Respond with 2-3 tips using EXACTLY this format for each tip (repeat the block):\n` +
-    `TIP: [one actionable recommendation]\n` +
-    `BECAUSE: [one sentence explaining why, citing team gaps like speed control, typings, or meta staples]\n` +
-    `META: [optional one sentence tying to current VGC meta]`;
+    `Team context:\n${teamSummary || "(empty roster)"}\n\n${formatHint}\n` +
+    `Player question: ${message}\n\n` +
+    `Answer as a concise VGC coach. Prefer 2-4 short paragraphs or bullets. ` +
+    `If giving discrete tips, you may also use TIP:/BECAUSE:/META: blocks. ` +
+    `Be specific to THIS team; do not invent Pokémon not on the roster. ` +
+    `Remind that advice is advisory and legality should be double-checked.`;
 
   const vgcInstructions =
-    "You are a Pokémon VGC (Video Game Championships) doubles coach. " +
+    "You are a Pokémon VGC (Video Game Championships) doubles coach for a team-builder app. " +
     "Teams register 6 Pokémon and bring 4 each round. " +
-    "Always explain your reasoning in BECAUSE lines (speed control, Tera, Intimidate, restricteds, common cores). " +
-    "Use the TIP/BECAUSE/META format exactly — no bullet lists.";
+    "You receive live team context (sets, roles, gaps, regulation, meta stubs). " +
+    "Prioritize speed control, intimidate cycles, Fake Out, redirect, Tera plans, and meta cores. " +
+    "Never claim to be an official Pokémon Company rules authority.";
 
   try {
-    const text = await requestAiText(prompt, vgcInstructions);
-    return res.json({ text });
+    const text = await requestAiText(prompt, vgcInstructions, history || []);
+    return res.json({ text, provider: "groq", model: GROQ_MODEL_ID });
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : "Server error";
     console.error("AI tips error:", errorMessage);
-    const status = errorMessage.includes("loading")
-      ? 503
+    const status = errorMessage.includes("rate limit")
+      ? 429
       : errorMessage.includes("timed out")
         ? 504
-        : 502;
+        : errorMessage.includes("Invalid Groq")
+          ? 401
+          : 502;
     return res.status(status).json({
       error: errorMessage || "Server error. Check the server terminal for details.",
     });
@@ -464,7 +426,7 @@ app.use((error, req, res, next) => {
 app.listen(PORT, () => {
   console.log(`AI tips server running on http://localhost:${PORT}`);
   console.log(
-    `HUGGINGFACE_TOKEN: ${getToken() ? "set" : "NOT SET (AI tips will fail)"}`,
+    `GROQ_API_KEY: ${getToken() ? "set" : "NOT SET (AI coach will fail)"}`,
   );
   console.log(`CORS allowed origins: ${parseAllowedOrigins().join(", ")}`);
   console.log(

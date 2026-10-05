@@ -17,6 +17,7 @@ import ShowdownImportModal from "./ShowdownImportModal";
 import SuggestSixthPanel from "./SuggestSixthPanel";
 import TeammateSuggestions from "./TeammateSuggestions";
 import TunePanels from "./TunePanels";
+import TeamAITips from "./TeamAITips";
 import Navbar from "./Navbar";
 import ApiStatusChip from "./ApiStatusChip";
 import AddPokemonModal from "./AddPokemonModal";
@@ -629,16 +630,22 @@ const TeamBuilder = () => {
             sets={activeTeam?.sets}
             teamName={activeTeam?.name || "Team"}
             regulationId={regulationId}
-            regulationLabel={regulation.label}
             bringList={bringList}
             onToggleBring={toggleBringPokemon}
             setBringList={setBringList}
-            roles={activeTeam?.roles}
-            coachReady={Boolean(workflow.health?.coachReady)}
             activeTabId={tuneTabId}
             onTabChange={setTuneTabId}
           />
         </BuildStepSection>
+
+        <TeamAITips
+          team={team}
+          sets={activeTeam?.sets}
+          roles={activeTeam?.roles}
+          bringList={bringList}
+          regulationId={regulationId}
+          regulationLabel={regulation.label}
+        />
 
         <BuildStepSection
           stepId="share"

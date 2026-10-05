@@ -1,11 +1,10 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import TeamAnalysis from "./TeamAnalysis";
 import MetaGapPanel from "./MetaGapPanel";
 import MetaThreatHints from "./MetaThreatHints";
 import SpeedTierTable from "./SpeedTierTable";
 import BringFourPreview from "./BringFourPreview";
 import TeamPreviewSimulator from "./TeamPreviewSimulator";
-import TeamAITips from "./TeamAITips";
 import "./TunePanels.css";
 
 const TABS = [
@@ -20,25 +19,15 @@ const TunePanels = ({
   sets,
   teamName,
   regulationId,
-  regulationLabel,
   bringList,
   onToggleBring,
   setBringList,
-  roles,
-  coachReady,
   activeTabId,
   onTabChange,
 }) => {
-  const [showCoach, setShowCoach] = useState(false);
   const activeTab = TABS.some((tab) => tab.id === activeTabId)
     ? activeTabId
     : "coverage";
-
-  useEffect(() => {
-    if (!coachReady) {
-      setShowCoach(false);
-    }
-  }, [coachReady]);
 
   return (
     <div className="tune-panels">
@@ -90,29 +79,6 @@ const TunePanels = ({
           </>
         )}
       </div>
-
-      {coachReady && (
-        <div className="tune-panels-coach">
-          {!showCoach ? (
-            <button
-              type="button"
-              className="tune-panels-coach-toggle"
-              onClick={() => setShowCoach(true)}
-            >
-              Optional: ask the coach
-            </button>
-          ) : (
-            <TeamAITips
-              team={team}
-              sets={sets}
-              roles={roles}
-              bringList={bringList}
-              regulationId={regulationId}
-              regulationLabel={regulationLabel}
-            />
-          )}
-        </div>
-      )}
     </div>
   );
 };
