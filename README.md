@@ -12,7 +12,7 @@ This is a **portfolio and research project** — useful for exploring competitiv
 
 **What it does:** build six-Pokémon teams, apply ladder sets, check regulation fit, analyze matchups, export/share.  
 **How it's built:** React SPA on GitHub Pages, Express proxy on Render, PokeAPI + bundled rules.  
-**Scope and limits:** browser storage only, inherited legality for some formats, AI is advisory — see [Assumptions](#assumptions) and [design decisions](docs/design-decisions.md).
+**Scope and limits:** browser storage only (with JSON backup/restore), curated Champions legality plus honest notices for incomplete formats, AI is advisory — see [Assumptions](#assumptions) and [design decisions](docs/design-decisions.md).
 
 ![Demo](docs/images/demo.gif)
 
@@ -25,13 +25,13 @@ This is a **portfolio and research project** — useful for exploring competitiv
 
 ## Highlights
 
-- **69 automated tests** — regulation legality, Showdown round-trip, team schema v3, build health workflow, HTTP protection, Pikalytics parser, App smoke
+- **Automated tests + CI** — regulation legality, Showdown round-trip, team schema v3, build health workflow, HTTP protection, Pikalytics parser, clipboard/backup helpers, App smoke
 - **Guided Team Builder** — four-step flow (Build → Check → Tune → Share) with sticky Team report, slot set-completeness, and undo toasts
-- **Live meta** — Pikalytics usage/sets via proxied API (6h cache) with bundled fallback when Render is cold
-- **Honest legality** — per-team regulation, inherited/unverified format notices, lazy learnset validation with clear pending states
-- **Showdown workflow** — import/export paste with VGC form name mapping, share links via `?team=` base64 payload
+- **Live meta** — Pikalytics usage/sets via proxied API (6h cache) with Reg M-C keyed offline fallback when Render is cold
+- **Champions legality** — curated Legendary / Mythical / Paradox ban list for Reg M-A/B/C (still not an official event authority)
+- **Showdown workflow** — import/export paste with VGC form name mapping, share links via `?team=` base64 payload, visible clipboard failures
 - **Protected AI route** — Groq API key server-side, CORS allowlist, rate limits, body validation, outbound timeouts
-- **No accounts, no database** — teams in `localStorage`; API holds no user roster data
+- **No accounts, no database** — teams in `localStorage` plus downloadable library backup; API holds no user roster data
 
 ## Screenshots
 
@@ -51,13 +51,13 @@ This is a **portfolio and research project** — useful for exploring competitiv
 
 | Area | What you get |
 |------|----------------|
-| **Team lab** | 6 slots, roles, bring-4, multi-team tabs, undo, per-team regulation, Team report |
+| **Team lab** | 6 slots, roles, bring-4, multi-team tabs, undo, per-team regulation, Team report, library backup/restore |
 | **Sets** | Move picker, set editor on slots, Apply meta set, Showdown import |
-| **Legality** | Species clause, restricteds, items, learnsets (on demand), transparency for unverified formats |
+| **Legality** | Species clause, restricteds, items, learnsets (on demand), curated Champions L/M/P bans, transparency for incomplete formats |
 | **Analysis** | Type coverage, speed tiers, meta gap, threat hints, preview simulator |
 | **Meta** | Usage %, win rate, partner suggestions, suggest 6th |
-| **Export** | Showdown paste, plain text, share URL |
-| **Browse** | Search, filters, favorites, compare, dark mode |
+| **Export** | Showdown paste, plain text, share URL, all-teams JSON backup |
+| **Browse** | Search, filters, compare, dark mode |
 
 ## Quickstart (local)
 
@@ -118,7 +118,7 @@ This project is a **team-building lab**, not an official VGC rules engine. Key s
 
 ### Regulation legality
 
-- **Bundled lists** — `src/data/regulations.json` (+ ban list for Regulation H). Some formats inherit another regulation and are flagged **unverified** in the UI.
+- **Bundled lists** — `src/data/regulations.json` plus `champions-banned.json` for Reg M-A/B/C and Regulation H ban data. Incomplete formats can still show honesty notices in the UI.
 - **Not official** — always confirm against the [official VGC handbook](https://play.pokemon.com/en-us/resources/rules/?category=vgc) before events.
 - **Learnset checks** — best-effort against PokeAPI learnsets; pending/unavailable states are shown explicitly.
 

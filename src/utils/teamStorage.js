@@ -98,4 +98,93 @@ function saveToStorage(teams, activeTeamId) {
   }
 }
 
-export { loadFromStorage, saveToStorage, generateId, TEAMS_KEY };
+function buildTeamLibraryBackup(teams) {
+  return {
+    version: TEAM_SCHEMA_VERSION,
+    exportedAt: new Date().toISOString(),
+    teams: (teams || []).map((team) => compactTeamForStorage(migrateTeamRecord(team))),
+  };
+}
+
+function parseTeamLibraryBackup(raw) {
+  let data = raw;
+  if (typeof raw === "string") {
+    try {
+      data = JSON.parse(raw);
+    } catch {
+      return { ok: false, error: "Backup file is not valid JSON." };
+    }
+  }
+
+  if (!data || typeof data !== "object" || !Array.isArray(data.teams)) {
+    return { ok: false, error: "Backup file is missing a teams list." };
+  }
+
+  if (data.version != null && Number(data.version) > TEAM_SCHEMA_VERSION) {
+    return {
+      ok: false,
+      error: `Backup schema version ${data.version} is newer than this app supports.`,
+    };
+  }
+
+  try {
+    const teams = normalizeLoadedTeams(data.teams);
+    if (teams.length === 0) {
+      return { ok: false, error: "Backup file contains no teams." };
+    }
+    return { ok: true, teams, exportedAt: data.exportedAt || null };
+  } catch {
+    return { ok: false, error: "Backup file could not be read." };
+  }
+}
+
+function uniqueRestoredName(desiredName, existingNames) {
+  const base = (desiredName || "Restored team").trim() || "Restored team";
+  if (!existingNames.has(base.toLowerCase())) {
+    return base;
+  }
+
+  let suffix = 2;
+  let candidate = `${base} (restored)`;
+  while (existingNames.has(candidate.toLowerCase())) {
+    candidate = `${base} (restored ${suffix})`;
+    suffix += 1;
+  }
+  return candidate;
+}
+
+function mergeRestoredTeams(existingTeams, restoredTeams) {
+  const existingNames = new Set(
+    (existingTeams || []).map((team) => (team.name || "").trim().toLowerCase()).filter(Boolean),
+  );
+
+  const mergedAdditions = (restoredTeams || []).map((team) => {
+    const name = uniqueRestoredName(team.name, existingNames);
+    existingNames.add(name.toLowerCase());
+    return {
+      ...migrateTeamRecord(team),
+      id: generateId(),
+      name,
+    };
+  });
+
+  const teams = [...(existingTeams || []), ...mergedAdditions].map((team) =>
+    expandTeamForUse(migrateTeamRecord(team)),
+  );
+
+  return {
+    teams,
+    addedCount: mergedAdditions.length,
+    activeTeamId: mergedAdditions[0]?.id || existingTeams?.[0]?.id || null,
+  };
+}
+
+export {
+  loadFromStorage,
+  saveToStorage,
+  generateId,
+  TEAMS_KEY,
+  buildTeamLibraryBackup,
+  parseTeamLibraryBackup,
+  mergeRestoredTeams,
+};

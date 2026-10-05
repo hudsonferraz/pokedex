@@ -1,11 +1,25 @@
 import regulationsData from "../data/regulations.json";
 import regulationHBanned from "../data/regulation-h-banned.json";
+import championsBanned from "../data/champions-banned.json";
 import { validateTeamSets } from "./regulationValidation";
 
 export const DEFAULT_REGULATION_ID = "champions-reg-mc";
 
+function withChampionsBanList(regulation) {
+  return {
+    ...regulation,
+    banned: championsBanned,
+    restricted: [],
+    maxRestricted: 0,
+    legalityUnverified: false,
+  };
+}
+
 const REGULATION_MAP = {
   ...regulationsData,
+  "champions-reg-mc": withChampionsBanList(regulationsData["champions-reg-mc"]),
+  "champions-reg-mb": withChampionsBanList(regulationsData["champions-reg-mb"]),
+  "champions-reg-ma": withChampionsBanList(regulationsData["champions-reg-ma"]),
   "regulation-h": {
     ...regulationsData["regulation-h"],
     banned: regulationHBanned,

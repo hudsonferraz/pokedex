@@ -5,6 +5,7 @@ import Home from "./components/Home";
 import PokemonDetail from "./components/PokemonDetail";
 import TeamBuilder from "./components/TeamBuilder";
 import ScrollToTop from "./components/ScrollToTop";
+import ErrorBoundary from "./components/ErrorBoundary";
 import { TeamProvider } from "./contexts/TeamContext";
 import { RegulationProvider, useRegulation } from "./contexts/RegulationContext";
 import { MetaDataProvider } from "./contexts/MetaDataContext";
@@ -28,17 +29,19 @@ function AppRoutes() {
 
 function App() {
   return (
-    <ThemeProvider>
-      <ComparisonProvider>
-        <ToastProvider>
-          <TeamProvider>
-            <RegulationProvider>
-              <AppRoutes />
-            </RegulationProvider>
-          </TeamProvider>
-        </ToastProvider>
-      </ComparisonProvider>
-    </ThemeProvider>
+    <ErrorBoundary>
+      <ThemeProvider>
+        <ComparisonProvider>
+          <ToastProvider>
+            <TeamProvider>
+              <RegulationProvider>
+                <AppRoutes />
+              </RegulationProvider>
+            </TeamProvider>
+          </ToastProvider>
+        </ComparisonProvider>
+      </ThemeProvider>
+    </ErrorBoundary>
   );
 }
 

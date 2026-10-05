@@ -553,13 +553,23 @@
   transform: translateY(-2px);
 }
 
+.team-backup-file-input {
+  display: none;
+}
+
 @media (max-width: 768px) {
   .team-builder-header {
     flex-direction: column;
     align-items: flex-start;
   }
 
+  .team-slots-wrapper {
+    overflow-x: visible;
+  }
+
   .team-slots-grid {
+    min-width: 0;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 12px;
   }
 

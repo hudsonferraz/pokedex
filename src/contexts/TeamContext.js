@@ -1,5 +1,5 @@
 import React from "react";
-import { loadFromStorage, saveToStorage, generateId } from "../utils/teamStorage";
+import { loadFromStorage, saveToStorage, generateId, mergeRestoredTeams } from "../utils/teamStorage";
 import { normalizeTeamPokemonList } from "../utils/teamPokemonModel";
 import {
   EMPTY_POKEMON_SET,
@@ -41,6 +41,7 @@ const TeamContext = React.createContext({
   clearStorageError: () => null,
   setTeamRegulationId: () => null,
   undoLastChange: () => false,
+  mergeImportedTeamLibrary: () => 0,
 });
 
 function pruneSetsAndRoles(teamRecord, names) {
@@ -229,6 +230,16 @@ function TeamProviderWithState({ children }) {
     undoSnapshotRef.current = null;
     return true;
   }, [persist]);
+
+  const mergeImportedTeamLibrary = React.useCallback(
+    (restoredTeams) => {
+      captureUndoSnapshot();
+      const merged = mergeRestoredTeams(state.teams, restoredTeams);
+      persist(merged.teams, merged.activeTeamId || state.activeTeamId);
+      return merged.addedCount;
+    },
+    [state.teams, state.activeTeamId, persist, captureUndoSnapshot],
+  );
 
   const clearUndoSnapshot = React.useCallback(() => {
     undoSnapshotRef.current = null;
@@ -561,6 +572,7 @@ function TeamProviderWithState({ children }) {
     clearStorageError,
     setTeamRegulationId,
     undoLastChange,
+    mergeImportedTeamLibrary,
   };
 
   return <TeamContext.Provider value={value}>{children}</TeamContext.Provider>;

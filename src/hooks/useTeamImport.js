@@ -23,12 +23,14 @@ export function useTeamImport({ onUndo, onShowdownImportComplete }) {
 
     const decoded = decodeTeamFromShare(teamShareParam);
     if (!decoded || decoded.pokemon.length === 0) {
+      showToast("Share link is invalid or empty", "error");
       setSearchParams({}, { replace: true });
       return undefined;
     }
 
     importedShareTeamRef.current = teamShareParam;
     let cancelled = false;
+    const expectedCount = Math.min(decoded.pokemon.length, 6);
 
     Promise.all(decoded.pokemon.slice(0, 6).map((name) => searchPokemon(name)))
       .then((resolvedPokemon) => {
@@ -46,7 +48,16 @@ export function useTeamImport({ onUndo, onShowdownImportComplete }) {
             decoded.bringList || null,
             decoded.regulationId || null,
           );
-          showUndoToast(`Imported "${decoded.name}"`, onUndo, "success");
+          if (fullTeam.length < expectedCount) {
+            showToast(
+              `Imported "${decoded.name}" with ${fullTeam.length} of ${expectedCount} Pokémon — some names could not be resolved`,
+              "info",
+            );
+          } else {
+            showUndoToast(`Imported "${decoded.name}"`, onUndo, "success");
+          }
+        } else {
+          showToast("Could not resolve any Pokémon from this share link", "error");
         }
         setSearchParams({}, { replace: true });
       })

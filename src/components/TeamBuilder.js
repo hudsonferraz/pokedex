@@ -30,6 +30,11 @@ import {
   getTeamShowdownExport,
   buildTeamShareUrl,
 } from "../utils/teamExport";
+import { copyTextToClipboard } from "../utils/clipboard";
+import {
+  buildTeamLibraryBackup,
+  parseTeamLibraryBackup,
+} from "../utils/teamStorage";
 import { computeTeamBuildHealth, BUILD_STEPS } from "../utils/teamBuildHealth";
 import "./TeamBuilder.css";
 
@@ -59,6 +64,7 @@ const TeamBuilder = () => {
     storageError,
     clearStorageError,
     undoLastChange,
+    mergeImportedTeamLibrary,
   } = useContext(TeamContext);
   const { showToast, showUndoToast } = useToast();
   const { regulation, regulationId, validateTeam } = useRegulation();
@@ -319,20 +325,62 @@ const TeamBuilder = () => {
     }
   };
 
+  const backupFileInputRef = useRef(null);
+
+  const copyWithFeedback = useCallback(
+    async (text, successMessage, { closeMenu = false, onSuccess } = {}) => {
+      const result = await copyTextToClipboard(text);
+      if (result.ok) {
+        showToast(successMessage, "success");
+        if (closeMenu) {
+          closeExportMenu();
+        }
+        if (onSuccess) {
+          onSuccess();
+        }
+        return;
+      }
+
+      showToast(
+        "Clipboard blocked — text is selected in a temporary box so you can copy manually (Ctrl/Cmd+C).",
+        "error",
+      );
+      try {
+        const textarea = document.createElement("textarea");
+        textarea.value = text;
+        textarea.style.position = "fixed";
+        textarea.style.top = "20%";
+        textarea.style.left = "50%";
+        textarea.style.transform = "translateX(-50%)";
+        textarea.style.zIndex = "10000";
+        textarea.style.width = "min(90vw, 480px)";
+        textarea.style.height = "160px";
+        document.body.appendChild(textarea);
+        textarea.focus();
+        textarea.select();
+        window.setTimeout(() => {
+          if (textarea.parentNode) {
+            textarea.parentNode.removeChild(textarea);
+          }
+        }, 20000);
+      } catch {
+        // ignore DOM fallback failure
+      }
+      if (closeMenu) {
+        closeExportMenu();
+      }
+    },
+    [showToast, closeExportMenu],
+  );
+
   const handleCopyAsText = () => {
     const text = getTeamExportText(team, activeTeam?.name || "Team", activeTeam?.sets);
-    navigator.clipboard.writeText(text).then(() => {
-      showToast("Copied to clipboard", "success");
-      closeExportMenu();
-    });
+    copyWithFeedback(text, "Copied to clipboard", { closeMenu: true });
   };
 
   const handleCopyShowdown = () => {
     const text = getTeamShowdownExport(team, activeTeam?.name || "Team", activeTeam?.sets);
-    navigator.clipboard.writeText(text).then(() => {
-      showToast("Showdown paste copied", "success");
-      closeExportMenu();
-    });
+    copyWithFeedback(text, "Showdown paste copied", { closeMenu: true });
   };
 
   const handleCopyShareLink = () => {
@@ -355,10 +403,52 @@ const TeamBuilder = () => {
       return;
     }
 
-    navigator.clipboard.writeText(url).then(() => {
-      showToast("Share link copied (includes regulation & roles)", "success");
-      markShareLinkCopied();
+    copyWithFeedback(url, "Share link copied (includes regulation & roles)", {
+      onSuccess: markShareLinkCopied,
     });
+  };
+
+  const handleDownloadTeamLibraryBackup = () => {
+    const backup = buildTeamLibraryBackup(teams);
+    const blob = new Blob([JSON.stringify(backup, null, 2)], {
+      type: "application/json",
+    });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `vgc-team-lab-backup-${new Date().toISOString().slice(0, 10)}.json`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+    showToast("Team library backup downloaded", "success");
+    setShowMoreMenu(false);
+  };
+
+  const handleRestoreTeamLibraryBackup = async (event) => {
+    const file = event.target.files?.[0];
+    event.target.value = "";
+    if (!file) {
+      return;
+    }
+
+    try {
+      const text = await file.text();
+      const parsed = parseTeamLibraryBackup(text);
+      if (!parsed.ok) {
+        showToast(parsed.error, "error");
+        return;
+      }
+      const addedCount = mergeImportedTeamLibrary(parsed.teams);
+      showUndoToast(
+        `Restored ${addedCount} team${addedCount === 1 ? "" : "s"} from backup`,
+        handleUndo,
+        "success",
+      );
+    } catch {
+      showToast("Could not read backup file", "error");
+    }
+    setShowMoreMenu(false);
   };
 
   return (
@@ -459,9 +549,27 @@ const TeamBuilder = () => {
                     >
                       Clear roster
                     </button>
+                    <button type="button" onClick={handleDownloadTeamLibraryBackup}>
+                      Download all teams backup
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => backupFileInputRef.current?.click()}
+                    >
+                      Restore teams backup
+                    </button>
                   </div>
                 )}
               </div>
+              <input
+                ref={backupFileInputRef}
+                type="file"
+                accept="application/json,.json"
+                className="team-backup-file-input"
+                onChange={handleRestoreTeamLibraryBackup}
+                aria-hidden="true"
+                tabIndex={-1}
+              />
             </div>
           </div>
         </div>
@@ -690,6 +798,16 @@ const TeamBuilder = () => {
               </span>
               <span className="build-step-export-card-copy">
                 URL with team, sets, bring-4, and regulation for collaborators.
+              </span>
+            </button>
+            <button
+              type="button"
+              className="build-step-export-card"
+              onClick={handleDownloadTeamLibraryBackup}
+            >
+              <span className="build-step-export-card-title">Backup all teams</span>
+              <span className="build-step-export-card-copy">
+                Download a JSON file of every team in this browser — restore anytime from More.
               </span>
             </button>
           </div>

@@ -1,0 +1,39 @@
+.error-boundary-shell {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: var(--bg-color, #0f1419);
+  color: var(--text-color, #f5f5f5);
+}
+
+.error-boundary-card {
+  max-width: 420px;
+  text-align: center;
+  padding: 28px 24px;
+  border: 1px solid var(--border-color, #334);
+  border-radius: 12px;
+  background: var(--card-bg, #1a222d);
+}
+
+.error-boundary-card h1 {
+  margin: 0 0 12px;
+  font-size: 1.4rem;
+}
+
+.error-boundary-card p {
+  margin: 0 0 20px;
+  line-height: 1.5;
+  opacity: 0.9;
+}
+
+.error-boundary-reload {
+  border: none;
+  border-radius: 8px;
+  padding: 10px 18px;
+  background: var(--accent, #4caf50);
+  color: #fff;
+  font-weight: 600;
+  cursor: pointer;
+}

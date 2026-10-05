@@ -26,10 +26,10 @@ A single origin with SSR/edge functions replaces the split, or meta/AI are remov
 Users need multi-team rosters, undo, and share links without accounts or backend persistence.
 
 **Decision**  
-Persist teams under `pokemon-teams` in `localStorage` with schema version 3. Share links encode the payload in `?team=` (base64 JSON).
+Persist teams under `pokemon-teams` in `localStorage` with schema version 3. Share links encode the payload in `?team=` (base64 JSON). Users can download/restore a full library JSON backup (merge/append, never wipe on bad files).
 
 **Trade-off**  
-Data is device-bound and vulnerable to quota limits — `persist()` surfaces `storageError` to the UI. Share URLs can exceed safe length (~1800 chars) for heavy sets; Showdown paste is the fallback.
+Data is still device-bound without accounts — backup is the escape hatch. Share URLs can exceed safe length (~1800 chars) for heavy sets; Showdown paste is the fallback.
 
 **Revisit when**  
 Cloud sync, collaborative editing, or official event submission requires server-side storage.
@@ -87,16 +87,16 @@ User research shows experienced builders prefer a single-page “expert” layou
 ## Honest regulation legality
 
 **Context**  
-Bundled ban/restricted lists can lag official announcements. Champions Reg M-A initially inherited Regulation I lists in error (restricted-count style); corrected to inherit the ban-only Regulation H list, matching the real rule that M-A/M-B/M-C ban all Legendary, Mythical, and Paradox Pokémon outright. Reg M-C (current as of Sep 9, 2026; through Dec 2, 2026) reuses the same inherited list and is flagged unverified until Pokémon publishes an official Champions ban list for tooling.
+Bundled ban/restricted lists can lag official announcements. Champions formats ban all Legendary, Mythical, and Paradox Pokémon. Earlier builds inherited Regulation H while showing an “unverified” banner on the default format.
 
 **Decision**  
-`legalityUnverified` and `legalityInheritsFrom` in `regulations.json`. Prominent `RegulationLegalityNotice` above the selector. Validation warns when lists are inherited; learnset checks show pending/unavailable states instead of silent passes.
+Champions Reg M-A/B/C inject `champions-banned.json` and clear `legalityUnverified`. Other formats may still use `legalityInheritsFrom` / incomplete lists with `RegulationLegalityNotice`. Learnset checks show pending/unavailable states instead of silent passes. Product copy keeps a non-oracle disclaimer.
 
 **Trade-off**  
-More UI noise on unverified formats, but users are not misled into treating the app as an official legality oracle.
+Default format feels product-ready; curated lists still need refresh when handbooks change.
 
 **Revisit when**  
-Official lists are bundled and verified for each supported format — remove flags and notice.
+Pokémon publishes machine-readable Champions ban lists for tooling.
 
 ---
 
@@ -122,10 +122,10 @@ Bundled learnset index ships for Regulation-supported species only.
 Pikalytics serves markdown, not JSON. CORS blocks direct browser access. Scraping must be respectful and resilient.
 
 **Decision**  
-Server fetches markdown, parses to structured meta (`pikalyticsParser.js`), caches 6 hours in memory. Bundled `vgcMeta.json` / `vgcUsage.json` used when API is cold or unreachable.
+Server fetches markdown, parses to structured meta (`pikalyticsParser.js`), caches 6 hours in memory. Bundled `vgcMeta.json` / `vgcUsage.json` used when API is cold or unreachable, with Reg M-C / M-B keys so offline default format is not silently unlabeled M-A data.
 
 **Trade-off**  
-Parser must track Pikalytics layout changes; fallback data can be stale relative to live ladder.
+Parser must track Pikalytics layout changes; fallback data can be stale relative to live ladder and is labeled as offline.
 
 **Revisit when**  
 Pikalytics offers a stable JSON API or official partnership.
@@ -177,6 +177,22 @@ Not a full history stack; undo is lost after a new mutation.
 
 **Revisit when**  
 Multi-step undo/redo is requested for set editing.
+
+---
+
+## Curated Champions ban list (verified lab data)
+
+**Context**  
+Default format Champions Reg M-C bans all Legendary, Mythical, and Paradox Pokémon. Inheriting Regulation H lists while showing an “unverified” banner undercut the product story.
+
+**Decision**  
+Bundle `champions-banned.json` generated from PokeAPI `is_legendary` / `is_mythical` plus a curated Paradox set. Inject into Reg M-A/B/C, clear `legalityUnverified`, and keep a non-oracle disclaimer in regulation notes.
+
+**Trade-off**  
+Lists can lag official handbook changes; the app remains a lab, not Championship software.
+
+**Revisit when**  
+Pokémon publishes machine-readable Champions ban lists.
 
 ---
 

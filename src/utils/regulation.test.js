@@ -26,18 +26,21 @@ describe("regulation legality", () => {
     expect(getSpeciesRegulationStatus("pecharunt", "regulation-i").status).toBe("banned");
   });
 
-  test("champions reg m-a inherits regulation-h ban-only legality", () => {
+  test("champions reg m-a uses curated ban-only legality", () => {
     expect(getSpeciesRegulationStatus("miraidon", "champions-reg-ma").status).toBe("banned");
   });
 
-  test("champions reg m-b inherits regulation-h ban-only legality", () => {
+  test("champions reg m-b uses curated ban-only legality", () => {
     expect(getSpeciesRegulationStatus("koraidon", "champions-reg-mb").status).toBe("banned");
     expect(getSpeciesRegulationStatus("incineroar", "champions-reg-mb").status).toBe("legal");
   });
 
-  test("champions reg m-c inherits regulation-h ban-only legality", () => {
+  test("champions reg m-c bans legendary mythical and paradox", () => {
     expect(getSpeciesRegulationStatus("miraidon", "champions-reg-mc").status).toBe("banned");
+    expect(getSpeciesRegulationStatus("mewtwo", "champions-reg-mc").status).toBe("banned");
+    expect(getSpeciesRegulationStatus("flutter-mane", "champions-reg-mc").status).toBe("banned");
     expect(getSpeciesRegulationStatus("rillaboom", "champions-reg-mc").status).toBe("legal");
+    expect(getSpeciesRegulationStatus("incineroar", "champions-reg-mc").status).toBe("legal");
   });
 
   test("incineroar is legal in regulation-h", () => {
@@ -61,14 +64,12 @@ describe("species clause", () => {
 });
 
 describe("regulation transparency", () => {
-  test("flags champions regulation as inherited and unverified", () => {
+  test("returns null for verified champions reg m-c", () => {
     const notice = getRegulationLegalityTransparency(
-      validateTeamForRegulation([], "champions-reg-ma").regulation,
+      validateTeamForRegulation([], "champions-reg-mc").regulation,
     );
 
-    expect(notice).not.toBeNull();
-    expect(notice.title).toMatch(/inherited legality/i);
-    expect(notice.message).toContain("Regulation H");
+    expect(notice).toBeNull();
   });
 
   test("returns null for verified regulation-i", () => {
@@ -77,6 +78,13 @@ describe("regulation transparency", () => {
     );
 
     expect(notice).toBeNull();
+  });
+
+  test("does not emit legality-unverified warning for champions reg m-c", () => {
+    const result = validateTeamForRegulation([], "champions-reg-mc");
+    expect(result.warnings.some((warning) => warning.type === "legality-unverified")).toBe(
+      false,
+    );
   });
 });
 

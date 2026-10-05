@@ -19,13 +19,19 @@
       {
         "id": "champions-fire-grass",
         "name": "Incineroar + Sinistcha",
-        "pokemon": ["incineroar", "sinistcha"],
+        "pokemon": [
+          "incineroar",
+          "sinistcha"
+        ],
         "hint": "A common Champions backbone — Intimidate support plus a bulky win condition. Plan Fire and Ghost answers."
       },
       {
         "id": "champions-speed",
         "name": "Garchomp + Sneasler",
-        "pokemon": ["garchomp", "sneasler"],
+        "pokemon": [
+          "garchomp",
+          "sneasler"
+        ],
         "hint": "Fast physical pressure is common in Champions. Ice, Fairy, and priority can punish this pairing."
       }
     ]
@@ -57,31 +63,49 @@
       {
         "id": "fire-grass",
         "name": "Incineroar + Rillaboom",
-        "pokemon": ["incineroar", "rillaboom"],
+        "pokemon": [
+          "incineroar",
+          "rillaboom"
+        ],
         "hint": "Intimidate plus Grassy Glide is a classic backbone. Your team may struggle without Fire/Grass answers or a way to pressure Incineroar."
       },
       {
         "id": "rain",
         "name": "Pelipper rain core",
-        "pokemon": ["pelipper", "palafin", "kingambit"],
+        "pokemon": [
+          "pelipper",
+          "palafin",
+          "kingambit"
+        ],
         "hint": "Rain teams abuse Swift Swim and boosted Water. Consider Electric coverage and weather control."
       },
       {
         "id": "sun",
         "name": "Torkoal sun core",
-        "pokemon": ["torkoal", "flutter-mane", "chi-yu"],
+        "pokemon": [
+          "torkoal",
+          "flutter-mane",
+          "chi-yu"
+        ],
         "hint": "Sun boosts Fire and weakens Water. Watch for speed under sun and opposing weather."
       },
       {
         "id": "trick-room",
         "name": "Trick Room stack",
-        "pokemon": ["farigiraf", "iron-hands", "torkoal"],
+        "pokemon": [
+          "farigiraf",
+          "iron-hands",
+          "torkoal"
+        ],
         "hint": "Trick Room reverses speed. Without anti-TR (Taunt, Imprison, fast KO) or your own TR, slow teams can run over you."
       },
       {
         "id": "ghost-fighting",
         "name": "Flutter Mane + Iron Hands",
-        "pokemon": ["flutter-mane", "iron-hands"],
+        "pokemon": [
+          "flutter-mane",
+          "iron-hands"
+        ],
         "hint": "Special + physical spread with Booster Energy. Dark, Ghost, and Steel answers are common in meta teams."
       }
     ]
@@ -100,8 +124,85 @@
       {
         "id": "fire-grass",
         "name": "Incineroar + Rillaboom",
-        "pokemon": ["incineroar", "rillaboom"],
+        "pokemon": [
+          "incineroar",
+          "rillaboom"
+        ],
         "hint": "Still a defining doubles core in many formats. Plan around Intimidate cycles and Rillaboom speed control."
+      }
+    ]
+  },
+  "champions-reg-mc": {
+    "sourceNote": "Offline snapshot for Champions Reg M-C — replace with live Pikalytics when the API is up.",
+    "topPokemon": [
+      "incineroar",
+      "sinistcha",
+      "garchomp",
+      "floette-mega",
+      "sneasler",
+      "basculegion",
+      "charizard-mega-y",
+      "pelipper",
+      "whimsicott",
+      "archaludon",
+      "dragonite-mega",
+      "scizor-mega"
+    ],
+    "cores": [
+      {
+        "id": "champions-fire-grass",
+        "name": "Incineroar + Sinistcha",
+        "pokemon": [
+          "incineroar",
+          "sinistcha"
+        ],
+        "hint": "A common Champions backbone — Intimidate support plus a bulky win condition. Plan Fire and Ghost answers."
+      },
+      {
+        "id": "champions-speed",
+        "name": "Garchomp + Sneasler",
+        "pokemon": [
+          "garchomp",
+          "sneasler"
+        ],
+        "hint": "Fast physical pressure is common in Champions. Ice, Fairy, and priority can punish this pairing."
+      }
+    ]
+  },
+  "champions-reg-mb": {
+    "sourceNote": "Offline snapshot for Champions Reg M-B — replace with live Pikalytics when the API is up.",
+    "topPokemon": [
+      "incineroar",
+      "sinistcha",
+      "garchomp",
+      "floette-mega",
+      "sneasler",
+      "basculegion",
+      "charizard-mega-y",
+      "pelipper",
+      "whimsicott",
+      "archaludon",
+      "dragonite-mega",
+      "scizor-mega"
+    ],
+    "cores": [
+      {
+        "id": "champions-fire-grass",
+        "name": "Incineroar + Sinistcha",
+        "pokemon": [
+          "incineroar",
+          "sinistcha"
+        ],
+        "hint": "A common Champions backbone — Intimidate support plus a bulky win condition. Plan Fire and Ghost answers."
+      },
+      {
+        "id": "champions-speed",
+        "name": "Garchomp + Sneasler",
+        "pokemon": [
+          "garchomp",
+          "sneasler"
+        ],
+        "hint": "Fast physical pressure is common in Champions. Ice, Fairy, and priority can punish this pairing."
       }
     ]
   }

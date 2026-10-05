@@ -76,5 +76,47 @@
       "amoonguss": 27,
       "urshifu-rapid-strike": 33
     }
+  },
+  "champions-reg-mc": {
+    "updated": "2026-05",
+    "source": "Offline Champions Reg M-C snapshot (copied from last bundled Champions ladder until a dedicated M-C scrape is refreshed).",
+    "usage": {
+      "incineroar": 26,
+      "sinistcha": 24,
+      "garchomp": 22,
+      "floette-mega": 21,
+      "sneasler": 18,
+      "basculegion": 17,
+      "charizard-mega-y": 16,
+      "pelipper": 14,
+      "whimsicott": 13,
+      "archaludon": 12,
+      "dragonite-mega": 11,
+      "scizor-mega": 10,
+      "venusaur": 9,
+      "aegislash": 8,
+      "rotom-wash": 7
+    }
+  },
+  "champions-reg-mb": {
+    "updated": "2026-05",
+    "source": "Offline Champions Reg M-B snapshot (copied from last bundled Champions ladder).",
+    "usage": {
+      "incineroar": 26,
+      "sinistcha": 24,
+      "garchomp": 22,
+      "floette-mega": 21,
+      "sneasler": 18,
+      "basculegion": 17,
+      "charizard-mega-y": 16,
+      "pelipper": 14,
+      "whimsicott": 13,
+      "archaludon": 12,
+      "dragonite-mega": 11,
+      "scizor-mega": 10,
+      "venusaur": 9,
+      "aegislash": 8,
+      "rotom-wash": 7
+    }
   }
 }

@@ -34,25 +34,47 @@ function writeClientCache(regulationId, data) {
 async function loadFallbackMeta(regulationId) {
   const usageModule = await import("../data/vgcUsage.json");
   const metaModule = await import("../data/vgcMeta.json");
-  const usageEntry =
-    usageModule.default[regulationId] ||
-    usageModule.default["champions-reg-ma"] ||
-    usageModule.default["regulation-i"];
-  const metaEntry =
-    metaModule.default[regulationId] ||
-    metaModule.default["champions-reg-ma"] ||
-    metaModule.default["regulation-i"];
+  const usageData = usageModule.default;
+  const metaData = metaModule.default;
+
+  const hasExact =
+    Boolean(usageData[regulationId]) || Boolean(metaData[regulationId]);
+  const fallbackRegulationId = hasExact
+    ? regulationId
+    : usageData["champions-reg-mc"]
+      ? "champions-reg-mc"
+      : usageData["champions-reg-ma"]
+        ? "champions-reg-ma"
+        : "regulation-i";
+
+  const usageEntry = usageData[regulationId] || usageData[fallbackRegulationId];
+  const metaEntry = metaData[regulationId] || metaData[fallbackRegulationId];
+  const usedDifferentSnapshot = !hasExact || fallbackRegulationId !== regulationId;
+
+  let source =
+    usageEntry?.source ||
+    "Bundled fallback data (update server or redeploy to refresh)";
+  let label = metaEntry?.sourceNote ? "Offline fallback" : regulationId;
+
+  if (usedDifferentSnapshot) {
+    label = `Offline fallback (stale ${fallbackRegulationId})`;
+    source = `${source} — showing bundled ${fallbackRegulationId} snapshot because ${regulationId} has no offline copy.`;
+  } else if (!usageEntry?.source?.toLowerCase().includes("offline")) {
+    source = `Offline fallback: ${source}`;
+  }
+
   return {
     live: false,
     regulationId,
     formatCode: null,
-    label: metaEntry?.sourceNote ? "Offline fallback" : regulationId,
+    label,
     updated: usageEntry?.updated || "",
-    source: usageEntry?.source || "Bundled fallback data (update server or redeploy to refresh)",
+    source,
     sourceUrl: null,
     usage: usageEntry?.usage || {},
     topPokemon: metaEntry?.topPokemon || [],
     cores: metaEntry?.cores || [],
+    fallbackFromRegulationId: usedDifferentSnapshot ? fallbackRegulationId : null,
   };
 }
 
