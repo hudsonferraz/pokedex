@@ -43,7 +43,8 @@
 }
 
 .team-empty-state-primary,
-.team-empty-state-secondary {
+.team-empty-state-secondary,
+.team-empty-state-tertiary {
   padding: 10px 20px;
   border-radius: var(--radius-md);
   font-size: 0.95rem;
@@ -73,3 +74,18 @@
   border-color: var(--accent);
   color: var(--accent);
 }
+
+.team-empty-state-tertiary {
+  border: none;
+  background: transparent;
+  color: var(--text-color);
+  opacity: 0.75;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.team-empty-state-tertiary:hover {
+  opacity: 1;
+  color: var(--accent);
+}
+

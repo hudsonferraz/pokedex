@@ -20,6 +20,31 @@
   border-style: solid;
 }
 
+.team-slot-completeness {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  z-index: 2;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  padding: 0.2rem 0.45rem;
+  border-radius: 999px;
+  background: rgba(15, 23, 42, 0.08);
+  color: var(--text-color);
+}
+
+.team-slot-completeness.complete {
+  background: rgba(22, 163, 74, 0.15);
+  color: #15803d;
+}
+
+.team-slot-completeness.incomplete {
+  background: rgba(217, 119, 6, 0.15);
+  color: #b45309;
+}
+
+
 .team-slot-filled-animate {
   animation: slot-fill-in 0.35s ease-out;
 }

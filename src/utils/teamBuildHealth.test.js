@@ -1,4 +1,5 @@
-import { computeTeamBuildHealth, getSuggestedStepId } from "./teamBuildHealth";
+import { computeTeamBuildHealth, getSuggestedStepId, getSlotCompleteness } from "./teamBuildHealth";
+import { buildTeamReport } from "./teamReport";
 
 function makePokemon(name, types) {
   return {
@@ -29,7 +30,7 @@ const fullSet = {
 };
 
 describe("teamBuildHealth", () => {
-  test("flags incomplete roster", () => {
+  test("flags incomplete roster on build step", () => {
     const team = [makePokemon("Incineroar", ["fire", "dark"])];
     const result = computeTeamBuildHealth({
       team,
@@ -38,8 +39,14 @@ describe("teamBuildHealth", () => {
     });
 
     expect(result.health.completedSets.count).toBe(0);
-    expect(result.suggestedStepId).toBe("roster");
-    expect(result.steps.find((step) => step.id === "roster").status).toBe("attention");
+    expect(result.suggestedStepId).toBe("build");
+    expect(result.steps.find((step) => step.id === "build").status).toBe("attention");
+    expect(result.steps.map((step) => step.id)).toEqual([
+      "build",
+      "check",
+      "tune",
+      "share",
+    ]);
   });
 
   test("detects speed control from moves", () => {
@@ -71,14 +78,14 @@ describe("teamBuildHealth", () => {
 
   test("prioritizes attention steps for suggestion", () => {
     const steps = [
-      { id: "roster", status: "complete" },
-      { id: "sets", status: "attention" },
-      { id: "legality", status: "complete" },
+      { id: "build", status: "complete" },
+      { id: "check", status: "attention" },
+      { id: "tune", status: "complete" },
     ];
-    expect(getSuggestedStepId(steps)).toBe("sets");
+    expect(getSuggestedStepId(steps)).toBe("check");
   });
 
-  test("marks coach complete on a full roster so suggestion can reach export", () => {
+  test("suggests share on a healthy full roster", () => {
     const team = Array.from({ length: 6 }, (_, index) =>
       makePokemon(`Mon${index}`, ["normal"]),
     );
@@ -104,21 +111,41 @@ describe("teamBuildHealth", () => {
       validateTeam: () => ({ issues: [], warnings: [] }),
     });
 
-    expect(result.steps.find((step) => step.id === "coach").status).toBe("complete");
-    expect(result.suggestedStepId).not.toBe("coach");
+    expect(result.steps.find((step) => step.id === "share").status).toBe("complete");
+    expect(result.health.coachReady).toBe(true);
+    expect(result.steps.find((step) => step.id === "coach")).toBeUndefined();
   });
 
-  test("marks coach as attention when roster is coach-ready but incomplete", () => {
-    const team = Array.from({ length: 4 }, (_, index) =>
-      makePokemon(`Mon${index}`, ["normal"]),
-    );
+  test("getSlotCompleteness requires moves ability item nature", () => {
+    expect(getSlotCompleteness(fullSet).isComplete).toBe(true);
+    expect(getSlotCompleteness({ moves: ["protect"] }).isComplete).toBe(false);
+  });
+});
 
-    const result = computeTeamBuildHealth({
-      team,
-      sets: {},
-      validateTeam: () => ({ issues: [], warnings: [] }),
-    });
+describe("teamReport", () => {
+  test("empty team returns import-oriented empty label", () => {
+    const report = buildTeamReport(null, { teamLength: 0 });
+    expect(report.issues).toEqual([]);
+    expect(report.emptyLabel).toMatch(/Import/i);
+  });
 
-    expect(result.steps.find((step) => step.id === "coach").status).toBe("attention");
+  test("ranks legality errors above roster info", () => {
+    const health = {
+      completedSets: {
+        count: 0,
+        total: 6,
+        rosterCount: 2,
+        incompleteNames: ["A", "B"],
+        label: "0/2 sets",
+      },
+      legality: { status: "error", label: "2 issues", issueCount: 2, warningCount: 0 },
+      speedControl: { status: "unknown", label: "—" },
+      damageBalance: { status: "unknown", label: "—" },
+      weaknesses: { status: "unknown", label: "—" },
+    };
+
+    const report = buildTeamReport(health, { teamLength: 2 });
+    expect(report.issues[0].id).toBe("legality-error");
+    expect(report.issues.some((issue) => issue.id === "incomplete-sets")).toBe(true);
   });
 });

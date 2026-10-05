@@ -5,24 +5,18 @@ import { useToast } from "./ToastProvider";
 import { searchPokemon } from "../api";
 import { buildMoveTypesMap, learnsetMapFromPokemon } from "../utils/resolveMoveTypes";
 import TeamSlot from "./TeamSlot";
-import TeamAnalysis from "./TeamAnalysis";
-import TeamAITips from "./TeamAITips";
-import SpeedTierTable from "./SpeedTierTable";
-import MetaThreatHints from "./MetaThreatHints";
 import TeamEmptyState from "./TeamEmptyState";
 import TeamBuildGuide from "./TeamBuildGuide";
-import TeamHealthSummary from "./TeamHealthSummary";
+import TeamReport from "./TeamReport";
 import BuildStepSection from "./BuildStepSection";
 import MovePickerModal from "./MovePickerModal";
 import RegulationSelector from "./RegulationSelector";
 import RegulationWarnings from "./RegulationWarnings";
-import BringFourPreview from "./BringFourPreview";
-import TeamPreviewSimulator from "./TeamPreviewSimulator";
 import PokemonSetModal from "./PokemonSetModal";
 import ShowdownImportModal from "./ShowdownImportModal";
-import MetaGapPanel from "./MetaGapPanel";
 import SuggestSixthPanel from "./SuggestSixthPanel";
 import TeammateSuggestions from "./TeammateSuggestions";
+import TunePanels from "./TunePanels";
 import Navbar from "./Navbar";
 import ApiStatusChip from "./ApiStatusChip";
 import AddPokemonModal from "./AddPokemonModal";
@@ -98,8 +92,11 @@ const TeamBuilder = () => {
     closeShowdownImport,
   } = useTeamBuilderModals();
   const [metaFocusIndex, setMetaFocusIndex] = useState(0);
-  const [activeBuildStepId, setActiveBuildStepId] = useState("roster");
-  const suggestedStepRef = useRef("roster");
+  const [activeBuildStepId, setActiveBuildStepId] = useState("build");
+  const [tuneTabId, setTuneTabId] = useState("coverage");
+  const [showMoreMenu, setShowMoreMenu] = useState(false);
+  const moreMenuRef = useRef(null);
+  const suggestedStepRef = useRef("build");
   const { learnsetBySpecies, isLoading: isLoadingLearnsets } = useTeamLearnsets(
     team,
     activeTeam?.sets,
@@ -134,7 +131,7 @@ const TeamBuilder = () => {
     const nextIndex = stepOrder.indexOf(suggestedStepId);
 
     if (team.length === 0) {
-      setActiveBuildStepId("roster");
+      setActiveBuildStepId("build");
     } else if (nextIndex > previousIndex && activeBuildStepId === previousSuggested) {
       setActiveBuildStepId(suggestedStepId);
     }
@@ -142,9 +139,42 @@ const TeamBuilder = () => {
     suggestedStepRef.current = suggestedStepId;
   }, [workflow, team.length, activeBuildStepId]);
 
+  useEffect(() => {
+    if (!showMoreMenu) return undefined;
+    const handlePointerDown = (event) => {
+      if (moreMenuRef.current && !moreMenuRef.current.contains(event.target)) {
+        setShowMoreMenu(false);
+      }
+    };
+    document.addEventListener("mousedown", handlePointerDown);
+    return () => document.removeEventListener("mousedown", handlePointerDown);
+  }, [showMoreMenu]);
+
   const handleBuildStepChange = useCallback((stepId) => {
     setActiveBuildStepId(stepId);
   }, []);
+
+  const handleReportNavigate = useCallback(
+    (issue) => {
+      if (issue?.stepId) {
+        setActiveBuildStepId(issue.stepId);
+      }
+      if (issue?.tuneTab) {
+        setTuneTabId(issue.tuneTab);
+      }
+      if (issue?.speciesName) {
+        const index = team.findIndex((entry) => entry?.name === issue.speciesName);
+        if (index >= 0) {
+          setMetaFocusIndex(index);
+          const pokemon = team[index];
+          if (pokemon) {
+            openSetEditor(pokemon);
+          }
+        }
+      }
+    },
+    [team, openSetEditor],
+  );
 
   const getStepMeta = useCallback(
     (stepId) => workflow.steps.find((step) => step.id === stepId) || { status: "upcoming" },
@@ -242,6 +272,7 @@ const TeamBuilder = () => {
   };
 
   const handleClearTeam = () => {
+    setShowMoreMenu(false);
     if (window.confirm("Are you sure you want to clear your entire team?")) {
       clearTeam();
       showUndoToast("Team cleared", handleUndo, "info");
@@ -249,11 +280,13 @@ const TeamBuilder = () => {
   };
 
   const handleNewTeam = () => {
+    setShowMoreMenu(false);
     addTeam();
     showToast("New team created", "success");
   };
 
   const handleRenameOpen = () => {
+    setShowMoreMenu(false);
     openRenameModal(activeTeam?.name);
   };
 
@@ -267,6 +300,7 @@ const TeamBuilder = () => {
   };
 
   const handleDeleteTeam = () => {
+    setShowMoreMenu(false);
     if (teams.length <= 1) {
       showToast("Keep at least one team", "info");
       return;
@@ -330,27 +364,28 @@ const TeamBuilder = () => {
     <div className="team-builder-container">
       <Navbar />
       <div className="team-builder-content">
-        <section className="team-builder-hero card-surface">
-          <ApiStatusChip />
-          <div className="team-builder-hero-text">
-            <p className="team-builder-hero-eyebrow">VGC team lab</p>
-            <h1>Build your {regulation.label} squad</h1>
-            <p className="team-builder-hero-copy">
-              Follow the six-step workflow below — roster, sets, legality, matchups, coach, then
-              export. Your team health stays pinned as you build.
+        {team.length === 0 ? (
+          <section className="team-builder-hero card-surface team-builder-hero-compact">
+            <ApiStatusChip />
+            <div className="team-builder-hero-text">
+              <p className="team-builder-hero-eyebrow">VGC team lab</p>
+              <h1>Build your {regulation.label} squad</h1>
+              <p className="team-builder-hero-copy">
+                Import a paste or fill six slots, then use the Team report to fix legality and matchup
+                gaps before you export.
+              </p>
+            </div>
+          </section>
+        ) : (
+          <div className="team-builder-compact-banner">
+            <ApiStatusChip />
+            <p className="team-builder-compact-banner-copy">
+              <strong>{regulation.label}</strong> · edit sets on each slot · follow the Team report
             </p>
           </div>
-          <ul className="team-builder-hero-features" aria-label="Workflow">
-            <li>Six-slot roster with meta partners</li>
-            <li>Legality &amp; matchup review</li>
-            <li>Focused AI coach questions</li>
-          </ul>
-        </section>
+        )}
 
         <div className="team-builder-header">
-          <div className="team-builder-title-block">
-            <h2 className="team-builder-section-title">Your teams</h2>
-          </div>
           <div className="team-builder-actions">
             <div className="team-selector-row">
               <select
@@ -359,8 +394,8 @@ const TeamBuilder = () => {
                 onChange={(e) => setActiveTeam(e.target.value)}
                 aria-label="Select team"
               >
-                {teams.map((t) => (
-                  <option key={t.id} value={t.id}>{t.name}</option>
+                {teams.map((entry) => (
+                  <option key={entry.id} value={entry.id}>{entry.name}</option>
                 ))}
               </select>
               <button
@@ -369,18 +404,7 @@ const TeamBuilder = () => {
                 onClick={openShowdownImport}
                 title="Import Showdown paste"
               >
-                Import paste
-              </button>
-              <button type="button" className="action-btn" onClick={handleNewTeam} title="New team">+ New</button>
-              <button type="button" className="action-btn" onClick={handleRenameOpen} title="Rename team">Rename</button>
-              <button
-                type="button"
-                className="action-btn clear-btn"
-                onClick={handleDeleteTeam}
-                disabled={teams.length <= 1}
-                title="Delete team"
-              >
-                Delete
+                Import
               </button>
               <div className="export-dropdown" ref={exportMenuRef}>
                 <button
@@ -394,8 +418,8 @@ const TeamBuilder = () => {
                 </button>
                 {showExportMenu && (
                   <div className="export-menu">
-                    <button type="button" onClick={handleCopyAsText}>Copy as text</button>
                     <button type="button" onClick={handleCopyShowdown}>Copy Showdown paste</button>
+                    <button type="button" onClick={handleCopyAsText}>Copy as text</button>
                     <button
                       type="button"
                       className={shareLinkCopied ? "copied-flash" : ""}
@@ -406,15 +430,38 @@ const TeamBuilder = () => {
                   </div>
                 )}
               </div>
+              <div className="more-dropdown" ref={moreMenuRef}>
+                <button
+                  type="button"
+                  className="action-btn"
+                  onClick={() => setShowMoreMenu((open) => !open)}
+                  aria-expanded={showMoreMenu}
+                  aria-haspopup="menu"
+                >
+                  More ▼
+                </button>
+                {showMoreMenu && (
+                  <div className="export-menu" role="menu">
+                    <button type="button" onClick={handleNewTeam}>New team</button>
+                    <button type="button" onClick={handleRenameOpen}>Rename</button>
+                    <button
+                      type="button"
+                      onClick={handleDeleteTeam}
+                      disabled={teams.length <= 1}
+                    >
+                      Delete team
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleClearTeam}
+                      disabled={team.length === 0}
+                    >
+                      Clear roster
+                    </button>
+                  </div>
+                )}
+              </div>
             </div>
-            <button
-              className="action-btn clear-btn"
-              onClick={handleClearTeam}
-              disabled={team.length === 0}
-              title="Clear current team"
-            >
-              Clear
-            </button>
           </div>
         </div>
 
@@ -425,9 +472,10 @@ const TeamBuilder = () => {
             activeStepId={activeBuildStepId}
             onStepChange={handleBuildStepChange}
           />
-          <TeamHealthSummary
+          <TeamReport
             health={workflow.health}
-            onNavigateStep={handleBuildStepChange}
+            teamLength={team.length}
+            onNavigateIssue={handleReportNavigate}
           />
         </div>
 
@@ -497,17 +545,18 @@ const TeamBuilder = () => {
         </div>
 
         <BuildStepSection
-          stepId="roster"
+          stepId="build"
           stepNumber={1}
-          title="Build six Pokémon"
-          description="Fill every slot. Use partner suggestions and the sixth-slot recommender when you are one short."
-          status={getStepMeta("roster").status}
-          isActive={activeBuildStepId === "roster"}
-          onActivate={() => handleBuildStepChange("roster")}
+          title="Build the roster"
+          description="Fill slots from Import, Add, or meta partners. Finish moves, ability, item, and nature on each slot."
+          status={getStepMeta("build").status}
+          isActive={activeBuildStepId === "build"}
+          onActivate={() => handleBuildStepChange("build")}
         >
           {team.length === 0 && (
             <TeamEmptyState
               onAddFirst={() => handleSlotClick(0)}
+              onImport={openShowdownImport}
               regulationLabel={regulation.label}
             />
           )}
@@ -550,48 +599,14 @@ const TeamBuilder = () => {
         </BuildStepSection>
 
         <BuildStepSection
-          stepId="sets"
+          stepId="check"
           stepNumber={2}
-          title="Complete sets"
-          description="Each Pokémon needs four moves plus ability, item, and nature. Use Edit set on a slot or import a Showdown paste."
-          status={getStepMeta("sets").status}
-          isActive={activeBuildStepId === "sets"}
-          onActivate={() => handleBuildStepChange("sets")}
+          title="Check legality"
+          description={`Confirm your squad meets ${regulation.label} rules — species clause, restricteds, items, and move learnsets.`}
+          status={getStepMeta("check").status}
+          isActive={activeBuildStepId === "check"}
+          onActivate={() => handleBuildStepChange("check")}
         >
-          <div className="build-step-inline-actions">
-            <button
-              type="button"
-              className="action-btn"
-              onClick={openShowdownImport}
-            >
-              Import Showdown paste
-            </button>
-          </div>
-          {workflow.health.completedSets.incompleteNames.length > 0 ? (
-            <div className="build-step-hint" role="status">
-              <strong>Incomplete:</strong>{" "}
-              {workflow.health.completedSets.incompleteNames.join(", ")} — open{" "}
-              <em>Edit set</em> or <em>Moves</em> on their slot above.
-            </div>
-          ) : team.length > 0 ? (
-            <div className="build-step-hint" role="status">
-              All rostered Pokémon have full sets. Review legality next.
-            </div>
-          ) : (
-            <div className="build-step-hint">Add Pokémon to the roster first.</div>
-          )}
-        </BuildStepSection>
-
-        <BuildStepSection
-          stepId="legality"
-          stepNumber={3}
-          title="Review legality"
-          description={`Confirm your squad meets ${regulation.label} rules — species clause, restricteds, items, and move learnsets (loaded on demand).`}
-          status={getStepMeta("legality").status}
-          isActive={activeBuildStepId === "legality"}
-          onActivate={() => handleBuildStepChange("legality")}
-        >
-          <RegulationSelector />
           <RegulationWarnings
             team={team}
             sets={activeTeam?.sets}
@@ -601,64 +616,38 @@ const TeamBuilder = () => {
         </BuildStepSection>
 
         <BuildStepSection
-          stepId="matchups"
-          stepNumber={4}
-          title="Inspect matchup gaps"
-          description="Check meta staples, shared weaknesses, speed tiers, and offensive coverage before you finalize bring-4."
-          status={getStepMeta("matchups").status}
-          isActive={activeBuildStepId === "matchups"}
-          onActivate={() => handleBuildStepChange("matchups")}
+          stepId="tune"
+          stepNumber={3}
+          title="Tune matchups"
+          description="Coverage, meta gaps, speed tiers, and bring-4 preview — one tab at a time."
+          status={getStepMeta("tune").status}
+          isActive={activeBuildStepId === "tune"}
+          onActivate={() => handleBuildStepChange("tune")}
         >
-          <MetaGapPanel team={team} />
-          <MetaThreatHints team={team} regulationId={regulationId} />
-          <TeamAnalysis
+          <TunePanels
             team={team}
             sets={activeTeam?.sets}
             teamName={activeTeam?.name || "Team"}
             regulationId={regulationId}
-          />
-          <SpeedTierTable team={team} sets={activeTeam?.sets} />
-          <BringFourPreview
-            team={team}
-            bringList={bringList}
-            onToggle={toggleBringPokemon}
-          />
-          <TeamPreviewSimulator
-            team={team}
-            sets={activeTeam?.sets}
-            bringList={bringList}
-            setBringList={setBringList}
-            regulationId={regulationId}
-          />
-        </BuildStepSection>
-
-        <BuildStepSection
-          stepId="coach"
-          stepNumber={5}
-          title="Ask the coach a focused question"
-          description="Get rule-based tips first, then ask one specific question about speed, typings, or meta — not a generic team review."
-          status={getStepMeta("coach").status}
-          isActive={activeBuildStepId === "coach"}
-          onActivate={() => handleBuildStepChange("coach")}
-        >
-          <TeamAITips
-            team={team}
-            sets={activeTeam?.sets}
-            roles={activeTeam?.roles}
-            bringList={bringList}
-            regulationId={regulationId}
             regulationLabel={regulation.label}
+            bringList={bringList}
+            onToggleBring={toggleBringPokemon}
+            setBringList={setBringList}
+            roles={activeTeam?.roles}
+            coachReady={Boolean(workflow.health?.coachReady)}
+            activeTabId={tuneTabId}
+            onTabChange={setTuneTabId}
           />
         </BuildStepSection>
 
         <BuildStepSection
-          stepId="export"
-          stepNumber={6}
-          title="Export or share"
+          stepId="share"
+          stepNumber={4}
+          title="Share or export"
           description="Copy a Showdown paste, plain-text summary, or share link with regulation and roles baked in."
-          status={getStepMeta("export").status}
-          isActive={activeBuildStepId === "export"}
-          onActivate={() => handleBuildStepChange("export")}
+          status={getStepMeta("share").status}
+          isActive={activeBuildStepId === "share"}
+          onActivate={() => handleBuildStepChange("share")}
         >
           <div className="build-step-export-actions">
             <button
@@ -752,4 +741,3 @@ const TeamBuilder = () => {
 };
 
 export default TeamBuilder;
-

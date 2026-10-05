@@ -1,6 +1,7 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
 import { getTypeColor, TEAM_ROLE_OPTIONS } from "../constants/typeColors";
+import { getSlotCompleteness } from "../utils/teamBuildHealth";
 import "./TeamSlot.css";
 
 const displayMove = (name) => (name || "").replace(/-/g, " ");
@@ -28,6 +29,7 @@ const TeamSlot = ({
   if (pokemon) {
     const primaryType = pokemon.types[0]?.type.name || "normal";
     const cardColor = getTypeColor(primaryType);
+    const completeness = getSlotCompleteness(pokemonSet);
     const movesToShow =
       Array.isArray(selectedMoves) && selectedMoves.length > 0
         ? selectedMoves
@@ -60,6 +62,14 @@ const TeamSlot = ({
         >
           ×
         </button>
+        <span
+          className={`team-slot-completeness ${
+            completeness.isComplete ? "complete" : "incomplete"
+          }`}
+          title={completeness.label}
+        >
+          {completeness.isComplete ? "Set ✓" : `${completeness.moveCount}/4`}
+        </span>
         <img
           src={
             pokemon.sprites?.other?.["official-artwork"]?.front_default ||

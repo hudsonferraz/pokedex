@@ -1,0 +1,62 @@
+.tune-panels {
+  display: grid;
+  gap: 0.85rem;
+}
+
+.tune-panels-tablist {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.tune-panels-tab {
+  border: 1px solid rgba(15, 23, 42, 0.12);
+  background: rgba(15, 23, 42, 0.03);
+  color: inherit;
+  border-radius: 999px;
+  padding: 0.4rem 0.85rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.tune-panels-tab.active {
+  background: #0f172a;
+  border-color: #0f172a;
+  color: #fff;
+}
+
+.tune-panels-body {
+  display: grid;
+  gap: 0.85rem;
+}
+
+.tune-panels-coach-toggle {
+  border: 1px dashed rgba(15, 23, 42, 0.2);
+  background: transparent;
+  color: inherit;
+  border-radius: 0.65rem;
+  padding: 0.65rem 0.85rem;
+  font-size: 0.9rem;
+  cursor: pointer;
+  width: 100%;
+  text-align: left;
+}
+
+[data-theme="dark"] .tune-panels-tab,
+.dark .tune-panels-tab {
+  border-color: rgba(255, 255, 255, 0.14);
+  background: rgba(255, 255, 255, 0.04);
+}
+
+[data-theme="dark"] .tune-panels-tab.active,
+.dark .tune-panels-tab.active {
+  background: #f8fafc;
+  border-color: #f8fafc;
+  color: #0f172a;
+}
+
+[data-theme="dark"] .tune-panels-coach-toggle,
+.dark .tune-panels-coach-toggle {
+  border-color: rgba(255, 255, 255, 0.22);
+}

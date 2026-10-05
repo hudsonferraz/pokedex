@@ -68,26 +68,26 @@ A global “workspace format” is needed for batch operations across all teams.
 
 ---
 
-## Guided six-step builder
+## Guided four-step builder
 
 **Context**  
-The original builder exposed many panels at once — powerful but overwhelming for new users and portfolio demos.
+The original six-step builder (Roster → Sets → Legality → Matchups → Coach → Export) plus health chips still felt clustered: duplicated format/export controls, a Sets step that repeated slot editing, and a Matchups scroll dump.
 
 **Decision**  
-Progressive disclosure via six steps (Roster → Sets → Legality → Matchups → Coach → Export) with a sticky health summary and auto-suggested next step from `computeTeamBuildHealth()`.
+Progressive disclosure via four steps (Build → Check → Tune → Share), set completeness on slots, a sticky ranked Team report instead of health chips, Tune as exclusive tabs, and Coach as optional under Tune. Thin chrome keeps Import/Export visible; New/Rename/Delete/Clear live in overflow.
 
 **Trade-off**  
-Power users take an extra click to reach some panels; slots and core actions remain always visible.
+Power users who liked simultaneous matchup panels need one extra tab click. Returning visitors keep a short dismissible tip instead of a long six-step intro.
 
 **Revisit when**  
-User research shows experienced builders prefer a single-page layout with optional “expert mode.”
+User research shows experienced builders prefer a single-page “expert” layout again.
 
 ---
 
 ## Honest regulation legality
 
 **Context**  
-Bundled ban/restricted lists can lag official announcements. Champions Reg M-A initially inherited Regulation I lists in error (restricted-count style); corrected to inherit the ban-only Regulation H list, matching the real rule that M-A/M-B ban all Legendary, Mythical, and Paradox Pokémon outright. Reg M-B (current as of Jun 17, 2026) reuses the same inherited list and is flagged unverified until Pokémon publishes an official Champions ban list.
+Bundled ban/restricted lists can lag official announcements. Champions Reg M-A initially inherited Regulation I lists in error (restricted-count style); corrected to inherit the ban-only Regulation H list, matching the real rule that M-A/M-B/M-C ban all Legendary, Mythical, and Paradox Pokémon outright. Reg M-C (current as of Sep 9, 2026; through Dec 2, 2026) reuses the same inherited list and is flagged unverified until Pokémon publishes an official Champions ban list for tooling.
 
 **Decision**  
 `legalityUnverified` and `legalityInheritsFrom` in `regulations.json`. Prominent `RegulationLegalityNotice` above the selector. Validation warns when lists are inherited; learnset checks show pending/unavailable states instead of silent passes.

@@ -1,4 +1,16 @@
 {
+  "champions-reg-mc": {
+    "id": "champions-reg-mc",
+    "label": "Champions Reg M-C",
+    "series": "Pokémon Champions",
+    "dateRange": "Sep 9 – Dec 2, 2026",
+    "maxRestricted": 0,
+    "legalityInheritsFrom": "regulation-h",
+    "legalityUnverified": true,
+    "notes": "Current ban-only format (as of Sep 9, 2026): all Legendary, Mythical, and Paradox Pokémon are banned (0 Restricted slots). Adds newly usable Pokémon and Mega Evolutions over Reg M-B (including Z Mega Evolutions). Legality mirrors bundled Regulation H ban list—confirm against the official Champions roster before events.",
+    "banned": [],
+    "restricted": []
+  },
   "champions-reg-ma": {
     "id": "champions-reg-ma",
     "label": "Champions Reg M-A",
@@ -15,11 +27,11 @@
     "id": "champions-reg-mb",
     "label": "Champions Reg M-B",
     "series": "Pokémon Champions",
-    "dateRange": "Jun 17 – Sep 2, 2026",
+    "dateRange": "Jun 17 – Sep 9, 2026",
     "maxRestricted": 0,
     "legalityInheritsFrom": "regulation-h",
     "legalityUnverified": true,
-    "notes": "Ban-only format, same base as Reg M-A: all Legendary, Mythical, and Paradox Pokémon are banned (0 Restricted slots). Adds 22 newly usable Pokémon and 16 new Mega Evolutions (75 total) over Reg M-A. Legality mirrors bundled Regulation H ban list—confirm before events, official 2026 World Championships format.",
+    "notes": "Ban-only format, same base as Reg M-A: all Legendary, Mythical, and Paradox Pokémon are banned (0 Restricted slots). Adds newly usable Pokémon and Mega Evolutions over Reg M-A. Superseded by Reg M-C for ranked play after Sep 9, 2026. Legality mirrors bundled Regulation H ban list—confirm before events.",
     "banned": [],
     "restricted": []
   },

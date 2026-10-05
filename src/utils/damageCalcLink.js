@@ -10,6 +10,7 @@ export const PIKALYTICS_CHAMPIONS_CALC_URL =
   "https://www.pikalytics.com/damage-calculator";
 
 const CALC_URL_BY_REGULATION = {
+  "champions-reg-mc": PIKALYTICS_CHAMPIONS_CALC_URL,
   "champions-reg-mb": PIKALYTICS_CHAMPIONS_CALC_URL,
   "champions-reg-ma": PIKALYTICS_CHAMPIONS_CALC_URL,
   "regulation-i": SHOWDOWN_DAMAGE_CALC_URL,
@@ -22,7 +23,11 @@ export function getDamageCalcUrl(regulationId) {
 }
 
 export function getDamageCalcLinkLabel(regulationId) {
-  if (regulationId === "champions-reg-mb" || regulationId === "champions-reg-ma") {
+  if (
+    regulationId === "champions-reg-mc" ||
+    regulationId === "champions-reg-mb" ||
+    regulationId === "champions-reg-ma"
+  ) {
     return "Pikalytics Champions calc →";
   }
   return "Showdown damage calc →";
@@ -35,7 +40,7 @@ export async function openDamageCalcWithTeam(
   team,
   sets,
   teamName = "Team",
-  regulationId = "champions-reg-mb",
+  regulationId = "champions-reg-mc",
 ) {
   const paste = getTeamShowdownExport(team, sets, teamName);
   const calcUrl = getDamageCalcUrl(regulationId);
@@ -56,7 +61,7 @@ export async function openDamageCalcWithTeam(
 export async function openDamageCalcWithPokemon(
   pokemon,
   set,
-  regulationId = "champions-reg-mb",
+  regulationId = "champions-reg-mc",
 ) {
   if (!pokemon) {
     throw new Error("No Pokémon provided");

@@ -6,7 +6,7 @@
 [![CI](https://github.com/hudsonferraz/pokedex/actions/workflows/ci.yml/badge.svg)](https://github.com/hudsonferraz/pokedex/actions/workflows/ci.yml)
 [![Live Demo](https://img.shields.io/badge/Live%20Demo-GitHub%20Pages-blue)](https://hudsonferraz.github.io/pokedex/)
 
-**Full-stack VGC doubles team builder** with live Pikalytics meta, regulation legality checks, Showdown import/export, guided workflow, and AI coaching — default format **Pokémon Champions Reg M-B**.
+**Full-stack VGC doubles team builder** with live Pikalytics meta, regulation legality checks, Showdown import/export, guided workflow, and AI coaching — default format **Pokémon Champions Reg M-C**.
 
 This is a **portfolio and research project** — useful for exploring competitive team construction, meta integration, and honest legality UX. It is **not** an official Pokémon Company tool or event legality authority.
 
@@ -26,7 +26,7 @@ This is a **portfolio and research project** — useful for exploring competitiv
 ## Highlights
 
 - **69 automated tests** — regulation legality, Showdown round-trip, team schema v3, build health workflow, HTTP protection, Pikalytics parser, App smoke
-- **Guided Team Builder** — six-step flow (Roster → Sets → Legality → Matchups → Coach → Export) with sticky health summary and undo toasts
+- **Guided Team Builder** — four-step flow (Build → Check → Tune → Share) with sticky Team report, slot set-completeness, and undo toasts
 - **Live meta** — Pikalytics usage/sets via proxied API (6h cache) with bundled fallback when Render is cold
 - **Honest legality** — per-team regulation, inherited/unverified format notices, lazy learnset validation with clear pending states
 - **Showdown workflow** — import/export paste with VGC form name mapping, share links via `?team=` base64 payload
@@ -51,8 +51,8 @@ This is a **portfolio and research project** — useful for exploring competitiv
 
 | Area | What you get |
 |------|----------------|
-| **Team lab** | 6 slots, roles, bring-4, multi-team tabs, undo, per-team regulation |
-| **Sets** | Move picker, set editor, Apply meta set, Showdown import |
+| **Team lab** | 6 slots, roles, bring-4, multi-team tabs, undo, per-team regulation, Team report |
+| **Sets** | Move picker, set editor on slots, Apply meta set, Showdown import |
 | **Legality** | Species clause, restricteds, items, learnsets (on demand), transparency for unverified formats |
 | **Analysis** | Type coverage, speed tiers, meta gap, threat hints, preview simulator |
 | **Meta** | Usage %, win rate, partner suggestions, suggest 6th |

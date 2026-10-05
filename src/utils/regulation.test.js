@@ -35,6 +35,11 @@ describe("regulation legality", () => {
     expect(getSpeciesRegulationStatus("incineroar", "champions-reg-mb").status).toBe("legal");
   });
 
+  test("champions reg m-c inherits regulation-h ban-only legality", () => {
+    expect(getSpeciesRegulationStatus("miraidon", "champions-reg-mc").status).toBe("banned");
+    expect(getSpeciesRegulationStatus("rillaboom", "champions-reg-mc").status).toBe("legal");
+  });
+
   test("incineroar is legal in regulation-h", () => {
     expect(getSpeciesRegulationStatus("incineroar", "regulation-h").status).toBe("legal");
   });

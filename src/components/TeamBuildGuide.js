@@ -85,12 +85,10 @@ const TeamBuildGuide = ({ steps, activeStepId, onStepChange }) => {
       {!introDismissed ? (
         <aside className="team-build-walkthrough card-surface" aria-label="Workflow introduction">
           <div className="team-build-walkthrough-copy">
-            <p className="team-build-walkthrough-title">How the six steps work</p>
+            <p className="team-build-walkthrough-title">How building works</p>
             <p className="team-build-walkthrough-body">
-              Build in order: fill the roster, finish sets, check legality, review matchups, optionally
-              ask the coach, then export. Only one step stays open at a time — use the bar below to jump
-              ahead, or tap <span aria-hidden>?</span>
-              <span className="visually-hidden">help</span> on a step for a short tip.
+              Build the roster (sets live on each slot), Check legality, Tune matchups one tab at a
+              time, then Share. Use the Team report to jump to the next fix.
             </p>
           </div>
           <button type="button" className="team-build-walkthrough-dismiss" onClick={dismissIntro}>

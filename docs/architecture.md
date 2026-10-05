@@ -76,17 +76,14 @@ ThemeProvider
 
 ```mermaid
 flowchart LR
-  Roster[Roster] --> Sets[Sets]
-  Sets --> Legality[Legality]
-  Legality --> Matchups[Matchups]
-  Matchups --> Coach[Coach]
-  Coach --> Export[Export]
+  Build[Build] --> Check[Check]
+  Check --> Tune[Tune]
+  Tune --> Share[Share]
 ```
 
-`computeTeamBuildHealth()` drives step status chips (complete / attention / upcoming) from:
+`computeTeamBuildHealth()` drives four-step status (complete / attention / upcoming) and feeds the Team report from:
 
-- Roster fill (6/6)
-- Set completeness (4 moves + ability + item + nature)
+- Roster fill (6/6) and set completeness on slots
 - Regulation validation (species clause, restricteds, items, learnsets when loaded)
 - Matchup signals (shared weaknesses, speed control, coverage gaps)
 

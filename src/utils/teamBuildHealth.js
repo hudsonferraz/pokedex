@@ -11,53 +11,56 @@ const VGC_SPEED_MOVES = {
   trickRoom: ["trick-room"],
 };
 
-export const BUILD_STEP_IDS = [
-  "roster",
-  "sets",
-  "legality",
-  "matchups",
-  "coach",
-  "export",
-];
+export const BUILD_STEP_IDS = ["build", "check", "tune", "share"];
 
 export const BUILD_STEPS = [
   {
-    id: "roster",
-    label: "Build six Pokémon",
-    shortLabel: "Roster",
-    help: "Fill all six slots. Partner suggestions and the sixth-slot tool help when you are one short.",
+    id: "build",
+    label: "Build the roster",
+    shortLabel: "Build",
+    help: "Fill slots, import a paste, or use partner suggestions. Finish sets from each slot.",
   },
   {
-    id: "sets",
-    label: "Complete sets",
-    shortLabel: "Sets",
-    help: "Give each Pokémon four moves plus ability, item, and nature — or import a Showdown paste.",
+    id: "check",
+    label: "Check legality",
+    shortLabel: "Check",
+    help: "Confirm species clause, restricteds, items, and learnsets for your format.",
   },
   {
-    id: "legality",
-    label: "Review legality",
-    shortLabel: "Legality",
-    help: "Check species clause, restricteds, items, and learnsets for your selected regulation.",
+    id: "tune",
+    label: "Tune matchups",
+    shortLabel: "Tune",
+    help: "Review coverage, meta gaps, speed, and bring-4 preview — one tab at a time.",
   },
   {
-    id: "matchups",
-    label: "Inspect matchup gaps",
-    shortLabel: "Matchups",
-    help: "Review meta threats, shared weaknesses, speed control, and bring-4 before you lock the squad.",
-  },
-  {
-    id: "coach",
-    label: "Ask the coach",
-    shortLabel: "Coach",
-    help: "Optional: get rule-based tips, then ask one focused question about speed, typing, or meta.",
-  },
-  {
-    id: "export",
-    label: "Export or share",
-    shortLabel: "Export",
-    help: "Copy a Showdown paste, plain-text summary, or share link with regulation and roles included.",
+    id: "share",
+    label: "Share or export",
+    shortLabel: "Share",
+    help: "Copy a Showdown paste, plain-text summary, or share link.",
   },
 ];
+
+export function getSlotCompleteness(pokemonSet) {
+  const set = normalizeSetEntry(pokemonSet);
+  const moveCount = set.moves.length;
+  const hasAbility = Boolean(set.ability);
+  const hasItem = Boolean(set.item);
+  const hasNature = Boolean(set.nature);
+  const hasFourMoves = moveCount === 4;
+  const isComplete = hasFourMoves && hasAbility && hasItem && hasNature;
+
+  return {
+    moveCount,
+    hasFourMoves,
+    hasAbility,
+    hasItem,
+    hasNature,
+    isComplete,
+    label: isComplete
+      ? "Set complete"
+      : `${moveCount}/4 moves${hasAbility && hasItem && hasNature ? "" : " · missing fields"}`,
+  };
+}
 
 function teamHasMove(team, setsByName, moveIds) {
   return team.some((pokemon) => {
@@ -66,7 +69,7 @@ function teamHasMove(team, setsByName, moveIds) {
   });
 }
 
-function countCompleteSets(team, setsByName) {
+export function countCompleteSets(team, setsByName) {
   if (!team?.length) {
     return { complete: 0, total: 6, incompleteNames: [] };
   }
@@ -76,10 +79,8 @@ function countCompleteSets(team, setsByName) {
 
   team.forEach((pokemon) => {
     if (!pokemon) return;
-    const set = normalizeSetEntry(setsByName?.[pokemon.name]);
-    const hasFourMoves = set.moves.length === 4;
-    const hasCoreFields = Boolean(set.ability && set.item && set.nature);
-    if (hasFourMoves && hasCoreFields) {
+    const completeness = getSlotCompleteness(setsByName?.[pokemon.name]);
+    if (completeness.isComplete) {
       complete += 1;
     } else {
       incompleteNames.push(pokemon.name);
@@ -203,24 +204,18 @@ function getStepStatus(stepId, context) {
     context;
 
   switch (stepId) {
-    case "roster":
+    case "build":
       if (team.length === 0) return "upcoming";
-      if (team.length < 6) return "attention";
+      if (team.length < 6 || setCompletion.complete < team.length) return "attention";
       return "complete";
 
-    case "sets":
+    case "check":
       if (team.length === 0) return "upcoming";
-      if (setCompletion.complete < team.length) return "attention";
-      if (setCompletion.complete === 6) return "complete";
-      return "attention";
-
-    case "legality":
-      if (team.length === 0) return "upcoming";
-      if (legality.status === "error") return "attention";
-      if (legality.status === "warn") return "attention";
+      if (legality.status === "error" || legality.status === "warn") return "attention";
+      if (legality.status === "attention") return "attention";
       return "complete";
 
-    case "matchups":
+    case "tune":
       if (team.length < 3) return "upcoming";
       if (
         weaknesses.status === "warn" ||
@@ -229,16 +224,9 @@ function getStepStatus(stepId, context) {
       ) {
         return "attention";
       }
-      return team.length >= 6 ? "complete" : "upcoming";
+      return team.length >= 6 ? "complete" : "attention";
 
-    case "coach":
-      // Optional advisory step. Available once the roster is coach-ready;
-      // complete at a full six so suggestion can advance to Export.
-      if (team.length < 4) return "upcoming";
-      if (team.length < 6) return "attention";
-      return "complete";
-
-    case "export":
+    case "share":
       if (team.length < 6) return "upcoming";
       if (legality.status === "error") return "attention";
       return "complete";
@@ -255,7 +243,7 @@ export function getSuggestedStepId(steps) {
   const firstIncomplete = steps.find((step) => step.status !== "complete");
   if (firstIncomplete) return firstIncomplete.id;
 
-  return "export";
+  return "share";
 }
 
 export function computeTeamBuildHealth({
@@ -304,6 +292,7 @@ export function computeTeamBuildHealth({
       speedControl,
       damageBalance,
       weaknesses,
+      coachReady: roster.length >= 4,
     },
   };
 }
